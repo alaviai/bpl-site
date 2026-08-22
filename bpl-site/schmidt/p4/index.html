@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business Process Lab · Lesson 4 — The Consulting Engagement</title>
+<style>
+  :root {
+    --page: #f5f5f2; --surface: #fcfcfb; --ink: #16212b; --navy: #33475b;
+    --secondary: #52514e; --muted: #898781; --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+    --red: #a5202f; --green: #2e7d32; --amber: #b5850b; --gold: #d99a06;
+    --blue: #2a78d6; --orange: #eb6834; --aqua: #1baf7a; --violet: #7c5cd6;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --radius: 14px; --shadow: 0 2px 10px rgba(30,40,50,.07);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--page); color: var(--ink); }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 10px; gap: 14px; flex-wrap: wrap; }
+  .header h1 { margin: 0; font-size: 21px; font-weight: 800; color: var(--navy); }
+  .ver { font-size: 11px; color: var(--muted); font-weight: 700; }
+  .hdr-right { display: flex; align-items: center; gap: 12px; }
+  .score { font-size: 13px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .prog { width: 180px; height: 8px; background: #e8eae5; border-radius: 5px; overflow: hidden; }
+  .prog > div { height: 100%; background: var(--green); border-radius: 5px; transition: width .5s; }
+  select.small { border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; background: #fff; color: var(--ink); }
+
+  .app { display: grid; grid-template-columns: 370px minmax(0,1fr) 265px; gap: 14px; padding: 0 16px 20px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+  .card h2 { margin: 0 0 8px; font-size: 12.5px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* lesson panel */
+  .lp-dots { display: flex; gap: 4px; margin: 4px 0 12px; flex-wrap: wrap; }
+  .lp-dots span { width: 8px; height: 8px; border-radius: 50%; background: #dfe1dc; }
+  .lp-dots span.cur { background: var(--navy); }
+  .lp-dots span.past { background: var(--green); }
+  .lp-step { font-size: 13.5px; line-height: 1.65; color: var(--ink); }
+  .lp-step p { margin: 8px 0; }
+  .lp-step b { color: var(--navy); }
+  .shape-ico { font-size: 17px; }
+  .lp-opt { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 12px; background: #fff; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.45; cursor: pointer; font-family: var(--sans); }
+  .lp-opt:hover { border-color: var(--navy); }
+  .lp-opt.sel { border-color: var(--navy); box-shadow: inset 0 0 0 1.4px var(--navy); }
+  .lp-opt.ok { border-color: var(--green); background: #f2f8f2; box-shadow: inset 0 0 0 1.4px var(--green); }
+  .lp-opt.bad { border-color: var(--red); background: #fdf1f1; }
+  .lp-fb { font-size: 12.5px; line-height: 1.55; margin-top: 8px; padding: 9px 12px; border-radius: 10px; display: none; }
+  .lp-fb.ok { display: block; background: #f2f8f2; color: #1d5a20; border: 1px solid rgba(46,125,50,.3); }
+  .lp-fb.bad { display: block; background: #fdf1f1; color: var(--red); border: 1px solid rgba(165,32,47,.3); }
+  .lp-fb.info { display: block; background: #eff3f8; color: var(--navy); border: 1px solid rgba(51,71,91,.25); }
+  .lp-task { background: #eff3f8; border: 1px solid rgba(51,71,91,.2); border-radius: 11px; padding: 11px 13px; margin: 9px 0; font-size: 13px; line-height: 1.55; }
+  .lp-task .tt { font-weight: 800; color: var(--navy); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+  .lp-status { font-size: 12.5px; color: var(--secondary); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .lp-status.pass { color: var(--green); font-weight: 800; }
+  .lp-take { background: #fdf8ec; border: 1.5px solid rgba(181,133,11,.45); border-radius: 12px; padding: 13px 15px; margin: 10px 0; font-size: 14px; font-weight: 700; color: #6b5106; line-height: 1.6; }
+  .lp-take .tt { font-size: 11px; letter-spacing: .08em; color: var(--amber); display: block; margin-bottom: 4px; }
+  .lp-nav { display: flex; gap: 8px; margin-top: 14px; }
+  .lp-nav button { flex: 1; }
+  button { appearance: none; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; background: #eef0ee; color: var(--ink); }
+  button:hover { filter: brightness(.97); }
+  button:disabled { opacity: .45; cursor: default; }
+  .primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .primary:disabled { background: #b9c0c7; border-color: #b9c0c7; opacity: 1; }
+  .mini { font-size: 12.5px; padding: 6px 11px; border-radius: 8px; background: #fff; font-weight: 700; color: var(--navy); }
+  .lp-num { display: flex; gap: 8px; margin-top: 8px; }
+  .lp-num input { flex: 1; border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; font-size: 14px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+  .lp-name input { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-family: var(--sans); margin-top: 5px; }
+  .lp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; font-weight: 800; letter-spacing: .1em; color: var(--navy); background: #eff3f8; border: 1.5px dashed var(--navy); border-radius: 10px; padding: 10px 12px; text-align: center; margin: 10px 0; user-select: all; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
+  .chip { border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; font-size: 12.5px; font-weight: 700; background: #fff; cursor: pointer; color: var(--navy); }
+  .chip.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* stage */
+  .stagewrap { position: relative; }
+  #stageSvg { width: 100%; height: auto; display: block; }
+  #stageCanvas { position: absolute; pointer-events: none; }
+  .runbar { display: none; gap: 8px; align-items: center; margin-top: 6px; }
+  .runbar.show { display: flex; }
+  .runbar .clock { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .tile { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 9px 12px 8px; display: none; }
+  .tile.show { display: block; }
+  .tile .k { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .tile .v { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .tile .s { font-size: 11px; color: var(--secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile.cR { border-color: var(--blue); }   .tile.cR .v { color: var(--blue); }
+  .tile.cCT { border-color: var(--orange) } .tile.cCT .v { color: var(--orange); }
+  .tile.cT { border-color: var(--violet) }  .tile.cT .v { color: var(--violet); }
+  .tile.cI { border-color: var(--aqua) }    .tile.cI .v { color: var(--aqua); }
+  .tile.cU { border-color: var(--gold) }    .tile.cU .v { color: var(--gold); }
+  .tile.cQ { border-color: var(--red) }     .tile.cQ .v { color: var(--red); }
+  .lbar { display: flex; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+  .lbar .lchip { border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 700; background: #fff; cursor: pointer; color: var(--secondary); font-family: var(--sans); }
+  .lbar .lchip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .lbar .lchip.done { border-color: rgba(46,125,50,.5); color: var(--green); }
+  .lbar .lchip.active.done { background: var(--green); border-color: var(--green); color: #fff; }
+  @keyframes born { 0% { transform: scale(.6); opacity: 0; box-shadow: 0 0 0 8px rgba(42,120,214,.25); } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); box-shadow: none; } }
+  .tile.born { animation: born .9s ease; }
+
+  /* output ticker */
+  .ticker { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--orange); border-radius: 12px; padding: 9px 12px; }
+  .ticker.show { display: block; }
+  .ticker .k { font-size: 10.5px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .06em; }
+  .ticker svg { width: 100%; height: 56px; display: block; }
+
+  /* stopwatch */
+  .watch { display: none; margin-top: 12px; background: #fdf6e3; border: 1.5px solid var(--gold); border-radius: 12px; padding: 9px 12px; font-size: 13px; color: #6b5106; font-variant-numeric: tabular-nums; }
+  .watch.show { display: block; }
+  .watch b { color: var(--gold); }
+  @keyframes flashW { 0%,100% { background: #fdf6e3; box-shadow: none; } 50% { background: #ffe9a8; box-shadow: 0 0 0 4px rgba(217,154,6,.3); } }
+  .watch.live { animation: flashW .9s ease infinite; }
+  .watch .big { font-size: 18px; font-weight: 800; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .lp-fb.bad { animation: shake .35s ease; }
+  .occ { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--aqua); border-radius: 12px; padding: 9px 12px; }
+  .occ.show { display: block; }
+  .occ .k { font-size: 10.5px; font-weight: 800; color: var(--aqua); text-transform: uppercase; letter-spacing: .06em; }
+  .occ svg { width: 100%; height: 64px; display: block; }
+
+  /* notebook */
+  .nb { position: sticky; top: 12px; }
+  .nb .empty { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .nb-entry { border: 1px solid var(--border); border-left: 4px solid var(--navy); border-radius: 10px; padding: 8px 11px; margin-bottom: 8px; background: #fff; }
+  .nb-entry .sym { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .nb-entry .nm { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .nb-entry .df { font-size: 11.5px; color: var(--secondary); line-height: 1.45; margin-top: 2px; }
+  .nb-entry .fx { font-size: 11.5px; font-family: ui-monospace, Menlo, monospace; color: var(--navy); margin-top: 3px; }
+  @keyframes stamp { 0% { transform: scale(1.35) rotate(-4deg); opacity: 0; } 60% { transform: scale(.96) rotate(1deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+  .nb-entry.stamp { animation: stamp .6s ease; }
+  .nb-entry.e-p { border-left-color: var(--navy); }   .nb-entry.e-p .sym { color: var(--navy); }
+  .nb-entry.e-c { border-left-color: var(--green); }  .nb-entry.e-c .sym { color: var(--green); }
+  .nb-entry.e-R { border-left-color: var(--blue); }   .nb-entry.e-R .sym { color: var(--blue); }
+  .nb-entry.e-CT { border-left-color: var(--orange); }.nb-entry.e-CT .sym { color: var(--orange); }
+  .nb-entry.e-T { border-left-color: var(--violet); } .nb-entry.e-T .sym { color: var(--violet); }
+  .nb-entry.e-I { border-left-color: var(--aqua); }   .nb-entry.e-I .sym { color: var(--aqua); }
+  .nb-entry.e-u { border-left-color: var(--gold); }   .nb-entry.e-u .sym { color: var(--gold); }
+
+  /* metric spotlight on map */
+  @keyframes pulseGlow { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  .spot { animation: pulseGlow 1.6s ease infinite; }
+  /* abrupt input change: flash a few times, then settle */
+  @keyframes flashIn { 0%, 100% { opacity: 1; } 50% { opacity: .12; } }
+  .flashIn { animation: flashIn .65s ease 5; }
+
+
+   }
+
+  .ntR, .ntT, .ntI { text-transform: none; font-style: italic; }
+  .verifybox { margin-top: 14px; font-size: 12px; color: var(--muted); }
+  .verifybox input { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-family: var(--sans); font-size: 12px; margin-top: 4px; width: 100%; }
+  @media (max-width: 1150px) { .app { grid-template-columns: 1fr; } .nb { position: static; } .tiles { grid-template-columns: repeat(2,1fr); } }
+  /* attention: highlighter + formula spotlight */
+  mark.hl { background: linear-gradient(100deg, rgba(255,224,102,.25), rgba(255,224,102,.9) 10%, rgba(255,213,60,.55)); padding: 0 4px; border-radius: 4px; font-weight: 700; color: #4a3800; }
+  .formula { display: block; text-align: center; background: #fffdf0; border: 1.5px dashed var(--gold); border-radius: 10px; padding: 8px 12px; margin: 9px 0; font-weight: 800; font-size: 15px; color: var(--navy); }
+  .endin { width: 60px; border: 1.2px solid var(--border); border-radius: 8px; padding: 3px 6px; font: inherit; font-size: 12px; background: #fff; }
+  /* system metrics: observed vs theory, minimizable */
+  .sysm { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--navy); border-radius: 12px; padding: 9px 12px; }
+  .sysm.show { display: block; animation: born .9s ease; }
+  .sysm .hd { display: flex; justify-content: space-between; align-items: center; }
+  .sysm .k { font-size: 10.5px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+  .sysm table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .sysm td, .sysm th { padding: 3px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+  .sysm td:first-child, .sysm th:first-child { text-align: left; font-weight: 700; }
+  .sysm th { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .sysm .agree { color: var(--green); font-weight: 800; }
+  /* question-context tags + clickable progress dots + name pointers */
+  .qtag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; margin: 0 0 6px; text-transform: uppercase; }
+  .qtag.off { background: #efe9fb; color: #6b46c1; border: 1px solid rgba(107,70,193,.35); }
+  .qtag.on { background: #e7f0fb; color: #1d5fa8; border: 1px solid rgba(29,95,168,.35); }
+  .lp-dots span.jump { cursor: pointer; }
+  .lp-dots span.jump:hover { transform: scale(1.6); }
+  .pointTag { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; margin-left: 8px; }
+  .spd { min-width: 40px; }
+  .spd.act { background: var(--navy); color: #fff; border-color: var(--navy); }
+  /* v3: segmented progress pills */
+  .pillbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .spill { display: flex; align-items: center; gap: 5px; border: 1.5px solid #dcdbd4; border-radius: 999px; padding: 3px 10px; background: #fafaf7; font-size: 11px; font-weight: 700; color: #52514e; }
+  .spill .sdots { display: flex; gap: 4px; }
+  .spill .sd { width: 7px; height: 7px; border-radius: 50%; background: #dfe1dc; }
+  .spill .sd.past { background: var(--green); } .spill .sd.cur { background: var(--navy); transform: scale(1.3); }
+  .spill.done { border-color: rgba(46,125,50,.45); color: var(--green); }
+  .spill.active { border-color: var(--navy); background: #eff3f8; color: var(--navy); }
+  .spill.reach { cursor: pointer; } .spill .sd.jump { cursor: pointer; }
+  /* v3: prediction feedback */
+  .predfb { border-radius: 10px; padding: 9px 13px; margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; border-left: 4px solid; }
+  .predfb.ok { background: #f2f7f2; border-color: var(--green); }
+  .predfb.mid { background: #fdf6e7; border-color: #d99a06; }
+  .predfb.bad { background: #faf0f0; border-color: #a5202f; }
+  /* v3: dimensional-chain fractions */
+  .frac { display: inline-block; text-align: center; vertical-align: middle; margin: 0 3px; font-size: 12.5px; line-height: 1.25; }
+  .frac .top { display: block; border-bottom: 1.3px solid #1f1e1c; padding: 0 5px 1px; }
+  .frac .bot { display: block; padding: 1px 5px 0; }
+  /* v3: task action strip */
+  .actstrip { border: 1.5px solid var(--navy); background: #eff3f8; border-radius: 10px; padding: 8px 12px; margin: 9px 0 4px; font-size: 12.5px; line-height: 1.55; }
+  .actstrip b { color: var(--navy); letter-spacing: .03em; font-size: 11px; }
+  /* v3: dimmed simulation for off-process questions */
+  .stagewrap.dimmed svg, .stagewrap.dimmed canvas { opacity: .18; filter: grayscale(.6); }
+  .dimnote { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); background: #fff; border: 1.5px solid #dcdbd4; border-radius: 10px; padding: 8px 14px; font-size: 12.5px; color: #52514e; font-weight: 700; z-index: 5; }
+  /* v3: option details toggle */
+  .optdetail { display: none; color: var(--muted); font-weight: 400; }
+  .showdet .optdetail { display: inline; }
+  .dettoggle { font-size: 11.5px; font-weight: 700; color: var(--navy); cursor: pointer; text-decoration: underline; margin: 2px 0 6px; display: inline-block; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Business Process Lab <span class="ver">v 3.0</span></h1>
+      <div class="lbar" id="lbar"></div>
+    </div>
+    <div class="hdr-right">
+      <select class="small" id="notaSel" title="Notation">
+        <option value="schmidt" selected>Notation: Schmidt (R · T · I)</option>
+        <option value="jacobs">Notation: Jacobs (λ · FT · INV)</option>
+      </select>
+      <span class="score" id="scoreEl">0 pts</span>
+      <div class="prog"><div id="progEl" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="card" id="lessonCard"></div>
+
+    <div>
+      <div class="card stagewrap" id="stageCard">
+        <svg id="stageSvg" viewBox="0 0 900 260"></svg>
+        <canvas id="stageCanvas"></canvas>
+        <div class="runbar" id="runbar">
+          <button class="mini" id="playBtn">▶ Play</button>
+          <button class="mini" id="resetBtn">Restart</button>
+          <span style="font-size:11.5px;color:var(--muted);margin-left:6px">speed</span>
+          <button class="mini spd" data-s="0.5">½×</button>
+          <button class="mini spd act" data-s="1">1×</button>
+          <button class="mini spd" data-s="2">2×</button>
+          <button class="mini spd" data-s="4">4×</button>
+          <span style="font-size:11.5px;color:var(--muted);margin-left:8px">stop at t =</span>
+          <input type="number" id="endIn" min="0" step="10" placeholder="∞" class="endin">
+          <span style="font-size:11.5px;color:var(--muted)">min</span>
+          <span class="clock" id="clockEl">t = 0 min</span>
+        </div>
+      </div>
+      <div class="tiles">
+        <div class="tile cR" id="tileR"><div class="k">Throughput (<span class="ntR">R</span>)</div><div class="v" id="vR">—</div><div class="s" id="sR">completed per hour</div></div>
+        <div class="tile cQ" id="tileQ"><div class="k">Queue</div><div class="v" id="vQ">—</div><div class="s" id="sQ">waiting right now</div></div>
+        <div class="tile cCT" id="tileCT"><div class="k">Cycle time</div><div class="v" id="vCT">—</div><div class="s" id="sCT">min between completions</div></div>
+        <div class="tile cT" id="tileT"><div class="k"><span class="ntTtermC">Throughput time</span> (<span class="ntT">T</span>)</div><div class="v" id="vT">—</div><div class="s" id="sT">one job’s journey, in → out</div></div>
+        <div class="tile cI" id="tileI"><div class="k">Average inventory (<span class="ntI">I</span>)</div><div class="v" id="vI">—</div><div class="s" id="sI">inside the boundary, averaged</div></div>
+      </div>
+      <div class="ticker" id="ticker">
+        <div class="k">Output ticker — every finished job leaves a mark</div>
+        <svg id="tickerSvg" viewBox="0 0 900 56" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="watch" id="watch">⏱ <b>Golden applicant:</b> <span id="watchTxt">waiting to arrive…</span></div>
+    </div>
+
+    <div class="card nb" id="nbCard">
+      <h2>Process Notebook</h2>
+      <div id="nbBody"><div class="empty">Concepts and formulas will appear here as you work through the lesson.</div></div>
+    </div>
+  </div>
+
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---------- notation ---------- */
+  const NOTA = { style: 'schmidt' };
+  function NT() {
+    return NOTA.style === 'jacobs'
+      ? { R: 'λ', T: 'FT', I: 'INV', law: '<i>INV</i> = <i>λ</i> × <i>FT</i>', Tterm: 'flow time', TtermC: 'Flow time', c: 'capacity' }
+      : { R: 'R', T: 'T', I: 'I', law: '<i>I</i> = <i>R</i> × <i>T</i>', Tterm: 'throughput time', TtermC: 'Throughput time', c: '<i>c</i>' };
+  }
+  function subN(s) {
+    const N = NT();
+    return String(s == null ? '' : s)
+      .split('⟦R⟧').join('<i>' + N.R + '</i>').split('⟦T⟧').join('<i>' + N.T + '</i>').split('⟦I⟧').join('<i>' + N.I + '</i>')
+      .split('⟦law⟧').join(N.law).split('⟦c⟧').join(N.c)
+      .split('⟦TtermC⟧').join(N.TtermC).split('⟦Tterm⟧').join(N.Tterm);
+  }
+  function subNP(s) {
+    const N = NT();
+    return String(s == null ? '' : s).split('⟦R⟧').join(N.R).split('⟦T⟧').join(N.T).split('⟦I⟧').join(N.I).split('⟦Tterm⟧').join(N.Tterm);
+  }
+  function applyNotation() {
+    const N = NT();
+    document.querySelectorAll('.ntR').forEach(e => e.textContent = N.R);
+    document.querySelectorAll('.ntT').forEach(e => e.textContent = N.T);
+    document.querySelectorAll('.ntI').forEach(e => e.textContent = N.I);
+    document.querySelectorAll('.ntTtermC').forEach(e => e.textContent = N.TtermC);
+    renderNotebook();
+    const st = STEPS[C.step];
+    if (!st) return;
+    const unlocked = $('contBtn') && !$('contBtn').disabled;
+    if (st.t === 'read' || st.t === 'take' || (!unlocked && (st.t === 'quiz' || st.t === 'quiznum' || st.t === 'predict' || st.t === 'task'))) renderStep();
+  }
+  $('notaSel').addEventListener('change', () => { NOTA.style = $('notaSel').value; applyNotation(); });
+
+  /* ---------- engine: multi-server Lindley, optional demand phases ---------- */
+  const E = { cfg: { stations: [], a: 6, doneName: 'Done' }, t: 0, playing: false, speed: 15, tEnd: Infinity, lastReal: 0, golden: -999, fakeI: null, peakQ: 0 };
+  let SCHED = [];
+  function computeSchedule() {
+    const st = E.cfg.stations, N = 700, WARM = E.cfg.noWarm ? 0 : 6;
+    SCHED = [];
+    const fins = st.map(() => []);
+    // arrivals: fixed gap a, or piecewise phases [[untilT, gap], ...]
+    const arrivals = [];
+    if (E.cfg.phases) {
+      let t = 0, ph = 0;
+      for (let k = 0; k < N; k++) {
+        while (ph < E.cfg.phases.length - 1 && t >= E.cfg.phases[ph][0]) ph++;
+        t += E.cfg.phases[ph][1];
+        arrivals.push(t);
+      }
+    } else {
+      for (let k = -WARM; k < N; k++) arrivals.push(E.cfg.a * (k + 1));
+    }
+    arrivals.forEach(arr => {
+      let t = arr;
+      const rec = { arr, s: [] };
+      for (let j = 0; j < st.length; j++) {
+        const m = st[j].m || 1, f = fins[j];
+        const free = f.length >= m ? f[f.length - m] : -1e9;
+        const start = Math.max(t, free);
+        rec.s.push({ eb: t, st: start, fi: start + st[j].p });
+        f.push(start + st[j].p);
+        t = start + st[j].p;
+      }
+      rec.done = t;
+      SCHED.push(rec);
+    });
+  }
+  function bnIdx() {
+    let b = 0, best = -1;
+    E.cfg.stations.forEach((s, i) => { const eff = s.p / (s.m || 1); if (eff > best) { best = eff; b = i; } });
+    return b;
+  }
+
+  const SVG = $('stageSvg'), CV = $('stageCanvas'), ctx = CV.getContext('2d');
+  const svgNS = 'http://www.w3.org/2000/svg';
+  function el(n, at, par) { const e = document.createElementNS(svgNS, n); for (const k in at) e.setAttribute(k, at[k]); if (par) par.appendChild(e); return e; }
+  const CY = 140, ACT_W = 118, ACT_H = 66, TRI_W = 76, TRI_H = 60;
+  let NODES = [], scale = 1, mapOpts = {};
+
+  function layout() {
+    const st = E.cfg.stations;
+    NODES = [];
+    const items = st.length * 2 + 1;
+    const step = (900 - 150) / items;
+    let x = 95;
+    st.forEach((s, j) => {
+      NODES.push({ type: 'buf', x, j, name: (E.cfg.bufNames && E.cfg.bufNames[j]) || 'Buffer ' + (j + 1) });
+      x += step;
+      NODES.push({ type: 'act', x, j, name: s.name, p: s.p, m: s.m || 1, ic: s.ic });
+      x += step;
+    });
+    NODES.push({ type: 'done', x: Math.min(x, 850), name: E.cfg.doneName });
+  }
+  function drawMap(opts) {
+    mapOpts = opts = opts || {};
+    layout();
+    SVG.innerHTML = '';
+    const defs = el('defs', {}, SVG);
+    const mk = el('marker', { id: 'arr', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#8d99a5' }, mk);
+    el('line', { x1: 12, y1: CY, x2: NODES[0].x - TRI_W / 2 - 10, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
+    if (E.cfg.arriveLabel) {
+      el('text', { x: 8, y: 44, 'font-size': 12.5, fill: '#52514e', 'font-weight': 700 }, SVG).textContent = E.cfg.arriveLabel;
+    }
+    if (opts.showArrRate && !E.cfg.phases) {
+      const rate = 60 / E.cfg.a; const rateTxt = 'demand: ' + (rate % 1 ? rate.toFixed(1) : rate.toFixed(0)) + ' jobs/hour';
+      const jumped = drawMap.lastRate !== undefined && drawMap.lastRate !== rateTxt;
+      const rr = el('text', { x: 8, y: CY - 76, 'font-size': jumped ? 14 : 12, 'font-weight': 800, fill: opts.hotDemand ? '#a5202f' : '#2a78d6', class: jumped ? 'flashIn' : '' }, SVG);
+      rr.textContent = rateTxt;
+      drawMap.lastRate = rateTxt;
+    }
+    if (opts.showArrRate && E.cfg.phases) {
+      const rr = el('text', { id: 'phaseRate', x: 8, y: CY - 76, 'font-size': 12, 'font-weight': 800, fill: '#a5202f' }, SVG);
+      rr.textContent = '';
+    }
+    if (opts.boundary === 'all') {
+      const lastAct = NODES.filter(n => n.type === 'act').pop();
+      const bx0 = NODES[0].x - TRI_W / 2 - 16, bx1 = lastAct.x + ACT_W / 2 + 18;
+      el('rect', { x: bx0, y: CY - ACT_H / 2 - 34, width: bx1 - bx0, height: ACT_H + 70, rx: 14, fill: 'none', stroke: '#7c5cd6', 'stroke-width': 2, 'stroke-dasharray': '7 5' }, SVG);
+      el('text', { x: bx1, y: CY - ACT_H / 2 - 52, 'text-anchor': 'end', 'font-size': 11, 'font-weight': 800, fill: '#7c5cd6' }, SVG).textContent = 'the boundary';
+    }
+    for (let i = 0; i < NODES.length - 1; i++) {
+      const a = NODES[i], b = NODES[i + 1];
+      const aw = a.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+      const bw = b.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+      el('line', { x1: a.x + aw + 4, y1: CY, x2: b.x - bw - 8, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
+    }
+    const bn = bnIdx();
+    NODES.forEach(nd => {
+      if (nd.type === 'act') {
+        const isBn = opts.showBn && nd.j === bn;
+        if (nd.m > 1) {
+          el('rect', { x: nd.x - ACT_W / 2 + 12, y: CY - ACT_H / 2 - 12, width: ACT_W, height: ACT_H, rx: 10, fill: '#eceded', stroke: '#a6b0ba', 'stroke-width': 2 }, SVG);
+          el('rect', { x: nd.x - ACT_W / 2 + 6, y: CY - ACT_H / 2 - 6, width: ACT_W, height: ACT_H, rx: 10, fill: '#f4f4f1', stroke: '#8d99a5', 'stroke-width': 2 }, SVG);
+        }
+        el('rect', { x: nd.x - ACT_W / 2, y: CY - ACT_H / 2, width: ACT_W, height: ACT_H, rx: 10, fill: '#fff', stroke: isBn ? '#a5202f' : '#5c6b7a', 'stroke-width': isBn ? 3.4 : 2.4 }, SVG);
+        if (nd.m > 1) {
+          const mb = el('text', { x: nd.x + ACT_W / 2 - 6, y: CY - ACT_H / 2 + 16, 'text-anchor': 'end', 'font-size': 11, 'font-weight': 800, fill: '#33475b', class: 'flashIn' }, SVG);
+          mb.textContent = 'm = ' + nd.m;
+        }
+        el('text', { x: nd.x, y: CY - ACT_H / 2 - 10, 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 800, fill: isBn ? '#a5202f' : '#33475b' }, SVG).textContent = nd.name;
+        if (opts.icons && nd.ic) el('text', { x: nd.x, y: CY - ACT_H / 2 - 26, 'text-anchor': 'middle', 'font-size': 24 }, SVG).textContent = nd.ic;
+        if (isBn) el('text', { x: nd.x, y: CY - ACT_H / 2 - (opts.icons ? 46 : 27), 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, fill: '#a5202f', 'letter-spacing': '.08em' }, SVG).textContent = 'BOTTLENECK';
+        if (!opts.hideP) el('text', { x: nd.x, y: CY + ACT_H / 2 + 17, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#33475b' }, SVG).textContent = 'p = ' + nd.p + ' min' + (nd.m > 1 ? ' · m = ' + nd.m : '');
+        if (opts.hideP) el('text', { x: nd.x, y: CY + ACT_H / 2 + 17, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#b7b5ac' }, SVG).textContent = 'p = ? min';
+        if (opts.showCap) el('text', { x: nd.x, y: CY + ACT_H / 2 + 33, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#2e7d32' }, SVG).textContent = 'cap ' + (nd.m * 60 / nd.p).toFixed(0) + '/hr';
+        if (opts.showU) { const ub = el('text', { id: 'mapU' + nd.j, x: nd.x, y: CY + ACT_H / 2 + 49, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 800, fill: '#d99a06' }, SVG); ub.textContent = 'u = —'; }
+        const stt = el('text', { id: 'st' + nd.j + '-state', x: nd.x, y: CY + 5, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, 'letter-spacing': '.07em', fill: '#2a78d6' }, SVG);
+        stt.textContent = '';
+      } else if (nd.type === 'buf') {
+        el('polygon', { points: (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2), fill: 'rgba(51,71,91,.06)', stroke: '#5c6b7a', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, SVG);
+        if (E.cfg.bufNames) el('text', { x: nd.x, y: CY - TRI_H / 2 - 8, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
+        const c = el('text', { id: 'buf' + nd.j + '-cnt', x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
+        c.textContent = '';
+        const pl = el('text', { id: 'buf' + nd.j + '-plus', x: nd.x, y: CY - TRI_H / 2 - 42, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#a5202f' }, SVG);
+        pl.textContent = '';
+      } else {
+        el('polygon', { points: (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2), fill: 'rgba(46,125,50,.08)', stroke: '#5c6b7a', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, SVG);
+        el('text', { x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
+        const dc = el('text', { id: 'doneCnt', x: nd.x, y: CY + TRI_H / 2 + 32, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
+        dc.textContent = '';
+        if (opts.showR) {
+          const caps2 = E.cfg.stations.map(st2 => (st2.m || 1) * 60 / st2.p);
+          const rTh = Math.min(60 / E.cfg.a, Math.min.apply(null, caps2));
+          const rl = el('text', { id: 'mapRout', x: nd.x, y: CY - TRI_H / 2 - 20, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#2a78d6' }, SVG);
+          rl.textContent = NT().R + ' = ' + (rTh % 1 ? rTh.toFixed(1) : rTh.toFixed(0)) + ' jobs/hour';
+        }
+      }
+    });
+    if (opts.note) el('text', { x: 450, y: 252, 'text-anchor': 'middle', 'font-size': 12, fill: '#898781' }, SVG).textContent = opts.note;
+    resizeCanvas();
+  }
+  function resizeCanvas() {
+    const r = SVG.getBoundingClientRect();
+    const host = CV.parentElement, hr = host.getBoundingClientRect();
+    CV.style.left = (r.left - hr.left - host.clientLeft) + 'px';
+    CV.style.top = (r.top - hr.top - host.clientTop) + 'px';
+    CV.style.width = r.width + 'px'; CV.style.height = r.height + 'px';
+    CV.width = Math.max(1, Math.round(r.width * devicePixelRatio));
+    CV.height = Math.max(1, Math.round(r.height * devicePixelRatio));
+    scale = r.width / 900;
+    ctx.setTransform(devicePixelRatio * scale, 0, 0, devicePixelRatio * scale, 0, 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function drawPerson(x, y, size, color, alpha) {
+    const h = size, headR = h * 0.21;
+    ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y - h + headR, headR, 0, Math.PI * 2); ctx.fill();
+    const bw = h * 0.62, bh = h * 0.52;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - bw / 2, y - bh, bw, bh, bw * 0.32); else ctx.rect(x - bw / 2, y - bh, bw, bh);
+    ctx.fill(); ctx.restore();
+  }
+  const GREEN = '#2e7d32';
+  function actNode(j) { return NODES.find(n => n.type === 'act' && n.j === j); }
+  function bufNode(j) { return NODES.find(n => n.type === 'buf' && n.j === j); }
+
+  function render() {
+    ctx.clearRect(0, 0, 900, 300);
+    const t = E.t, nS = E.cfg.stations.length;
+    const waiting = E.cfg.stations.map(() => []);
+    const serving = E.cfg.stations.map(() => []);
+    const donePile = []; let doneCount = 0;
+    for (let k = 0; k < SCHED.length; k++) {
+      const r = SCHED[k];
+      if (r.arr - 1.4 > t) break;
+      if (t < r.arr) {
+        const f = (t - (r.arr - 1.4)) / 1.4;
+        drawPerson(-20 + (bufNode(0).x + 20) * f, CY + 10, 20, GREEN);
+        continue;
+      }
+      if (r.done > 0 && r.done <= t) doneCount++;
+      if (t >= r.done + 1.4) { donePile.push(k); continue; }
+      let placed = false;
+      for (let j = 0; j < nS; j++) {
+        const s = r.s[j];
+        if (t < s.st) { waiting[j].push(k); placed = true; break; }
+        if (t < s.fi) { serving[j].push(k); placed = true; break; }
+      }
+      if (!placed) {
+        const f = (t - r.done) / 1.4;
+        const from = actNode(nS - 1).x + ACT_W / 2 + 14, to = NODES[NODES.length - 1].x;
+        drawPerson(from + (to - from) * f, CY + 10, 20, GREEN);
+      }
+    }
+    waiting.forEach((arr, j) => {
+      const nx = bufNode(j).x, tip = CY + TRI_H / 2 - 6;
+      const VIS = 13;
+      arr.slice(0, VIS).forEach((k, i) => {
+        const rows = [1, 2, 3, 4, 4, 4];
+        let rr = 0, rem = i;
+        while (rem >= rows[rr]) { rem -= rows[rr]; rr++; }
+        drawPerson(nx + (rem - (rows[rr] - 1) / 2) * 15, tip - rr * 14, 12.5, GREEN);
+      });
+      const pl = document.getElementById('buf' + j + '-plus');
+      if (pl) pl.textContent = arr.length > VIS ? '+' + (arr.length - VIS) + ' more' : '';
+      const c = document.getElementById('buf' + j + '-cnt');
+      if (c) c.textContent = arr.length ? arr.length + ' waiting' : '';
+    });
+    serving.forEach((ks, j) => {
+      const stEl = document.getElementById('st' + j + '-state');
+      const m = E.cfg.stations[j].m || 1;
+      if (ks.length) {
+        ks.slice(0, 3).forEach((k, i) => drawPerson(actNode(j).x + (i - (Math.min(ks.length, 3) - 1) / 2) * 22, CY + 12, 22, GREEN));
+        if (stEl) stEl.textContent = '';
+      } else if (stEl) {
+        if (mapOpts.hotDemand && t > 2) { stEl.textContent = j === 0 ? 'idle' : 'STARVED'; stEl.setAttribute('fill', j === 0 ? '#b7b5ac' : '#2a78d6'); }
+        else stEl.textContent = '';
+      }
+    });
+    const dn = NODES[NODES.length - 1];
+    donePile.slice(-9).forEach((k, i) => {
+      const row = Math.floor(i / 3), col = i % 3;
+      drawPerson(dn.x + (col - 1) * 15, CY + TRI_H / 2 - 8 - row * 14, 12, GREEN, .9);
+    });
+    const dc = document.getElementById('doneCnt');
+    if (dc) dc.textContent = doneCount ? doneCount + ' ' + (E.cfg.doneWord || 'done') : '';
+    // progress dial: first job in service at each station
+    serving.forEach((ks, j) => {
+      const nd = actNode(j), dx = nd.x + ACT_W / 2 - 15, dy = CY - ACT_H / 2 + 15, rr = 8.5;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(dx, dy, rr, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e1e0d9'; ctx.lineWidth = 3.2; ctx.stroke();
+      if (ks.length) {
+        const sj = SCHED[ks[0]].s[j];
+        const prog = Math.max(0, Math.min(1, (t - sj.st) / E.cfg.stations[j].p));
+        ctx.beginPath(); ctx.arc(dx, dy, rr, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2);
+        ctx.strokeStyle = '#eb6834'; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.stroke();
+      }
+      ctx.restore();
+    });
+    const totQ = waiting.reduce((a, w) => a + w.length, 0);
+    if (totQ > E.peakQ) E.peakQ = totQ;
+    return { waiting, serving, done: doneCount, totQ };
+  }
+
+  /* ---------- metrics ---------- */
+  function metrics() {
+    const t = Math.max(E.t, 0.001), nS = E.cfg.stations.length;
+    let done = 0, lastDone = null, prevDone = null, area = 0, tSum = 0, insideNow = 0;
+    const busy = E.cfg.stations.map(() => 0);
+    for (let k = 0; k < SCHED.length; k++) {
+      const r = SCHED[k];
+      for (let j = 0; j < nS; j++) {
+        const s = r.s[j];
+        busy[j] += Math.max(0, Math.min(s.fi, t) - Math.max(0, Math.min(s.st, t)));
+      }
+      area += Math.max(0, Math.min(r.done, t) - Math.max(r.arr, 0));
+      if (r.arr <= t && t < r.done) insideNow++;
+      if (r.done > 0 && r.done <= t) { done++; tSum += r.done - r.arr; prevDone = lastDone; lastDone = r.done; }
+      if (r.arr > t + 1) break;
+    }
+    return {
+      done, Rout: done / t * 60,
+      gap: lastDone != null && prevDone != null ? lastDone - prevDone : null,
+      utils: busy.map((b, j) => Math.min(1, b / (t * (E.cfg.stations[j].m || 1)))),
+      avgI: area / t,
+      avgT: done ? tSum / done : null,
+      insideNow, bn: bnIdx()
+    };
+  }
+
+  const UI = { tiles: {}, ticker: false, runbar: false };
+  function setUI(o) {
+    UI.tiles = o.tiles || {}; UI.ticker = !!o.ticker; UI.runbar = !!o.runbar;
+    ['R', 'Q', 'CT', 'T', 'I'].forEach(k => {
+      const eln = $('tile' + k); if (!eln) return;
+      const on = !!UI.tiles[k], was = eln.classList.contains('show');
+      eln.classList.toggle('show', on);
+      if (on && !was) { eln.classList.remove('born'); void eln.offsetWidth; eln.classList.add('born'); }
+    });
+    $('ticker').classList.toggle('show', UI.ticker);
+    $('runbar').classList.toggle('show', UI.runbar);
+    updateWidgets();
+  }
+  function revealTile(k) { UI.tiles[k] = 1; setUI({ tiles: UI.tiles, ticker: UI.ticker, runbar: UI.runbar }); }
+  function updateWidgets() {
+    const m = metrics();
+    $('clockEl').textContent = 't = ' + Math.floor(E.t) + ' min';
+    if (UI.tiles.R) {
+      let v = m.Rout;
+      if (Math.abs(v * 2 - Math.round(v * 2)) < 0.3) v = Math.round(v * 2) / 2;
+      $('vR').innerHTML = E.t > 5 && m.done > 1 ? v.toFixed(1) + ' <span style="font-size:12.5px;font-weight:700">jobs/hr</span>' : '—';
+      $('sR').textContent = (E.cfg.doneWord || 'completed') + ' per hour · ' + m.done + ' total';
+    }
+    if (UI.tiles.Q) {
+      const w = render.lastWaiting ? render.lastWaiting.reduce((a, x) => a + x.length, 0) : 0;
+      $('vQ').textContent = w;
+    }
+    if (UI.tiles.CT) $('vCT').textContent = m.gap != null ? m.gap.toFixed(0) + ' min' : '—';
+    if (UI.tiles.T) $('vT').textContent = m.avgT != null ? m.avgT.toFixed(1) + ' min' : '—';
+    if (UI.tiles.I) {
+      const shown = E.fakeI != null ? E.fakeI : m.avgI;
+      $('vI').textContent = E.t > 5 ? shown.toFixed(2) : '—';
+      $('sI').textContent = 'inside the boundary, averaged · right now: ' + m.insideNow;
+    }
+    E.cfg.stations.forEach((_, j) => {
+      const ub = document.getElementById('mapU' + j);
+      if (ub) ub.textContent = E.t > 5 ? 'u = ' + Math.round(m.utils[j] * 100) + '%' : 'u = —';
+    });
+    const pr = document.getElementById('phaseRate');
+    if (pr && E.cfg.phases) {
+      let ph = 0;
+      while (ph < E.cfg.phases.length - 1 && E.t >= E.cfg.phases[ph][0]) ph++;
+      const rate = 60 / E.cfg.phases[ph][1];
+      pr.textContent = (rate % 1 ? rate.toFixed(1) : rate.toFixed(0)) + '/hr ' + (ph === 0 ? '(rush!)' : '(after the rush)');
+      pr.setAttribute('fill', ph === 0 ? '#a5202f' : '#2a78d6');
+    }
+    if (UI.ticker) drawTicker();
+  }
+  function drawTicker() {
+    const s = $('tickerSvg'); s.innerHTML = '';
+    const t1 = Math.max(E.t, 60), t0 = Math.max(0, t1 - 90);
+    el('line', { x1: 0, y1: 40, x2: 900, y2: 40, stroke: '#c3c2b7', 'stroke-width': 1.5 }, s);
+    let prevX = null, prevT = null;
+    for (let k = 0; k < SCHED.length; k++) {
+      const d = SCHED[k].done;
+      if (d > Math.min(E.t, t1)) break;
+      if (d < t0) continue;
+      const x = (d - t0) / (t1 - t0) * 880 + 10;
+      el('circle', { cx: x, cy: 40, r: 5, fill: '#eb6834' }, s);
+      if (prevX != null && x - prevX > 48) {
+        el('text', { x: (x + prevX) / 2, y: 22, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#eb6834' }, s).textContent = '↔ ' + (d - prevT).toFixed(0) + ' min';
+        el('line', { x1: prevX + 7, y1: 30, x2: x - 7, y2: 30, stroke: '#eb6834', 'stroke-width': 1, 'stroke-dasharray': '3 3' }, s);
+      }
+      prevX = x; prevT = d;
+    }
+  }
+
+  function frame(now) {
+    if (E.playing) {
+      const dt = Math.min(0.1, (now - E.lastReal) / 1000);
+      E.t += dt * E.speed;
+      if (E.tEnd && E.t >= E.tEnd) { E.t = E.tEnd; E.playing = false; $('playBtn').textContent = '▶ Play'; }
+      updateWidgets();
+    }
+    E.lastReal = now;
+    const rr = render();
+    render.lastWaiting = rr.waiting;
+    requestAnimationFrame(frame);
+  }
+  function setSpeed(v) { E.baseSpeed = v; E.speed = v * (E.spdMult || 1); }
+  document.querySelectorAll('.spd').forEach(b => b.addEventListener('click', () => {
+    E.spdMult = parseFloat(b.dataset.s);
+    E.speed = (E.baseSpeed || 7) * E.spdMult;
+    document.querySelectorAll('.spd').forEach(x => x.classList.toggle('act', x === b));
+  }));
+  $('endIn').addEventListener('change', () => { const v = parseFloat($('endIn').value); E.tEnd = v > 0 ? v : Infinity; });
+  $('playBtn').addEventListener('click', () => { E.playing = !E.playing; $('playBtn').textContent = E.playing ? '❚❚ Pause' : '▶ Play'; if (!E.playing) C.pauses = (C.pauses || 0) + 1; });
+  $('resetBtn').addEventListener('click', () => { E.t = 0; E.peakQ = 0; updateWidgets(); });
+
+  /* ---------- notebook: the consultant's field guide ---------- */
+  const NB_DEFS = {
+    bn:   { cls: 'e-u',  sym: () => 'BN?', nm: 'Diagnosis by symptom', df: 'The bottleneck shows itself: the pile grows in front of it, everyone downstream starves, and its dial never rests. Overloaded, the exit rhythm equals ITS p.', fx: () => 'exit gap under overload = p of the bottleneck' },
+    peak: { cls: 'e-T',  sym: () => 'ΔI↑', nm: 'Peak of the pile', df: 'While demand exceeds capacity: pile grows at (in − out). Peak = growth rate × how long the rush lasts.', fx: () => 'peak = (rate in − rate out) × rush duration' },
+    drain:{ cls: 'e-CT', sym: () => 'ΔI↓', nm: 'Drain time', df: 'After the rush: pile shrinks at (capacity − demand). Time to empty = peak ÷ drain rate.', fx: () => 'drain time = peak ÷ (capacity − demand)' },
+    audit:{ cls: 'e-I',  sym: () => 'LL', nm: 'The law as auditor', df: 'Three numbers claiming to describe one boundary must satisfy ⟦law⟧. If they do not, at least one is wrong.', fx: () => 'the three must satisfy ⟦I⟧ = ⟦R⟧ × ⟦T⟧' },
+    staff:{ cls: 'e-c',  sym: () => 'm≥', nm: 'Staffing by arithmetic', df: 'Implied utilization = demand × p ÷ (60m). Choose m so the ask fits inside the target: m ≥ demand × p ÷ (60 × u-target).', fx: () => 'm ≥ demand × p ÷ (60 × target u)' },
+    xray: { cls: 'e-R',  sym: () => '1–7', nm: 'The full profile', df: 'Any process, seven numbers, one pass: capacities → bottleneck → ⟦R⟧ = min(demand, capacity) → u per step → cycle time → ⟦T⟧ → ⟦I⟧ by the law.', fx: () => '' },
+    ct2:  { cls: 'e-CT', sym: () => 'CT', nm: 'Two cycle-time regimes', df: 'Overloaded: one exit every p of the bottleneck. Demand-limited: one exit every 1/⟦R⟧ — the arrivals set the rhythm.', fx: () => 'overloaded: CT = p(bottleneck) · demand-limited: CT = 1/⟦R⟧' }
+  };
+  const nbLearned = [];
+  function learn(key) { if (nbLearned.includes(key)) return; nbLearned.push(key); renderNotebook(key); }
+  function renderNotebook(stampKey) {
+    const b = $('nbBody');
+    if (!nbLearned.length) { b.innerHTML = '<div class="empty">Empty for now. Five clients today — each leaves a field note behind.</div>'; return; }
+    b.innerHTML = nbLearned.map(k => {
+      const d = NB_DEFS[k];
+      const x = d.fx ? d.fx() : '';
+      return '<div class="nb-entry ' + d.cls + (k === stampKey ? ' stamp' : '') + '"><span class="sym">' + d.sym() + '</span> — <span class="nm">' + (typeof d.nm === 'function' ? d.nm() : d.nm) + '</span><div class="df">' + subN(d.df) + '</div>' + (x ? '<div class="fx">' + subN(x) + '</div>' : '') + '</div>';
+    }).join('');
+  }
+
+  /* ---------- course state, codes ---------- */
+  const C = { name: '', score: 0, step: -1, poll: null, finished: false, pauses: 0 };
+  const SALT = 7207;
+  function nameHash(name) {
+    let h = 5381; const s = (name || '').trim().toLowerCase();
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h % 46656;
+  }
+  function makeCode(name, score) {
+    const h = nameHash(name), payload = (4 << 10) | Math.min(1023, score);
+    const chk = (h * 31 + payload * 7 + SALT) % 1296;
+    const b36 = (n, l) => n.toString(36).toUpperCase().padStart(l, '0');
+    return 'P4-' + b36(h, 3) + '-' + b36(payload, 4) + '-' + b36(chk, 2);
+  }
+  function readCode(name, code) {
+    const m = (code || '').trim().toUpperCase().match(/^P4-([0-9A-Z]{3})-([0-9A-Z]{4})-([0-9A-Z]{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 36), payload = parseInt(m[2], 36), chk = parseInt(m[3], 36);
+    if (h !== nameHash(name) || (h * 31 + payload * 7 + SALT) % 1296 !== chk) return null;
+    return { score: payload & 1023 };
+  }
+
+  /* ---------- steps: five client engagements ---------- */
+  const STEPS = [
+    { t: 'home' },
+
+    /* CASE 1 — the mystery bottleneck */
+    { t: 'read', pg: 'sandwich', h: '<p><b>Client 1 of 5 — the sandwich shop. 🥪</b> The owner is losing lunch customers and does not know why. One complication: nobody has ever timed the three stations — <b>every processing time on the map reads “p = ?”</b>.</p><p>You do not need them. An overloaded process shows its bottleneck directly: the queue grows in front of it, stations downstream are starved, and its utilization stays at 100%. Watch the simulation for a minute before answering.</p>' },
+    { t: 'quiz', pg: 'sandwich', q: 'No processing times, only symptoms. Which station is the bottleneck?', opts: [{ o: 'Grill — the pile grows in front of it, Wrap keeps flashing STARVED, and its dial never stops sweeping', ok: 1 }, { o: 'Order — it is the first station, so it receives every order first', ok: 0 }, { o: 'Wrap — it is idle so often, it must be the problem', ok: 0 }], pts: 5, ex: 'The bottleneck is identified by its symptoms: a queue grows upstream, resources downstream are starved, and its utilization stays at 100%. Wrap’s idleness is a symptom of Grill’s overload, not a fault — you learned that choreography in Lesson 2, and today you used it without any numbers at all.', learn: 'bn' },
+    { t: 'quiznum', pg: 'sandwich', q: 'Now recover the hidden number. The shop is overloaded, so the exit rhythm belongs to the bottleneck. Read the orange ticker: the Grill’s processing time must be p = ___ minutes:', unit: 'min', ans: 4, tol: 0.4, pts: 5, hint: 'Overloaded system: one exit every p of the bottleneck. Read the gap between orange dots.', hint2: 'The dots are 4 minutes apart — and at maximum output, the gap IS the bottleneck’s p.', ex: 'p = 4 minutes, measured from across the counter without a stopwatch on anyone. In an overloaded process, the gap between finished jobs equals the bottleneck’s processing time, so the ticker reveals it without timing any station.' },
+    { t: 'quiznum', pg: 'sandwich', q: 'Finish the diagnosis: with the bottleneck at p = 4 minutes, the shop’s maximum output is ___ sandwiches per hour:', unit: 'jobs/hr', ans: 15, tol: 0.5, pts: 5, hint: 'System capacity = the bottleneck’s capacity = 60 ÷ p.', ex: 'Capacity = 60/4 = 15 jobs/hr. The conclusion for the owner: the shop cannot serve more than 15 sandwiches per hour until the Grill’s capacity changes, regardless of how hard Order and Wrap work.' },
+
+    /* CASE 2 — the lunch rush */
+    { t: 'read', pg: 'rushIntro', h: '<p><b>Client 2 of 5 — the campus café. ☕</b> A different cause: this shop is not always overloaded. From noon to 1:00 the rush brings <b>20 orders/hr</b> against a single barista’s <b>15 jobs/hr</b> capacity; at 1:00 demand falls to <b>10 jobs/hr</b>.</p><p>The owner asks two questions every consultant should answer <i>before</i> running anything: how bad does the line get, and how long after the rush until it is gone?</p>' },
+    { t: 'quiznum', pg: 'rushIntro', q: 'Commit before you watch. During the rush hour, the line grows at (20 − 15) = 5 jobs/hr. At 1:00, the peak line is ___ customers:', unit: 'customers', ans: 5, tol: 0.5, pts: 5, hint: 'Growth rate × how long it lasts: 5 jobs/hr × 1 hr.', ex: 'Peak = 5 jobs/hr × 1 hr = 5 customers — inventory build-up, from Lesson 2, now with an end in sight.', learn: 'peak' },
+    { t: 'quiznum', pg: 'rushIntro', q: 'And the recovery. After 1:00 the barista serves 15 jobs/hr but only 10 jobs/hr arrive, so the line drains at 5 jobs/hr. The line is gone at ___ minutes past noon (enter the clock time in minutes, e.g. 90):', unit: 'min', ans: 120, tol: 6, pts: 5, hint: 'Peak of 5, draining at 5 per hour → one hour of recovery after the rush ends at t = 60.', hint2: 'Drain time = 5 ÷ 5 = 1 hour. The rush ends at t = 60.', ex: 'Empty again at t = 120 — a full hour after the rush ended. The line lasts a full hour after the rush ends: draining the backlog takes time even when demand is back below capacity.', learn: 'drain' },
+    { t: 'task', pg: 'rush', h: '<span class="tt">Watch the queue grow and drain</span>Your calculations: a peak of <b>5</b> at t = 60, empty again at t = <b>120</b>. Press <b>▶ Play</b> and watch the whole story — the rise, the peak, the slow drain. The queue tile counts the line live.', endT: 140, verify() { if (E.t < 139.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' · line: ' + (render.lastWaiting ? render.lastWaiting[0].length : 0) + (E.t < 60 ? ' (rush)' : ' (draining)') : 'Press ▶ Play.' }; return { ok: true, msg: 'Peak line observed: ' + Math.round(E.peakQ) + ', around t = 60 — and empty again near t = 120. Both of your numbers, live on stage.' }; } },
+
+    /* CASE 3 — the broken gauge */
+    { t: 'read', pg: 'gauge', h: '<p><b>Client 3 of 5 — the loan office. 🏦</b> An old friend: the retuned pipeline from Lesson 3, calm and stable. The manager proudly shows you a dashboard — three tiles below the simulation.</p><p>One of them has been misconfigured, and the manager cannot tell which. You can: for one boundary and one period, the three numbers <b>must</b> satisfy ⟦law⟧.</p>' },
+    { t: 'quiz', pg: 'gauge', q: 'Audit the dashboard: ⟦R⟧ = 10 jobs/hr, ⟦T⟧ = 12 min, ⟦I⟧ = 3.00. Which tile is misconfigured?', opts: [{ o: 'The ⟦I⟧ tile — 10 jobs/hr × (12/60) hr = 2, not 3', ok: 1 }, { o: 'The ⟦R⟧ tile — throughput cannot be a round number', ok: 0 }, { o: 'None — three measurements are three facts', ok: 0 }], pts: 5, ex: 'Check: ⟦R⟧ × ⟦T⟧ = 10 × 12/60 = 2 ≠ 3.00. Two of the three gauges pin down the third — measurements about one boundary are not independent facts. This audit takes ten seconds and catches broken sensors, bad spreadsheets, and optimistic reports alike.', learn: 'audit' },
+    { t: 'quiznum', pg: 'gaugeFixed', q: 'You reset the gauge, and the green tile now reads correctly. Confirm the reading it should settle on: ⟦I⟧ = ___ :', unit: 'loans', ans: 2, tol: 0.1, pts: 5, hint: '⟦R⟧ × ⟦T⟧, units converted.', ex: '⟦I⟧ = 10 × 12/60 = 2 — and the repaired tile agrees. If reported numbers violate the law, at least one of them is wrong.' },
+
+    /* CASE 4 — the staffing call */
+    { t: 'read', pg: 'coffee1', h: '<p><b>Client 4 of 5 — the espresso bar. ☕⚡</b> One barista, p = 3 minutes per drink, and the morning brings <b>40 orders per hour</b>. The stage shows the result — watch the pile for a moment.</p><p>The owner asks the only question that matters: <b>how many baristas do I actually need?</b> Answer like a consultant: with implied utilization, from Lesson 2.</p>' },
+    { t: 'quiznum', pg: 'coffee1', q: 'First, quantify the overload. With one barista, the load (demand × <i>p</i> / 60), in %:', unit: '%', ans: 200, tol: 5, pts: 5, hint: '40 jobs/hr × 3 min ÷ 60. The answer may exceed 100 — that is the point.', ex: 'Implied u = 200%: customers are asking one human for twice a human’s hours. Actual utilization pins at 100% and the impossible half becomes the pile you are watching.' },
+    { t: 'quiznum', pg: 'coffee1', q: 'The bare minimum: how many baristas make the implied utilization just reach 100% (the smallest m that can keep up at all)?', unit: 'baristas', ans: 2, tol: 0.01, pts: 5, hint: 'Spread 200% of implied load across m people: 200 ÷ m ≤ 100.', ex: 'm = 2 → implied u = 100% exactly. Any absence or any demand above 40 jobs/hr immediately creates a queue: m = 2 keeps up on average but leaves no margin.' },
+    { t: 'quiznum', pg: 'coffee1', q: 'The professional answer: the owner wants utilization at or below 80% so the bar can absorb surprises. The smallest m that achieves it is ___ baristas:', unit: 'baristas', ans: 3, tol: 0.01, pts: 5, hint: '200 ÷ m ≤ 80 — what is the smallest whole m?', hint2: 'm = 2 gives 100%. m = 3 gives 200/3 ≈ 67%. Which first satisfies ≤ 80?', ex: 'm = 3 → u = 67%, comfortably under the target. Watch the simulation: the bar now runs with three stacked cards — and the pile is gone.', learn: 'staff', after: 'coffee3' },
+    { t: 'quiznum', pg: 'coffee3', q: 'Close the case with Lesson 3: with three baristas and no waiting, each drink spends ⟦T⟧ = 3 minutes inside. Average drinks in progress: ⟦I⟧ = ⟦R⟧ × ⟦T⟧ = ___ :', unit: 'drinks', ans: 2, tol: 0.1, pts: 5, hint: '40 jobs/hr × (3/60) hr.', ex: '⟦I⟧ = 40 × 3/60 = 2 drinks in progress on average — confirm it on the green tile. Three lessons, one espresso bar: implied utilization sized the team, m priced the capacity, and the law told you what the bar looks like when it is healthy.' },
+
+    /* CASE 5 — the full X-ray */
+    { t: 'read', pg: 'pizza', h: '<p><b>Client 5 of 5 — the pizza kitchen. 🍕</b> The final engagement is the full physical: a process you have never seen, and you will produce its complete profile, one number at a time. The stage confirms each answer as you land it.</p><p>The facts: <b>Prep</b> p = 2 → <b>Bake</b> p = 5 → <b>Box</b> p = 2 (minutes), orders arriving steadily at one every 6 minutes (10 jobs/hr). Begin.</p>' },
+    { t: 'quiz', pg: 'pizza', q: 'Profile 1/7 — the constraint. Capacities are 30, 12, and 30 per hour. The bottleneck is:', opts: [{ o: 'Bake — lowest capacity, highest utilization', ok: 1 }, { o: 'Prep — first in line', ok: 0 }, { o: 'Box — last in line', ok: 0 }], pts: 5, ex: 'Bake, at 12 jobs/hr — the red outline confirms it. Note what comes next though: demand is only 10 jobs/hr, so this bottleneck has slack. A constraint with slack is quiet — but it is still the constraint.', after: 'pizzaBn' },
+    { t: 'quiznum', pg: 'pizzaBn', q: 'Profile 2/7 — system capacity: ___ jobs/hr:', unit: 'jobs/hr', ans: 12, tol: 0.5, pts: 5, hint: 'min(30, 12, 30).', ex: 'Capacity = 12 jobs/hr — the ceiling, whether or not demand reaches it.', after: 'pizzaCap' },
+    { t: 'quiznum', pg: 'pizzaCap', q: 'Profile 3/7 — actual throughput: ⟦R⟧ = min(demand, capacity) = ___ /hr:', unit: 'jobs/hr', ans: 10, tol: 0.5, pts: 5, hint: 'min(10, 12).', ex: '⟦R⟧ = 10 jobs/hr — demand-limited: the kitchen has room to spare. The blue tile agrees.', after: 'pizzaR' },
+    { t: 'quiznum', pg: 'pizzaR', q: 'Profile 4/7 — the bottleneck’s utilization: u(Bake) = ⟦R⟧ × p ÷ 60 = ___%:', unit: '%', ans: 83, tol: 3, pts: 5, hint: '10 jobs/hr × 5 min ÷ 60.', ex: 'u = 83% — high, but below 100%. The gold badges under the stations agree: 33 / 83 / 33.', after: 'pizzaU' },
+    { t: 'quiznum', pg: 'pizzaU', q: 'Profile 5/7 — the exit rhythm. Careful: is this kitchen overloaded or demand-limited? A finished pizza leaves every ___ minutes:', unit: 'min', ans: 6, tol: 0.4, pts: 5, hint: 'Demand-limited: the arrivals set the rhythm. CT = 1/⟦R⟧, not the bottleneck’s p.', hint2: '60 ÷ 10 per hour. (The sandwich shop was overloaded — its rhythm was the Grill’s p = 4. This kitchen is not.)', ex: 'CT = 60/10 = <b>6 minutes</b> — NOT Bake’s 5. That distinction separated the two shops today: overloaded → CT = the bottleneck’s p (sandwich: 4 min); demand-limited → CT = 1/⟦R⟧ (pizza: 6 min). The orange ticker confirms it.', learn: 'ct2', after: 'pizzaCT' },
+    { t: 'quiznum', pg: 'pizzaCT', q: 'Profile 6/7 — one order’s journey, no queues anywhere: ⟦T⟧ = ___ minutes:', unit: 'min', ans: 9, tol: 0.4, pts: 5, hint: 'Sum of the processing times.', ex: '⟦T⟧ = 2 + 5 + 2 = 9 minutes, door to door. The violet tile agrees.', after: 'pizzaT' },
+    { t: 'quiznum', pg: 'pizzaT', q: 'Profile 7/7 — close with the law: average orders inside the kitchen, ⟦I⟧ = ⟦R⟧ × ⟦T⟧ = ___ :', unit: 'orders', ans: 1.5, tol: 0.05, pts: 5, hint: '10 jobs/hr × (9/60) hr.', ex: '⟦I⟧ = 10 × 9/60 = <b>1.5</b> — and the green tile settles right there. Seven numbers, one pass, nothing measured by hand. This completes the full profile.', learn: 'xray', after: 'pizzaI' },
+
+    { t: 'match', pg: 'pizzaI', pts: 10 },
+    { t: 'take', h: 'Five clients, one toolkit. A process reveals its constraint through symptoms: a queue upstream and starvation downstream. A rush leaves a line that outlives it: peak = (in − out) × duration, drain = peak ÷ (capacity − demand). Three numbers about one boundary must obey <b>⟦law⟧</b> — use it as an auditor. Staff by arithmetic: m ≥ demand × p ÷ (60 × target u). And when the numbers are all yours, the full X-ray runs in one pass: capacity → bottleneck → ⟦R⟧ → u → cycle time → ⟦T⟧ → ⟦I⟧. This is the complete single-pass profile — it applies to any stable process.' }
+  ];
+  const SECTIONS = [
+    { lab: 'Case 1 — hidden bottleneck', n: 4 },
+    { lab: 'Case 2 — the rush', n: 4 },
+    { lab: 'Case 3 — the gauge audit', n: 3 },
+    { lab: 'Case 4 — staffing', n: 5 },
+    { lab: 'Case 5 — full profile', n: 8 },
+    { lab: 'Review', n: 2 }
+  ];
+  const MAX_PTS = STEPS.reduce((a, s) => a + (s.pts || 0), 0);
+
+  const MATCH_CONCEPTS = [
+    { k: 'bn', lab: '🔎 diagnosis by symptom' },
+    { k: 'ct2', lab: '🥁 two cycle-time regimes' },
+    { k: 'peak', lab: '⛰ peak of the pile' },
+    { k: 'drain', lab: '🕳 drain time' },
+    { k: 'audit', lab: '🧪 the law as auditor' },
+    { k: 'staff', lab: '🧮 staffing by arithmetic' },
+    { k: 'xray', lab: '🩻 the full X-ray' }
+  ];
+  const MATCH_PROMPTS = [
+    { q: 'The pile grows in front of it while its neighbor starves — no timer needed.', k: 'bn' },
+    { q: 'Overloaded: exits every p of the slowest step. Demand-limited: exits every 1/⟦R⟧.', k: 'ct2' },
+    { q: '(20 − 15) per hour, for one hour → a line of 5 at its worst.', k: 'peak' },
+    { q: 'The rush ends at 1:00; the line is gone at 2:00.', k: 'drain' },
+    { q: 'Three gauges, one boundary — and 10 × 12/60 ≠ 3.', k: 'audit' },
+    { q: 'Two hundred percent asked of one person → hire until the ask fits under the target.', k: 'staff' },
+    { q: 'Seven numbers, one pass, nothing measured by hand.', k: 'xray' }
+  ];
+
+  /* ---------- pages ---------- */
+  const PAGES = {
+    sandwich: () => { E.cfg = { stations: [{ name: 'Order', p: 2, ic: '📋' }, { name: 'Grill', p: 4, ic: '🍳' }, { name: 'Wrap', p: 1.5, ic: '🥪' }], a: 3, doneName: 'Served', doneWord: 'served' }; E.fakeI = null; computeSchedule(); drawMap({ icons: true, hideP: true, hotDemand: true, showArrRate: true }); E.t = 0; E.tEnd = Infinity; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; setSpeed(7); setUI({ runbar: true, tiles: {}, ticker: true }); },
+    rushIntro: () => { E.cfg = { stations: [{ name: 'Barista', p: 4, ic: '☕' }], phases: [[60, 3], [Infinity, 6]], doneName: 'Served', doneWord: 'served', noWarm: true, bufNames: ['The line'] }; E.fakeI = null; computeSchedule(); drawMap({ icons: true, showArrRate: true, note: 'noon rush: 20 jobs/hr until t = 60, then 10 jobs/hr — against a 15 jobs/hr barista' }); E.t = 0; E.peakQ = 0; E.playing = false; E.tEnd = Infinity; setSpeed(6); setUI({ runbar: true, tiles: { Q: 1 } }); },
+    rush: () => { E.cfg = { stations: [{ name: 'Barista', p: 4, ic: '☕' }], phases: [[60, 3], [Infinity, 6]], doneName: 'Served', doneWord: 'served', noWarm: true, bufNames: ['The line'] }; E.fakeI = null; computeSchedule(); drawMap({ icons: true, showArrRate: true, note: 'noon rush: 20 jobs/hr until t = 60, then 10 jobs/hr — against a 15 jobs/hr barista' }); E.t = 0; E.peakQ = 0; E.playing = false; E.tEnd = Infinity; setSpeed(6); setUI({ runbar: true, tiles: { Q: 1 } }); },
+    gauge: () => { E.cfg = { stations: [{ name: 'Intake', p: 4 }, { name: 'Underwriting', p: 5 }, { name: 'Closing', p: 3 }], a: 6, doneName: 'Funded', doneWord: 'funded' }; computeSchedule(); E.fakeI = 3; drawMap({ showArrRate: true, showCap: true, boundary: 'all' }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true, tiles: { R: 1, T: 1, I: 1 }, ticker: true }); },
+    gaugeFixed: () => { E.fakeI = null; drawMap({ showArrRate: true, showCap: true, boundary: 'all' }); E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true, tiles: { R: 1, T: 1, I: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    coffee1: () => { E.cfg = { stations: [{ name: 'Espresso bar', p: 3, ic: '☕' }], a: 1.5, doneName: 'Served', doneWord: 'served', bufNames: ['The line'] }; E.fakeI = null; computeSchedule(); drawMap({ icons: true, showArrRate: true, hotDemand: true }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true, tiles: { Q: 1 } }); },
+    coffee3: () => { E.cfg = { stations: [{ name: 'Espresso bar', p: 3, m: 3, ic: '☕' }], a: 1.5, doneName: 'Served', doneWord: 'served', bufNames: ['The line'] }; computeSchedule(); drawMap({ icons: true, showArrRate: true, showCap: true, boundary: 'all' }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true, tiles: { Q: 1, I: 1 } }); },
+    pizza: () => { E.cfg = { stations: [{ name: 'Prep', p: 2, ic: '🥣' }, { name: 'Bake', p: 5, ic: '🔥' }, { name: 'Box', p: 2, ic: '📦' }], a: 6, doneName: 'Out the door', doneWord: 'delivered' }; E.fakeI = null; computeSchedule(); drawMap({ icons: true, showArrRate: true }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true, tiles: {}, ticker: true }); },
+    pizzaBn: () => { drawMap({ icons: true, showArrRate: true, showBn: true }); keepPlay(); setUI({ runbar: true, tiles: {}, ticker: true }); },
+    pizzaCap: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true }); keepPlay(); setUI({ runbar: true, tiles: {}, ticker: true }); },
+    pizzaR: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true }); keepPlay(); setUI({ runbar: true, tiles: { R: 1 }, ticker: true }); },
+    pizzaU: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true, showU: true }); keepPlay(); setUI({ runbar: true, tiles: { R: 1 }, ticker: true }); },
+    pizzaCT: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true, showU: true }); keepPlay(); setUI({ runbar: true, tiles: { R: 1, CT: 1 }, ticker: true }); },
+    pizzaT: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true, showU: true }); keepPlay(); setUI({ runbar: true, tiles: { R: 1, CT: 1, T: 1 }, ticker: true }); },
+    pizzaI: () => { drawMap({ icons: true, showArrRate: true, showBn: true, showCap: true, showU: true, boundary: 'all' }); keepPlay(); setUI({ runbar: true, tiles: { R: 1, CT: 1, T: 1, I: 1 }, ticker: true }); }
+  };
+  function keepPlay() { E.tEnd = Infinity; if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } }
+  let curPage = null;
+  function ensurePage(pg) { if (!pg || pg === curPage) return; curPage = pg; PAGES[pg](); const ei = $('endIn'); if (ei) ei.value = (E.tEnd && isFinite(E.tEnd)) ? E.tEnd : ''; updateWidgets(); }
+
+  /* ---------- renderer ---------- */
+  function stopPoll() { if (C.poll) { clearInterval(C.poll); C.poll = null; } }
+  function award(pts) {
+    C.awarded = C.awarded || {};
+    if (!C.awarded[C.step]) { C.awarded[C.step] = 1; C.score += pts; }
+    setScore();
+  }
+  function setScore() {
+    $('scoreEl').textContent = C.score + ' / ' + MAX_PTS + ' pts';
+    $('progEl').style.width = (Math.max(0, C.step) / (STEPS.length - 1) * 100) + '%';
+  }
+  function applyAfter(st) { if (st.after && PAGES[st.after]) { curPage = st.after; PAGES[st.after](); updateWidgets(); } }
+  function shuffleIdx(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function optHTML(o) {
+    if (o && typeof o === 'object' && o.v !== undefined) return subN(o.v) + '<span class="optdetail"> — ' + subN(o.d) + '</span>';
+    return subN(o);
+  }
+  function optionsHTML(items) {
+    const order = shuffleIdx(items.length);
+    let out = '';
+    const hasDet = items.some(it => it.html.indexOf('optdetail') >= 0);
+    if (hasDet) out += '<span class="dettoggle" onclick="this.parentElement.classList.toggle(\'showdet\'); this.textContent = this.parentElement.classList.contains(\'showdet\') ? \'Hide details\' : \'Show more details\';">Show more details</span><br>';
+    order.forEach(i => { out += '<button ' + items[i].attrs + '>' + items[i].html + '</button>'; });
+    return out;
+  }
+  function setDim(on, note) {
+    const sc = document.getElementById('stageCard');
+    if (!sc) return;
+    sc.classList.toggle('dimmed', !!on);
+    let dn = document.getElementById('dimNote');
+    if (on) {
+      if (!dn) { dn = document.createElement('div'); dn.id = 'dimNote'; dn.className = 'dimnote'; sc.appendChild(dn); }
+      dn.textContent = note || 'This question uses a different process — the simulation does not apply.';
+    } else if (dn) dn.remove();
+  }
+  function renderStep() {
+    stopPoll();
+    const st = STEPS[C.step];
+    const c = $('lessonCard');
+    setScore();
+    if (st.pg) ensurePage(st.pg);
+    setDim(!!st.dim, st.dimNote);
+    let h = (function () {
+      let idx = 1, out = '<div class="pillbar">';
+      SECTIONS.forEach(sec => {
+        const start = idx, end = idx + sec.n - 1;
+        const cls = C.step > end ? 'done' : (C.step >= start ? 'active' : '');
+        const reach = start <= (C.maxStep || 1);
+        out += '<span class="spill ' + cls + (reach ? ' reach' : '') + '" data-start="' + start + '">' + subN(sec.lab) + '<span class="sdots">';
+        for (let k = start; k <= end; k++) out += '<span class="sd' + (k < C.step ? ' past' : k === C.step ? ' cur' : '') + (k <= (C.maxStep || 1) ? ' jump' : '') + '" data-i="' + k + '"></span>';
+        out += '</span></span>';
+        idx = end + 1;
+      });
+      return out + '</div>';
+    })();
+    if (C.step > 0) {
+      const prev = STEPS[C.step - 1];
+      if (prev && prev.t === 'predict' && prev.fb && C.pred && C.pred[C.step - 1]) {
+        const ch = C.pred[C.step - 1];
+        const kind = ch.i === prev.correct ? 'ok' : ((prev.partial || []).indexOf(ch.i) >= 0 ? 'mid' : 'bad');
+        const verdict = kind === 'ok' ? 'Correct.' : (kind === 'mid' ? 'Partly correct.' : 'Not correct.');
+        h += '<div class="predfb ' + kind + '"><b>Your prediction:</b> “' + ch.txt + '” — <b>' + verdict + '</b> ' + subN(prev.fb[kind] || prev.fb.ok) + '</div>';
+      }
+    }
+
+    h += '<div class="lp-step">';
+    let contDisabled = false;
+
+    if (st.t === 'home') {
+      h += '<p style="font-size:15px"><b>🩻 Lesson 4 — The Consulting Engagement.</b> No new concepts today. Five clients, five real problems, and every tool from Lessons 1–3 in your bag: capacity, bottlenecks, implied utilization, m, build-up, and the law. Some numbers will be hidden; some gauges will lie. That is the job.</p><p style="font-size:12.5px;color:var(--secondary)">~25 minutes · integrates Lessons 1–3 · full credit for every completed case</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name</b> (same spelling as before, for consistent codes):</p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
+      h += '<div class="lp-nav"><button class="primary" id="goBtn">Meet the first client →</button></div>';
+      h += '<div class="verifybox"><details><summary>Instructor: verify a completion code</summary><input id="vN" placeholder="student name"><input id="vC" placeholder="P4-XXX-XXXX-XX"><button class="mini" id="vB" style="margin-top:6px">Check</button><div id="vOut" style="margin-top:5px"></div></details></div></div>';
+      c.innerHTML = h;
+      $('goBtn').addEventListener('click', () => {
+        const n = $('nmIn').value.trim();
+        if (!n) { $('nmIn').style.borderColor = 'var(--red)'; return; }
+        C.name = n; C.step = 1; renderStep();
+      });
+      $('vB') && $('vB').addEventListener('click', () => {
+        const r = readCode($('vN').value, $('vC').value);
+        $('vOut').innerHTML = r ? '<span style="color:var(--green);font-weight:700">✓ Valid — Lesson 4 complete, score ' + r.score + ' / ' + MAX_PTS + '</span>' : '<span style="color:var(--red);font-weight:700">✗ Invalid — name and code do not match.</span>';
+      });
+      return;
+    }
+    if (st.t === 'read') { h += subN(st.h); if (st.learn) learn(st.learn); }
+    else if (st.t === 'quiz') {
+      h += '<p><b>Check your understanding</b> (' + st.pts + ' pts). ' + subN(st.q) + '</p>';
+      h += optionsHTML(st.opts.map(o => ({ html: optHTML(o.o || o), attrs: 'class="lp-opt lp-qz" data-ok="' + o.ok + '"' })));
+      h += '<div class="lp-fb" id="fb"></div>';
+      contDisabled = true;
+    } else if (st.t === 'quiznum') {
+      h += '<p><b>Check your understanding</b> (' + st.pts + ' pts). ' + subN(st.q) + '</p>';
+      h += '<div class="lp-num"><input id="numIn" type="number" step="any" placeholder="' + (st.unit || '') + '"><button class="mini" id="numBtn">Submit</button></div><div class="lp-fb" id="fb"></div>';
+      contDisabled = true;
+    } else if (st.t === 'task') {
+      h += '<div class="lp-task">' + subN(st.h) + '</div>';
+      if (st.act) h += '<div class="actstrip"><b>YOUR TASK:</b> ' + subN(st.act) + (st.unlock ? ' &nbsp;·&nbsp; <b>TO CONTINUE:</b> ' + subN(st.unlock) : '') + '</div>';
+      h += '<div class="lp-status" id="tstat">…</div>';
+      contDisabled = true;
+    } else if (st.t === 'match') {
+      h += '<p><b>🎯 The debrief</b> (' + st.pts + ' pts): seven field notes from five clients — match each to its tool. Misses come back until you clear them all.</p>';
+      h += '<div class="lp-task" id="mPrompt" style="font-size:14.5px;font-weight:700"></div>';
+      h += '<div class="chips" id="mChips">' + MATCH_CONCEPTS.map(cc => '<button class="chip" data-k="' + cc.k + '">' + subN(cc.lab) + '</button>').join('') + '</div>';
+      h += '<div class="lp-fb" id="fb"></div><div class="lp-status" id="mStat"></div>';
+      contDisabled = true;
+    } else if (st.t === 'take') {
+      h += '<div class="lp-take"><span class="tt">CORE REFERENCE</span>' + subN(st.h) + '</div>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code (submit this in Canvas):</p><div class="lp-code">' + makeCode(C.name, C.score) + '</div>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">This completes the Business Process Lab sequence. A lesson on batching arrives in a future release.</p>';
+      if (!C.finished) { C.finished = true; renderLessonBar(); }
+    }
+    h += '</div>';
+    const last = C.step === STEPS.length - 1;
+    h += '<div class="lp-nav"><button id="backBtn">← Back</button><button class="primary" id="contBtn" ' + (contDisabled ? 'disabled' : '') + '>' + (last ? 'Finish ✓' : 'Continue →') + '</button></div>';
+    c.innerHTML = h;
+    $('backBtn').addEventListener('click', () => { if (C.step > 1) { C.step--; renderStep(); } });
+    C.maxStep = Math.max(C.maxStep || 1, C.step);
+    c.querySelectorAll('.spill .sd.jump').forEach(sp => sp.addEventListener('click', ev => { ev.stopPropagation(); C.step = +sp.dataset.i; renderStep(); }));
+    c.querySelectorAll('.spill.reach').forEach(pl => pl.addEventListener('click', () => { C.step = Math.min(+pl.dataset.start, C.maxStep || 1); renderStep(); }));
+    $('contBtn').addEventListener('click', () => {
+      if (last) { lbNote('🎉 The engagement is complete — and so is the Business Process Lab sequence. Your code above is ready to submit.'); }
+      else { C.step++; renderStep(); }
+    });
+
+    if (st.t === 'quiz') {
+      let attempts = 0;
+      const finish = (got, revealed) => {
+        award(got);
+        $('fb').className = 'lp-fb ' + (revealed ? 'info' : 'ok');
+        $('fb').innerHTML = (revealed ? 'Answer shown. Review the walkthrough: ' : '✓ +' + got + ' pts. ') + subN(st.ex) + (revealed ? ' <b>(+' + got + ' pts — full credit for working it through.)</b>' : '');
+        if (st.learn) learn(st.learn);
+        applyAfter(st);
+        $('contBtn').disabled = false;
+      };
+      c.querySelectorAll('.lp-qz').forEach(b => b.addEventListener('click', () => {
+        if (!$('contBtn').disabled) return;
+        if (b.dataset.ok === '1') { b.classList.add('ok'); finish(st.pts, false); }
+        else {
+          attempts++; b.classList.add('bad');
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          if (attempts >= 2) { c.querySelectorAll('.lp-qz').forEach(x => { if (x.dataset.ok === '1') x.classList.add('ok'); }); finish(st.pts, true); }
+          else $('fb').innerHTML = 'Not quite. Try again.' + (st.hint ? ' <b>Hint:</b> ' + subN(st.hint) : '');
+        }
+      }));
+    }
+    if (st.t === 'quiznum') {
+      let attempts = 0;
+      const submit = () => {
+        if (!$('contBtn').disabled) return;
+        const v = parseFloat($('numIn').value); if (isNaN(v)) return;
+        if (Math.abs(v - st.ans) <= st.tol) {
+          award(st.pts);
+          $('fb').className = 'lp-fb ok'; $('fb').innerHTML = '✓ +' + st.pts + ' pts. ' + subN(st.ex);
+          if (st.learn) learn(st.learn);
+          applyAfter(st);
+          $('contBtn').disabled = false;
+        } else {
+          attempts++;
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          if (attempts === 1) $('fb').innerHTML = 'Not quite. <b>Hint:</b> ' + subN(st.hint || 'The number is in the simulation.');
+          else if (attempts === 2 && st.hint2) $('fb').innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(st.hint2);
+          else {
+            $('fb').className = 'lp-fb info';
+            award(st.pts);
+            $('fb').innerHTML = 'Answer: <b>' + st.ans + ' ' + (st.unit || '') + '</b>. Review the walkthrough: ' + subN(st.ex) + ' <b>(+' + st.pts + ' pts — full credit for working it through.)</b>';
+            if (st.learn) learn(st.learn);
+            applyAfter(st);
+            $('contBtn').disabled = false;
+          }
+        }
+      };
+      $('numBtn').addEventListener('click', submit);
+      $('numIn').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      $('numIn').focus();
+    }
+    if (st.t === 'task') {
+      if (st.endT) { E.tEnd = st.endT; if ($('endIn')) $('endIn').value = st.endT; }
+      C.poll = setInterval(() => {
+        const eln = $('tstat'); if (!eln) { stopPoll(); return; }
+        let r; try { r = st.verify(); } catch (e) { r = { ok: false, msg: '…' }; }
+        eln.textContent = r.msg; eln.className = 'lp-status' + (r.ok ? ' pass' : '');
+        if (r.ok) $('contBtn').disabled = false;
+      }, 500);
+    }
+    if (st.t === 'match') {
+      const queue = MATCH_PROMPTS.map((_, i) => i);
+      for (let i = queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [queue[i], queue[j]] = [queue[j], queue[i]]; }
+      let misses = 0, cleared = 0, lock = false;
+      const total = queue.length;
+      const show = () => {
+        if (!queue.length) {
+          const got = st.pts;
+          award(got);
+          $('mPrompt').innerHTML = 'All ' + total + ' concepts matched.';
+          $('fb').className = 'lp-fb ok';
+          $('fb').innerHTML = '✓ +' + got + ' pts — ' + (misses === 0 ? 'a PERFECT debrief.' : misses + ' miss' + (misses > 1 ? 'es' : '') + ', all recovered.');
+          $('contBtn').disabled = false;
+          return;
+        }
+        $('mPrompt').textContent = '“' + subN(MATCH_PROMPTS[queue[0]].q) + '”';
+        $('mStat').textContent = cleared + ' / ' + total + ' cleared' + (misses ? ' · ' + misses + ' miss' + (misses > 1 ? 'es' : '') : '');
+      };
+      show();
+      c.querySelectorAll('#mChips .chip').forEach(ch => ch.addEventListener('click', () => {
+        if (lock || !queue.length) return;
+        const want = MATCH_PROMPTS[queue[0]].k;
+        if (ch.dataset.k === want) {
+          cleared++; queue.shift();
+          $('fb').className = 'lp-fb ok';
+          $('fb').textContent = '✓ ' + subN(MATCH_CONCEPTS.find(x => x.k === want).lab);
+          lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 650);
+        } else {
+          misses++; queue.push(queue.shift());
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          $('fb').textContent = '✗ Not that one — this note will come back.';
+          lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 900);
+        }
+      }));
+    }
+  }
+
+
+
+  /* ---------- lesson bar ---------- */
+  function lbNote(msg) {
+    let n = $('lbNote');
+    if (!n) {
+      n = document.createElement('div');
+      n.id = 'lbNote';
+      n.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:640px;';
+      $('lbar').after(n);
+    }
+    n.textContent = msg;
+    clearTimeout(lbNote.t);
+    lbNote.t = setTimeout(() => n.remove(), 6000);
+  }
+  function fileNote(n) {
+    let el2 = document.getElementById('lbNote');
+    if (!el2) {
+      el2 = document.createElement('div');
+      el2.id = 'lbNote';
+      el2.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:680px;';
+      document.getElementById('lbar').after(el2);
+    }
+    el2.textContent = '📁 To continue there, open process101_lesson' + n + '.html directly from your course folder. (Direct links between lesson files are turned off, so you always start each lesson from its newest copy.)';
+    clearTimeout(fileNote.t);
+    fileNote.t = setTimeout(() => el2.remove(), 8000);
+  }
+  function renderLessonBar() {
+    const lb = $('lbar');
+    lb.innerHTML =
+      '<button class="lchip" id="lb1">Lesson 1 — Anatomy of a Process</button>' +
+      '<button class="lchip" id="lb2">Lesson 2 — Systems &amp; Bottlenecks</button>' +
+      '<button class="lchip" id="lb3">Lesson 3 — Little’s Law</button>' +
+      '<button class="lchip active' + (C.finished ? ' done' : '') + '" id="lb4">' + (C.finished ? '✓ ' : '') + 'Lesson 4 — The Consulting Engagement</button>';
+    $('lb1').addEventListener('click', () => fileNote(1));
+    $('lb2').addEventListener('click', () => fileNote(2));
+    $('lb3').addEventListener('click', () => fileNote(3));
+    $('lb4').addEventListener('click', () => { if (C.name) renderStep(); });
+  }
+
+  /* ---------- init ---------- */
+  C.step = 0;
+  renderLessonBar();
+  renderNotebook();
+  PAGES.sandwich();
+  curPage = 'sandwich';
+  renderStep();
+  requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
+
+  window.__P104 = { C, E, STEPS, metrics, makeCode, readCode, SCHED: () => SCHED, bnIdx };
+})();
+
+</script>
+</body>
+</html>

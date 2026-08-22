@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business Process Lab · Exercise 2 — Systems & Bottlenecks</title>
+<style>
+  :root {
+    --page: #f5f5f2; --surface: #fcfcfb; --ink: #16212b; --navy: #33475b;
+    --secondary: #52514e; --muted: #898781; --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+    --red: #a5202f; --green: #2e7d32; --amber: #b5850b; --gold: #d99a06;
+    --blue: #2a78d6; --orange: #eb6834; --aqua: #1baf7a; --violet: #7c5cd6;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --radius: 14px; --shadow: 0 2px 10px rgba(30,40,50,.07);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--page); color: var(--ink); }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 10px; gap: 14px; flex-wrap: wrap; }
+  .header h1 { margin: 0; font-size: 21px; font-weight: 800; color: var(--navy); }
+  .ver { font-size: 11px; color: var(--muted); font-weight: 700; }
+  .hdr-right { display: flex; align-items: center; gap: 12px; }
+  .score { font-size: 13px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .prog { width: 180px; height: 8px; background: #e8eae5; border-radius: 5px; overflow: hidden; }
+  .progrow { display: flex; align-items: center; gap: 10px; margin: 0 0 8px 2px; }
+  .progrow .prog { flex: 1; width: auto; }
+  .prog > div { height: 100%; background: var(--green); border-radius: 5px; transition: width .5s; }
+  select.small { border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; background: #fff; color: var(--ink); }
+
+  .app { display: grid; grid-template-columns: 370px minmax(0,1fr) 265px; gap: 14px; padding: 0 16px 20px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+  .card h2 { margin: 0 0 8px; font-size: 12.5px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* lesson panel */
+  .lp-dots { display: flex; gap: 4px; margin: 4px 0 12px; flex-wrap: wrap; }
+  .lp-dots span { width: 8px; height: 8px; border-radius: 50%; background: #dfe1dc; }
+  .lp-dots span.cur { background: var(--navy); }
+  .lp-dots span.past { background: var(--green); }
+  .lp-step { font-size: 13.5px; line-height: 1.65; color: var(--ink); }
+  .lp-step p { margin: 8px 0; }
+  .lp-step b { color: var(--navy); }
+  .shape-ico { font-size: 17px; }
+  .lp-opt { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 12px; background: #fff; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.45; cursor: pointer; font-family: var(--sans); }
+  .lp-opt:hover { border-color: var(--navy); }
+  .lp-opt.sel { border-color: var(--navy); box-shadow: inset 0 0 0 1.4px var(--navy); }
+  .lp-opt.ok { border-color: var(--green); background: #f2f8f2; box-shadow: inset 0 0 0 1.4px var(--green); }
+  .lp-opt.bad { border-color: var(--red); background: #fdf1f1; }
+  .lp-fb { font-size: 12.5px; line-height: 1.55; margin-top: 8px; padding: 9px 12px; border-radius: 10px; display: none; }
+  .lp-fb.ok { display: block; background: #f2f8f2; color: #1d5a20; border: 1px solid rgba(46,125,50,.3); }
+  .lp-fb.bad { display: block; background: #fdf1f1; color: var(--red); border: 1px solid rgba(165,32,47,.3); }
+  .lp-fb.info { display: block; background: #eff3f8; color: var(--navy); border: 1px solid rgba(51,71,91,.25); }
+  .lp-task { background: #eff3f8; border: 1px solid rgba(51,71,91,.2); border-radius: 11px; padding: 11px 13px; margin: 9px 0; font-size: 13px; line-height: 1.55; }
+  .lp-task .tt { font-weight: 800; color: var(--navy); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+  .lp-status { font-size: 12.5px; color: var(--secondary); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .lp-status.pass { color: var(--green); font-weight: 800; }
+  .lp-take { background: #fdf8ec; border: 1.5px solid rgba(181,133,11,.45); border-radius: 12px; padding: 13px 15px; margin: 10px 0; font-size: 14px; font-weight: 700; color: #6b5106; line-height: 1.6; }
+  .lp-take .tt { font-size: 11px; letter-spacing: .08em; color: var(--amber); display: block; margin-bottom: 4px; }
+  .lp-nav { display: flex; gap: 8px; margin-top: 14px; }
+  .lp-nav button { flex: 1; }
+  button { appearance: none; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; background: #eef0ee; color: var(--ink); }
+  button:hover { filter: brightness(.97); }
+  button:disabled { opacity: .45; cursor: default; }
+  .primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .primary:disabled { background: #b9c0c7; border-color: #b9c0c7; opacity: 1; }
+  .mini { font-size: 12.5px; padding: 6px 11px; border-radius: 8px; background: #fff; font-weight: 700; color: var(--navy); }
+  .lp-num { display: flex; gap: 8px; margin-top: 8px; }
+  .lp-num input { flex: 1; border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; font-size: 14px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+  .lp-name input { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-family: var(--sans); margin-top: 5px; }
+  .lp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; font-weight: 800; letter-spacing: .1em; color: var(--navy); background: #eff3f8; border: 1.5px dashed var(--navy); border-radius: 10px; padding: 10px 12px; text-align: center; margin: 10px 0; user-select: all; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
+  .chip { border: 1px solid var(--border); border-radius: 999px; padding: 7px 13px; font-size: 12.5px; font-weight: 700; background: #fff; cursor: pointer; color: var(--navy); }
+  .chip.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* stage */
+  .stagewrap { position: relative; }
+  #stageSvg { width: 100%; height: auto; display: block; }
+  #stageCanvas { position: absolute; pointer-events: none; }
+  .runbar { display: none; gap: 8px; align-items: center; margin-top: 6px; }
+  .runbar.show { display: flex; }
+  .runbar .clock { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .tile { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 9px 12px 8px; display: none; }
+  .tile.show { display: block; }
+  .tile .k { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .tile .v { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .tile .s { font-size: 11px; color: var(--secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile.cR { border-color: var(--blue); }   .tile.cR .v { color: var(--blue); }
+  .tile.cCT { border-color: var(--orange) } .tile.cCT .v { color: var(--orange); }
+  .tile.cT { border-color: var(--violet) }  .tile.cT .v { color: var(--violet); }
+  .tile.cI { border-color: var(--aqua) }    .tile.cI .v { color: var(--aqua); }
+  .tile.cU { border-color: var(--gold) }    .tile.cU .v { color: var(--gold); }
+  .tile.cQ { border-color: var(--red) }     .tile.cQ .v { color: var(--red); }
+  .lbar { display: flex; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+  .lbar .lchip { border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 700; background: #fff; cursor: pointer; color: var(--secondary); font-family: var(--sans); }
+  .lbar .lchip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .lbar .lchip.done { border-color: rgba(46,125,50,.5); color: var(--green); }
+  .lbar .lchip.active.done { background: var(--green); border-color: var(--green); color: #fff; }
+  @keyframes born { 0% { transform: scale(.6); opacity: 0; box-shadow: 0 0 0 8px rgba(42,120,214,.25); } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); box-shadow: none; } }
+  .tile.born { animation: born .9s ease; }
+
+  /* output ticker */
+  .ticker { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--orange); border-radius: 12px; padding: 9px 12px; }
+  .ticker.show { display: block; }
+  .ticker .k { font-size: 10.5px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .06em; }
+  .ticker svg { width: 100%; height: 56px; display: block; }
+
+  /* stopwatch */
+  .watch { display: none; margin-top: 12px; background: #fdf6e3; border: 1.5px solid var(--gold); border-radius: 12px; padding: 9px 12px; font-size: 13px; color: #6b5106; font-variant-numeric: tabular-nums; }
+  .watch.show { display: block; }
+  .watch b { color: var(--gold); }
+  @keyframes flashW { 0%,100% { background: #fdf6e3; box-shadow: none; } 50% { background: #ffe9a8; box-shadow: 0 0 0 4px rgba(217,154,6,.3); } }
+  .watch.live { animation: flashW .9s ease infinite; }
+  .watch .big { font-size: 18px; font-weight: 800; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .lp-fb.bad { animation: shake .35s ease; }
+  .occ { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--aqua); border-radius: 12px; padding: 9px 12px; }
+  .occ.show { display: block; }
+  .occ .k { font-size: 10.5px; font-weight: 800; color: var(--aqua); text-transform: uppercase; letter-spacing: .06em; }
+  .occ svg { width: 100%; height: 64px; display: block; }
+
+  /* notebook */
+  .nb { position: sticky; top: 12px; }
+  .nb .empty { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .nb-entry { border: 1px solid var(--border); border-left: 4px solid var(--navy); border-radius: 10px; padding: 8px 11px; margin-bottom: 8px; background: #fff; }
+  .nb-entry .sym { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .nb-entry .nm { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .nb-entry .df { font-size: 11.5px; color: var(--secondary); line-height: 1.45; margin-top: 2px; }
+  .nb-entry .fx { font-size: 11.5px; font-family: ui-monospace, Menlo, monospace; color: var(--navy); margin-top: 3px; }
+  @keyframes stamp { 0% { transform: scale(1.35) rotate(-4deg); opacity: 0; } 60% { transform: scale(.96) rotate(1deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+  .nb-entry.stamp { animation: stamp .6s ease; }
+  .nb-entry.e-p { border-left-color: var(--navy); }   .nb-entry.e-p .sym { color: var(--navy); }
+  .nb-entry.e-c { border-left-color: var(--green); }  .nb-entry.e-c .sym { color: var(--green); }
+  .nb-entry.e-R { border-left-color: var(--blue); }   .nb-entry.e-R .sym { color: var(--blue); }
+  .nb-entry.e-CT { border-left-color: var(--orange); }.nb-entry.e-CT .sym { color: var(--orange); }
+  .nb-entry.e-T { border-left-color: var(--violet); } .nb-entry.e-T .sym { color: var(--violet); }
+  .nb-entry.e-I { border-left-color: var(--aqua); }   .nb-entry.e-I .sym { color: var(--aqua); }
+  .nb-entry.e-u { border-left-color: var(--gold); }   .nb-entry.e-u .sym { color: var(--gold); }
+
+  /* metric spotlight on map */
+  @keyframes pulseGlow { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  .spot { animation: pulseGlow 1.6s ease infinite; }
+  /* abrupt input change: flash a few times, then settle */
+  @keyframes flashIn { 0%, 100% { opacity: 1; } 50% { opacity: .12; } }
+  .flashIn { animation: flashIn .65s ease 5; }
+
+
+  /* confetti */ }
+
+  .ntR, .ntT, .ntI { text-transform: none; }
+  .verifybox { margin-top: 14px; font-size: 12px; color: var(--muted); }
+  .verifybox input { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-family: var(--sans); font-size: 12px; margin-top: 4px; width: 100%; }
+  @media (max-width: 1150px) { .app { grid-template-columns: 1fr; } .nb { position: static; } .tiles { grid-template-columns: repeat(2,1fr); } }
+  /* attention: highlighter + formula spotlight */
+  mark.hl { background: linear-gradient(100deg, rgba(255,224,102,.25), rgba(255,224,102,.9) 10%, rgba(255,213,60,.55)); padding: 0 4px; border-radius: 4px; font-weight: 700; color: #4a3800; }
+  .formula { display: block; text-align: center; background: #fffdf0; border: 1.5px dashed var(--gold); border-radius: 10px; padding: 8px 12px; margin: 9px 0; font-weight: 800; font-size: 15px; color: var(--navy); }
+  .endin { width: 60px; border: 1.2px solid var(--border); border-radius: 8px; padding: 3px 6px; font: inherit; font-size: 12px; background: #fff; }
+  /* system metrics: observed vs theory, minimizable */
+  .sysm { display: none; margin-top: 12px; background: var(--surface); border: 1.5px solid var(--navy); border-radius: 12px; padding: 9px 12px; }
+  .sysm.show { display: block; animation: born .9s ease; }
+  .sysm .hd { display: flex; justify-content: space-between; align-items: center; }
+  .sysm .k { font-size: 10.5px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .06em; }
+  .sysm table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .sysm td, .sysm th { padding: 3px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+  .sysm td:first-child, .sysm th:first-child { text-align: left; font-weight: 700; }
+  .sysm th { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .sysm .agree { color: var(--green); font-weight: 800; }
+  /* question-context tags + clickable progress dots + name pointers */
+  .qtag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; margin: 0 0 6px; text-transform: uppercase; }
+  .qtag.off { background: #efe9fb; color: #6b46c1; border: 1px solid rgba(107,70,193,.35); }
+  .qtag.on { background: #e7f0fb; color: #1d5fa8; border: 1px solid rgba(29,95,168,.35); }
+  .lp-dots span.jump { cursor: pointer; }
+  .lp-dots span.jump:hover { transform: scale(1.6); }
+  .pointTag { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; margin-left: 8px; }
+  .spd { min-width: 40px; }
+  .spd.act { background: var(--navy); color: #fff; border-color: var(--navy); }
+  details.teach { margin-top: 9px; border: 1.5px dashed rgba(51,71,91,.3); border-radius: 10px; padding: 6px 11px; background: #fafaf7; }
+  details.teach summary { cursor: pointer; font-size: 11.5px; font-weight: 800; color: var(--navy); letter-spacing: .03em; }
+  details.teach[open] { background: #f4f6f9; padding-bottom: 9px; }
+  details.teach p { margin: 7px 0 0; }
+  /* v3: segmented progress pills */
+  .pillbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .spill { display: flex; align-items: center; gap: 5px; border: 1.5px solid #dcdbd4; border-radius: 999px; padding: 3px 10px; background: #fafaf7; font-size: 11px; font-weight: 700; color: #52514e; }
+  .spill .sdots { display: flex; gap: 4px; }
+  .spill .sd { width: 7px; height: 7px; border-radius: 50%; background: #dfe1dc; }
+  .spill .sd.past { background: var(--green); } .spill .sd.cur { background: var(--navy); transform: scale(1.3); }
+  .spill.done { border-color: rgba(46,125,50,.45); color: var(--green); }
+  .spill.active { border-color: var(--navy); background: #eff3f8; color: var(--navy); }
+  .spill.reach { cursor: pointer; } .spill .sd.jump { cursor: pointer; }
+  /* v3: prediction feedback */
+  .predfb { border-radius: 10px; padding: 9px 13px; margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; border-left: 4px solid; }
+  .predfb.ok { background: #f2f7f2; border-color: var(--green); }
+  .predfb.mid { background: #fdf6e7; border-color: #d99a06; }
+  .predfb.bad { background: #faf0f0; border-color: #a5202f; }
+  /* v3: dimensional-chain fractions */
+  .frac { display: inline-block; text-align: center; vertical-align: middle; margin: 0 3px; font-size: 12.5px; line-height: 1.25; }
+  .frac .top { display: block; border-bottom: 1.3px solid #1f1e1c; padding: 0 5px 1px; }
+  .frac .bot { display: block; padding: 1px 5px 0; }
+  /* v3: task action strip */
+  .actstrip { border: 1.5px solid var(--navy); background: #eff3f8; border-radius: 10px; padding: 8px 12px; margin: 9px 0 4px; font-size: 12.5px; line-height: 1.55; }
+  .actstrip b { color: var(--navy); letter-spacing: .03em; font-size: 11px; }
+  /* v3: dimmed simulation for off-process questions */
+  .stagewrap.dimmed svg, .stagewrap.dimmed canvas { opacity: .18; filter: grayscale(.6); }
+  .dimnote { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); background: #fff; border: 1.5px solid #dcdbd4; border-radius: 10px; padding: 8px 14px; font-size: 12.5px; color: #52514e; font-weight: 700; z-index: 5; }
+  .contnote { font-size: 12px; color: #898781; font-weight: 700; margin: 10px 0 0; }
+  .switchrow { display: flex; align-items: center; gap: 10px; margin: 7px 0; cursor: pointer; }
+  .switchrow .swlab { font-size: 13.5px; font-weight: 700; color: var(--navy); }
+  .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex: 0 0 40px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider { position: absolute; inset: 0; background: #d5d4cc; border-radius: 999px; transition: background .2s; }
+  .switch .slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .switch input:checked + .slider { background: var(--green); }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+  .lp-status.warn { background: #fdecec; border-left: 4px solid #a5202f; border-radius: 0 8px 8px 0; padding: 8px 12px; color: #7c2a2a; font-weight: 600; }
+  .dimmedcards { opacity: .25 !important; filter: grayscale(.6); }
+  .runbar.dimmedcards { pointer-events: none; }
+  #playBtn.pulse { animation: btnpulse 1.15s ease-in-out infinite; border-color: var(--green); color: var(--green); }
+  @keyframes btnpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(46,125,50,.55); } 55% { box-shadow: 0 0 0 7px rgba(46,125,50,0); } }
+  .confetti { position: fixed; top: -12px; pointer-events: none; z-index: 90; font-size: 18px; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(105vh) rotate(340deg); opacity: .9; } }
+  /* v3: option details toggle */
+  .optdetail { display: none; color: var(--muted); font-weight: 400; }
+  .showdet .optdetail { display: inline; }
+  .dettoggle { font-size: 11.5px; font-weight: 700; color: var(--navy); cursor: pointer; text-decoration: underline; margin: 2px 0 6px; display: inline-block; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.2</span></h1>
+      <div class="lbar" id="lbar"></div>
+    </div>
+    <div class="hdr-right">
+      <select class="small" id="notaSel" title="Notation">
+        <option value="schmidt" selected>Notation: Schmidt (R · T · I)</option>
+        <option value="jacobs">Notation: Jacobs (λ · FT · INV)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="app">
+    <div>
+      <div class="progrow"><span class="score" id="scoreEl">Progress 0%</span><div class="prog"><div id="progEl" style="width:0%"></div></div></div>
+      <div class="card" id="lessonCard"></div>
+    </div>
+
+    <div>
+      <div class="card stagewrap" id="stageCard">
+        <svg id="stageSvg" viewBox="0 0 900 260"></svg>
+        <canvas id="stageCanvas"></canvas>
+        <div class="runbar" id="runbar">
+          <button class="mini" id="playBtn">▶ Play</button>
+          <button class="mini" id="resetBtn">Restart</button>
+          <span style="font-size:11.5px;color:var(--muted);margin-left:6px">speed</span>
+          <button class="mini spd" data-s="0.5">½×</button>
+          <button class="mini spd act" data-s="1">1×</button>
+          <button class="mini spd" data-s="2">2×</button>
+          <button class="mini spd" data-s="4">4×</button>
+          <span style="font-size:11.5px;color:var(--muted);margin-left:8px">stop at t =</span>
+          <input type="number" id="endIn" min="0" step="10" placeholder="∞" class="endin">
+          <span style="font-size:11.5px;color:var(--muted)">min</span>
+          <span class="clock" id="clockEl">t = 0 min</span>
+        </div>
+      </div>
+      <div class="tiles">
+        <div class="tile cR" id="tileR"><div class="k">Throughput out (<span class="ntR">R</span>)</div><div class="v" id="vR">—</div><div class="s" id="sR">loans finished per hour</div></div>
+        <div class="tile cQ" id="tileQ"><div class="k">Queue at bottleneck</div><div class="v" id="vQ">—</div><div class="s" id="sQ">waiting in the busiest buffer</div></div>
+        <div class="tile cU" id="tileU"><div class="k">Utilization (u)</div><div class="v" id="vU">—</div><div class="s" id="sU">time busy ÷ time available</div></div>
+        <div class="tile cCT" id="tileCT"><div class="k">System cycle time</div><div class="v" id="vCT">—</div><div class="s" id="sCT">min between finished loans</div></div>
+      </div>
+      <div class="ticker" id="ticker">
+        <div class="k">Output ticker — every finished job leaves a mark</div>
+        <svg id="tickerSvg" viewBox="0 0 900 56" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="sysm" id="sysm">
+        <div class="hd"><span class="k">System metrics — observed vs theory</span><button class="mini" id="sysmMin">− minimize</button></div>
+        <div id="sysmBody"></div>
+      </div>
+      <div class="watch" id="watch">⏱ <b>Highlighted job:</b> <span id="watchTxt">waiting to arrive…</span></div>
+      <div class="occ" id="occ">
+        <div class="k">Desk occupancy — one hour under the microscope</div>
+        <svg id="occSvg" viewBox="0 0 900 64" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="card nb" id="nbCard">
+      <h2>Process Notebook</h2>
+      <div id="nbBody"><div class="empty">Concepts and formulas will appear here as you work through the exercise.</div></div>
+    </div>
+  </div>
+
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---------- notation ---------- */
+  const NOTA = { style: 'schmidt' };
+  function NT() {
+    return NOTA.style === 'jacobs'
+      ? { R: 'λ', T: 'FT', I: 'INV', law: '<i>INV</i> = <i>λ</i> × <i>FT</i>', Tterm: 'flow time', TtermC: 'Flow time', c: 'capacity' }
+      : { R: 'R', T: 'T', I: 'I', law: '<i>I</i> = <i>R</i> × <i>T</i>', Tterm: 'throughput time', TtermC: 'Throughput time', c: '<i>c</i>' };
+  }
+  function subN(s) {
+    const N = NT();
+    return String(s == null ? '' : s)
+      .split('⟦R⟧').join('<i>' + N.R + '</i>').split('⟦T⟧').join('<i>' + N.T + '</i>').split('⟦I⟧').join('<i>' + N.I + '</i>')
+      .split('⟦law⟧').join(N.law).split('⟦c⟧').join(N.c)
+      .split('⟦TtermC⟧').join(N.TtermC).split('⟦Tterm⟧').join(N.Tterm)
+      .split('⟦cap1⟧').join(NOTA.style === 'jacobs' ? '1 / processing time' : '<i>m</i>/<i>p</i>')
+      .replace(/<span class="formula">([\s\S]*?)<\/span>/g, (m0, inner) => '<span class="formula">' + inner.split(' · ').join(' ·<br>') + '</span>');
+  }
+  function subNP(s) {
+    const N = NT();
+    return String(s == null ? '' : s).split('⟦R⟧').join(N.R).split('⟦T⟧').join(N.T).split('⟦I⟧').join(N.I).split('⟦Tterm⟧').join(N.Tterm);
+  }
+  function applyNotation() {
+    const N = NT();
+    document.querySelectorAll('.ntR').forEach(e => e.textContent = N.R);
+    document.querySelectorAll('.ntT').forEach(e => e.textContent = N.T);
+    document.querySelectorAll('.ntI').forEach(e => e.textContent = N.I);
+    renderNotebook();
+    const st = STEPS[C.step];
+    if (!st) return;
+    const unlocked = $('contBtn') && !$('contBtn').disabled;
+    if (st.t === 'read' || st.t === 'take' || st.t === 'home' || (!unlocked && (st.t === 'quiz' || st.t === 'quiznum' || st.t === 'quiznum2' || st.t === 'predict' || st.t === 'task'))) renderStep();
+  }
+  $('notaSel').addEventListener('change', () => { NOTA.style = $('notaSel').value; applyNotation(); });
+
+  /* ---------- deterministic engine WITH queueing ---------- */
+  const E = { cfg: { stations: [{ name: 'Intake', p: 3 }, { name: 'Underwriting', p: 5 }, { name: 'Closing', p: 2 }], a: 8, doneName: 'Funded' }, t: 0, playing: false, speed: 15, tEnd: Infinity, lastReal: 0 };
+  let SCHED = [];
+  function computeSchedule() {
+    // warm start: begin arrivals before t=0 so at t=0 the line is already in its
+    // long-run pattern -> observed utilization/throughput match theory exactly
+    const st = E.cfg.stations, a = E.cfg.a, N = 600, WARM = 6;
+    SCHED = [];
+    const dep = st.map(() => -1e9);           // when each station's previous job DEPARTED
+    const nb = E.cfg.noBufAfter;              // station index with no buffer after it (blocking possible there)
+    for (let k = -WARM; k < N; k++) {
+      const arr = a * (k + 1);
+      let t = arr;
+      const rec = { arr, s: [] };
+      for (let j = 0; j < st.length; j++) {
+        const start = Math.max(t, dep[j]);
+        const fi = start + st[j].p;
+        rec.s.push({ eb: t, st: start, fi, dep: fi });
+        t = fi;
+      }
+      if (nb !== undefined && st[nb + 1]) {
+        const s0 = rec.s[nb], s1 = rec.s[nb + 1];
+        s1.st = Math.max(s0.fi, dep[nb + 1]);
+        s1.fi = s1.st + st[nb + 1].p; s1.dep = s1.fi;
+        s0.dep = s1.st;                        // the job leaves the blocked station only when the next one takes it
+        let tt = s1.fi;
+        for (let j = nb + 2; j < st.length; j++) { const sj = rec.s[j]; sj.st = Math.max(tt, dep[j]); sj.fi = sj.st + st[j].p; sj.dep = sj.fi; tt = sj.fi; }
+      }
+      for (let j = 0; j < st.length; j++) dep[j] = rec.s[j].dep;
+      rec.done = rec.s[st.length - 1].fi;
+      SCHED.push(rec);
+    }
+  }
+  function bnIdx() {
+    let b = 0;
+    E.cfg.stations.forEach((s, i) => { if (s.p > E.cfg.stations[b].p) b = i; });
+    return b;
+  }
+
+  const SVG = $('stageSvg'), CV = $('stageCanvas'), ctx = CV.getContext('2d');
+  const svgNS = 'http://www.w3.org/2000/svg';
+  function el(n, at, par) { const e = document.createElementNS(svgNS, n); for (const k in at) e.setAttribute(k, at[k]); if (par) par.appendChild(e); return e; }
+  const CY = 140, ACT_W = 118, ACT_H = 66, TRI_W = 76, TRI_H = 60;
+  let NODES = [], scale = 1, mapOpts = {};
+
+  function layout() {
+    const st = E.cfg.stations;
+    NODES = [];
+    const seq = [];
+    st.forEach((s, j) => {
+      if (!(E.cfg.noBufAfter !== undefined && j === E.cfg.noBufAfter + 1)) seq.push({ type: 'buf', j, name: (E.cfg.bufNames && E.cfg.bufNames[j]) || 'Buffer ' + (j + 1) });
+      seq.push({ type: 'act', j, name: s.name, p: s.p, ic: s.ic });
+    });
+    seq.push({ type: 'done', name: E.cfg.doneName });
+    const step = (900 - 150) / seq.length;
+    let x = 95;
+    seq.forEach(nd => { nd.x = Math.min(x, 850); NODES.push(nd); x += step; });
+  }
+  function drawMap(opts) {
+    mapOpts = opts = opts || {};
+    layout();
+    SVG.innerHTML = '';
+    const defs = el('defs', {}, SVG);
+    const mk = el('marker', { id: 'arr', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#8d99a5' }, mk);
+    el('line', { x1: 12, y1: CY, x2: NODES[0].x - TRI_W / 2 - 10, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
+    if (E.cfg.arriveLabel) {
+      el('text', { x: 8, y: 44, 'font-size': 12.5, fill: '#52514e', 'font-weight': 700 }, SVG).textContent = E.cfg.arriveLabel;
+    } else {
+      el('text', { x: 8, y: CY - 60, 'font-size': 12.5, fill: '#52514e', 'font-weight': 700 }, SVG).textContent = 'applications';
+      el('text', { x: 8, y: CY - 46, 'font-size': 12.5, fill: '#52514e', 'font-weight': 700 }, SVG).textContent = 'arrive';
+    }
+    if (opts.showArrRate) {
+      const rate = 60 / E.cfg.a; const rateTxt = 'demand: ' + (rate % 1 ? rate.toFixed(1) : rate.toFixed(0)) + ' jobs/hour';
+      const jumped = drawMap.lastRate !== undefined && drawMap.lastRate !== rateTxt;
+      const rr = el('text', { x: 8, y: CY - 76, 'font-size': jumped ? 14 : 12, 'font-weight': 800, fill: opts.hotDemand ? '#a5202f' : '#2a78d6', class: jumped ? 'flashIn' : (opts.spotR ? 'spot' : '') }, SVG);
+      rr.textContent = rateTxt;
+      drawMap.lastRate = rateTxt;
+    }
+    for (let i = 0; i < NODES.length - 1; i++) {
+      const a = NODES[i], b = NODES[i + 1];
+      const aw = a.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+      const bw = b.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+      let lx1 = a.x + aw + 4, lx2 = b.x - bw - 8;
+      if (lx2 - lx1 < 10) { const lmid = (a.x + aw + b.x - bw) / 2; lx1 = lmid - 6; lx2 = lmid + 6; }   // tight gap: centered right-pointing arrow
+      const isBlockLink = E.cfg.noBufAfter !== undefined && a.type === 'act' && a.j === E.cfg.noBufAfter && b.type === 'act';
+      el('line', Object.assign(isBlockLink ? { id: 'blkLink' } : {}, { x1: lx1, y1: CY, x2: lx2, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }), SVG);
+      if (isBlockLink) { const mx = (lx1 + lx2) / 2; el('line', { id: 'blkSlash', x1: mx - 5, y1: CY + 8, x2: mx + 5, y2: CY - 8, stroke: '#a5202f', 'stroke-width': 2.6, display: 'none' }, SVG); }
+    }
+    const bn = bnIdx();
+    NODES.forEach(nd => {
+      if (nd.type === 'act') {
+        const isBn = opts.showBn && nd.j === bn;
+        el('rect', { x: nd.x - ACT_W / 2, y: CY - ACT_H / 2, width: ACT_W, height: ACT_H, rx: 10, fill: '#fff', stroke: isBn ? '#a5202f' : '#5c6b7a', 'stroke-width': isBn ? 3.4 : 2.4 }, SVG);
+        el('text', { x: nd.x, y: CY - ACT_H / 2 - 10, 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 800, fill: isBn ? '#a5202f' : '#33475b' }, SVG).textContent = nd.name;
+        if (opts.icons && nd.ic) el('text', { x: nd.x, y: CY - ACT_H / 2 - 26, 'text-anchor': 'middle', 'font-size': 24 }, SVG).textContent = nd.ic;
+        if (isBn) el('text', { x: nd.x, y: CY - ACT_H / 2 - 27, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, fill: '#a5202f', 'letter-spacing': '.08em' }, SVG).textContent = 'BOTTLENECK';
+        el('text', { x: nd.x, y: CY + ACT_H / 2 + 17, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#33475b' }, SVG).textContent = 'p = ' + nd.p + ' min';
+        if (opts.showCap) el('text', { id: 'mapCap' + nd.j, x: nd.x, y: CY + ACT_H / 2 + 33, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#2e7d32' }, SVG).textContent = 'capacity = ' + (60 / nd.p).toFixed(0) + ' jobs/hour';
+        if (opts.showU) { const ub = el('text', { id: 'mapU' + nd.j, x: nd.x, y: CY + ACT_H / 2 + 49, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 800, fill: '#d99a06' }, SVG); ub.textContent = 'u = —'; }
+        // state tag lives INSIDE the box (shown only when the activity is empty)
+        const stt = el('text', { id: 'st' + nd.j + '-state', x: nd.x, y: CY + 5, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, 'letter-spacing': '.07em', fill: '#2a78d6' }, SVG);
+        stt.textContent = '';
+      } else if (nd.type === 'buf') {
+        el('polygon', { points: (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2), fill: 'rgba(51,71,91,.06)', stroke: '#5c6b7a', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, SVG);
+        if (E.cfg.bufNames) el('text', { id: 'bufName' + nd.j, x: nd.x, y: CY - TRI_H / 2 - 8, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
+        const c = el('text', { id: 'buf' + nd.j + '-cnt', x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
+        c.textContent = '';
+        const pl = el('text', { id: 'buf' + nd.j + '-plus', x: nd.x, y: CY - TRI_H / 2 - 42, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#a5202f' }, SVG);
+        pl.textContent = '';
+      } else {
+        el('polygon', { points: (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2), fill: 'rgba(46,125,50,.08)', stroke: '#5c6b7a', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, SVG);
+        el('text', { x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
+        const dc = el('text', { id: 'doneCnt', x: nd.x, y: CY + TRI_H / 2 + 32, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
+        dc.textContent = '';
+        if (opts.showR !== false) {
+          const caps = E.cfg.stations.map(st2 => (st2.m || 1) * 60 / st2.p);
+          const rTh = Math.min(60 / E.cfg.a, Math.min.apply(null, caps));
+          const rl = el('text', { id: 'mapRout', x: nd.x, y: CY - TRI_H / 2 - 20, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#2a78d6' }, SVG);
+          const ay = CY - TRI_H / 2 - 8;
+          el('line', { x1: nd.x - 24, y1: ay, x2: nd.x + 18, y2: ay, stroke: '#2a78d6', 'stroke-width': 2 }, SVG);
+          el('polygon', { points: (nd.x + 26) + ',' + ay + ' ' + (nd.x + 16) + ',' + (ay - 4.5) + ' ' + (nd.x + 16) + ',' + (ay + 4.5), fill: '#2a78d6' }, SVG);
+          rl.textContent = NT().R + ' = ' + (rTh % 1 ? rTh.toFixed(1) : rTh.toFixed(0)) + ' jobs/hour';
+        }
+      }
+    });
+    if (opts.note) el('text', { x: 450, y: 252, 'text-anchor': 'middle', 'font-size': 12, fill: '#898781' }, SVG).textContent = opts.note;
+    resizeCanvas();
+  }
+  function resizeCanvas() {
+    const r = SVG.getBoundingClientRect();
+    const host = CV.parentElement, hr = host.getBoundingClientRect();
+    CV.style.left = (r.left - hr.left - host.clientLeft) + 'px';
+    CV.style.top = (r.top - hr.top - host.clientTop) + 'px';
+    CV.style.width = r.width + 'px'; CV.style.height = r.height + 'px';
+    CV.width = Math.max(1, Math.round(r.width * devicePixelRatio));
+    CV.height = Math.max(1, Math.round(r.height * devicePixelRatio));
+    scale = r.width / 900;
+    ctx.setTransform(devicePixelRatio * scale, 0, 0, devicePixelRatio * scale, 0, 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function drawPerson(x, y, size, color, alpha) {
+    const h = size, headR = h * 0.21;
+    ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y - h + headR, headR, 0, Math.PI * 2); ctx.fill();
+    const bw = h * 0.62, bh = h * 0.52;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - bw / 2, y - bh, bw, bh, bw * 0.32); else ctx.rect(x - bw / 2, y - bh, bw, bh);
+    ctx.fill(); ctx.restore();
+  }
+  const GREEN = '#2e7d32';
+  function actNode(j) { return NODES.find(n => n.type === 'act' && n.j === j); }
+  function bufNode(j) { return NODES.find(n => n.type === 'buf' && n.j === j); }
+
+  function render() {
+    ctx.clearRect(0, 0, 900, 300);
+    { const bl0 = document.getElementById('blkLink'); if (bl0) bl0.setAttribute('stroke', '#8d99a5');
+      const bs0 = document.getElementById('blkSlash'); if (bs0) bs0.setAttribute('display', 'none'); }
+    const t = E.t, nS = E.cfg.stations.length;
+    const waiting = E.cfg.stations.map(() => []);
+    const serving = E.cfg.stations.map(() => null);
+    const donePile = []; let doneCount = 0;
+    for (let k = 0; k < SCHED.length; k++) {
+      const r = SCHED[k];
+      if (r.arr - 1.4 > t) break;
+      if (t < r.arr) {   // travel in
+        const f = (t - (r.arr - 1.4)) / 1.4;
+        drawPerson(-20 + (bufNode(0).x + 20) * f, CY + 10, 20, GREEN);
+        continue;
+      }
+      if (r.done > 0 && r.done <= t) doneCount++;
+      if (t >= r.done + 1.4) { donePile.push(k); continue; }
+      let placed = false;
+      for (let j = 0; j < nS; j++) {
+        const s = r.s[j];
+        if (t < s.st) { waiting[j].push(k); placed = true; break; }
+        if (t < (s.dep !== undefined ? s.dep : s.fi)) { serving[j] = k; serving.blk = serving.blk || {}; serving.blk[j] = t >= s.fi; placed = true; break; }
+      }
+      if (!placed) {   // traveling to done (start OUTSIDE the box so it never overlaps a state tag)
+        const f = (t - r.done) / 1.4;
+        const from = actNode(nS - 1).x + ACT_W / 2 + 14, to = NODES[NODES.length - 1].x;
+        drawPerson(from + (to - from) * f, CY + 10, 20, GREEN);
+      }
+    }
+    // buffers
+    waiting.forEach((arr, j) => {
+      if (!bufNode(j)) return;   // no buffer drawn between blocked stations
+      const nx = bufNode(j).x, tip = CY + TRI_H / 2 - 6;
+      const VIS = 13;
+      arr.slice(0, VIS).forEach((k, i) => {
+        const rows = [1, 2, 3, 4, 4, 4];
+        let rr = 0, rem = i;
+        while (rem >= rows[rr]) { rem -= rows[rr]; rr++; }
+        drawPerson(nx + (rem - (rows[rr] - 1) / 2) * 15, tip - rr * 14, 12.5, GREEN);
+      });
+      const pl = document.getElementById('buf' + j + '-plus');
+      if (pl) pl.textContent = arr.length > VIS ? '+' + (arr.length - VIS) + ' more' : '';
+      const c = document.getElementById('buf' + j + '-cnt');
+      if (c) c.textContent = arr.length ? arr.length + ' waiting' : '';
+    });
+    // stations + state tags
+    serving.forEach((k, j) => {
+      const stEl = document.getElementById('st' + j + '-state');
+      if (k != null) {
+        const blocked = serving.blk && serving.blk[j];
+        drawPerson(actNode(j).x, blocked ? CY + 22 : CY + 12, blocked ? 20 : 24, blocked ? '#c47f16' : GREEN);
+        if (j === E.cfg.noBufAfter) {
+          const bl = document.getElementById('blkLink'), bs = document.getElementById('blkSlash');
+          if (bl) bl.setAttribute('stroke', blocked ? '#a5202f' : '#8d99a5');
+          if (bs) bs.setAttribute('display', blocked ? 'block' : 'none');
+        }
+        if (stEl) {
+          if (blocked) { stEl.textContent = 'BLOCKED'; stEl.setAttribute('fill', '#a5202f'); stEl.setAttribute('opacity', '0.95'); }
+          else if (mapOpts.showStates) { stEl.textContent = ''; }
+          else stEl.textContent = '';
+        }
+      } else if (stEl) {
+        if (mapOpts.hotDemand && t > 2) {
+          const blink = E.playing ? Math.floor(performance.now() / 220) % 2 === 0 : true;   // flashes only while the simulation runs
+          const bnI = bnIdx();
+          const overloaded = (60 / E.cfg.a) > (60 / E.cfg.stations[bnI].p) * (E.cfg.stations[bnI].m || 1) + 1e-9;
+          const starved = overloaded && j > bnI;
+          stEl.textContent = starved ? 'STARVED' : 'idle';
+          stEl.setAttribute('fill', starved ? '#2a78d6' : '#b7b5ac');
+          stEl.setAttribute('opacity', blink ? '0.95' : '0.25');
+        }
+        else if (mapOpts.showStates && t > 2) { stEl.textContent = 'idle'; stEl.setAttribute('fill', '#b7b5ac'); stEl.setAttribute('opacity', '0.95'); }
+        else stEl.textContent = '';
+      }
+    });
+    // done pile
+    const dn = NODES[NODES.length - 1];
+    donePile.slice(-9).forEach((k, i) => {
+      const row = Math.floor(i / 3), col = i % 3;
+      drawPerson(dn.x + (col - 1) * 15, CY + TRI_H / 2 - 8 - row * 14, 12, GREEN, .9);
+    });
+    // progress dials: one sweep = one job; watch how fast each activity's clock turns
+    serving.forEach((k, j) => {
+      const nd = actNode(j), dx = nd.x + ACT_W / 2 - 15, dy = CY - ACT_H / 2 + 15, rr = 8.5;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(dx, dy, rr, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e1e0d9'; ctx.lineWidth = 3.2; ctx.stroke();
+      if (k != null) {
+        const sj = SCHED[k].s[j];
+        const prog = Math.max(0, Math.min(1, (t - sj.st) / E.cfg.stations[j].p));
+        ctx.beginPath(); ctx.arc(dx, dy, rr, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2);
+        ctx.strokeStyle = '#eb6834'; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.stroke();
+      }
+      ctx.restore();
+    });
+    const dc = document.getElementById('doneCnt');
+    if (dc) dc.textContent = doneCount ? doneCount + ' ' + (E.cfg.doneWord || 'funded') : '';
+    return { waiting, serving, done: donePile.length };
+  }
+
+  function metrics() {
+    const t = Math.max(E.t, 0.001), nS = E.cfg.stations.length;
+    let done = 0, lastDone = null, prevDone = null;
+    const busy = E.cfg.stations.map(() => 0);
+    const wait = E.cfg.stations.map(() => 0);
+    for (let k = 0; k < SCHED.length; k++) {
+      const r = SCHED[k];
+      if (r.arr > t && r.arr - 1e-9 > t) { if (r.arr > t + 1) break; }
+      for (let j = 0; j < nS; j++) {
+        const s = r.s[j];
+        busy[j] += Math.max(0, Math.min(s.fi, t) - Math.max(0, Math.min(s.st, t)));
+        wait[j] += r.s[j].eb <= t ? Math.max(0, Math.min(s.st, t) - r.s[j].eb) : 0;
+      }
+      if (r.done > 0 && r.done <= t) { done++; prevDone = lastDone; lastDone = r.done; }
+    }
+    const bn = bnIdx();
+    return {
+      done, Rout: done / t * 60,
+      gap: lastDone != null && prevDone != null ? lastDone - prevDone : null,
+      utils: busy.map(b => Math.min(1, b / t)), bn
+    };
+  }
+
+  const UI = { tiles: {}, ticker: false, runbar: false, sysm: false };
+  function setUI(o) {
+    UI.tiles = o.tiles || {}; UI.ticker = !!o.ticker; UI.runbar = !!o.runbar; UI.sysm = !!o.sysm;
+    $('sysm').classList.toggle('show', UI.sysm);
+    ['R', 'Q', 'U', 'CT'].forEach(k => {
+      const eln = $('tile' + k); if (!eln) return;
+      const on = !!UI.tiles[k], was = eln.classList.contains('show');
+      eln.classList.toggle('show', on);
+      if (on && !was) { eln.classList.remove('born'); void eln.offsetWidth; eln.classList.add('born'); }
+    });
+    $('ticker').classList.toggle('show', UI.ticker);
+    $('runbar').classList.toggle('show', UI.runbar);
+    updateWidgets();
+  }
+  function updateWidgets() {
+    const m = metrics();
+    $('clockEl').textContent = 't = ' + Math.floor(E.t) + ' min';
+    const pb2 = $('playBtn');
+    if (pb2) {
+      const stq = STEPS[C.step], cb2 = document.getElementById('contBtn');
+      const needPlay = !!(stq && stq.t === 'task' && !stq.acts && cb2 && cb2.disabled);   // flash only when playing is required to advance
+      pb2.classList.toggle('pulse', needPlay && !E.playing && !document.getElementById('stageCard').classList.contains('dimmed'));
+    }
+    if (UI.tiles.R) {
+      let v = m.Rout;
+      if (Math.abs(v - Math.round(v)) < 0.2) v = Math.round(v);
+      $('vR').innerHTML = E.t > 5 && m.done > 1 ? v.toFixed(1) + ' <span style="font-size:12.5px;font-weight:700">jobs/hour</span>' : '—';
+      $('sR').textContent = 'funded per hour · ' + m.done + ' total';
+    }
+    if (UI.tiles.Q) {
+      const w = render.lastWaiting ? render.lastWaiting[m.bn].length : 0;
+      $('vQ').textContent = w;
+      $('sQ').textContent = 'in front of ' + E.cfg.stations[m.bn].name;
+    }
+    if (UI.tiles.U) {
+      $('vU').textContent = E.t > 5 ? Math.round(m.utils[m.bn] * 100) + '%' : '—';
+      $('sU').textContent = E.cfg.stations[m.bn].name + ' · others: ' + m.utils.filter((_, i) => i !== m.bn).map(u => Math.round(u * 100) + '%').join(', ');
+    }
+    if (UI.tiles.CT) $('vCT').textContent = m.gap != null ? m.gap.toFixed(0) + ' min' : '—';
+    E.cfg.stations.forEach((_, j) => {
+      const ub = document.getElementById('mapU' + j);
+      if (ub) ub.textContent = E.t > 5 ? 'u = ' + Math.round(m.utils[j] * 100) + '%' : 'u = —';
+    });
+    if (UI.sysm && !updateWidgets.sysmMin) renderSysm(m);
+    if (UI.ticker) drawTicker();
+  }
+  function theory() {
+    const demand = 60 / E.cfg.a;
+    const caps = E.cfg.stations.map(st => 60 / st.p);
+    const syscap = Math.min.apply(null, caps);
+    const Rth = Math.min(demand, syscap);
+    let cum = demand;
+    const uth = E.cfg.stations.map((st, j) => { cum = Math.min(cum, caps[j]); return Math.min(1, cum * st.p / 60); });
+    return { demand, caps, syscap, Rth, CTth: 60 / Rth, uth };
+  }
+  function renderSysm(m) {
+    const th = theory(), N = NT();
+    const near = (a, b, tol) => a != null && Math.abs(a - b) <= tol;
+    const mk = (obs, thv, hit) => '<td>' + obs + '</td><td>' + thv + (hit ? ' <span class="agree">✓</span>' : '') + '</td>';
+    let rows = '';
+    rows += '<tr><td>system throughput ' + N.R + '</td>' + mk(E.t > 5 && m.done > 1 ? m.Rout.toFixed(1) + ' jobs/hour' : '—', 'min(' + th.demand.toFixed(0) + ', ' + th.syscap.toFixed(0) + ') = ' + th.Rth.toFixed(0) + ' jobs/hour', E.t > 5 && near(m.Rout, th.Rth, 0.6)) + '</tr>';
+    rows += '<tr><td>system capacity</td><td>—</td><td>min(' + th.caps.map(c => c.toFixed(0)).join(', ') + ') = ' + th.syscap.toFixed(0) + ' jobs/hour</td></tr>';
+    rows += '<tr><td>system cycle time</td>' + mk(m.gap != null ? m.gap.toFixed(0) + ' min' : '—', '1/' + N.R + ' = ' + th.CTth.toFixed(0) + ' min', near(m.gap, th.CTth, 0.6)) + '</tr>';
+    E.cfg.stations.forEach((st, j) => {
+      const iu = th.demand * st.p / 60;
+      const iuNote = Math.abs(iu - th.uth[j]) > 0.01 ? ' · implied ' + Math.round(iu * 100) + '%' : '';
+      rows += '<tr><td>u — ' + st.name + '</td>' + mk(E.t > 5 ? Math.round(m.utils[j] * 100) + '%' : '—', Math.round(th.uth[j] * 100) + '%' + iuNote, E.t > 5 && near(m.utils[j] * 100, th.uth[j] * 100, 2)) + '</tr>';
+    });
+    $('sysmBody').innerHTML = '<table><tr><th>metric</th><th>observed</th><th>theory</th></tr>' + rows + '</table>';
+  }
+  function drawTicker() {
+    const s = $('tickerSvg'); s.innerHTML = '';
+    const t1 = Math.max(E.t, 60), t0 = Math.max(0, t1 - 90);
+    el('line', { x1: 0, y1: 40, x2: 900, y2: 40, stroke: '#c3c2b7', 'stroke-width': 1.5 }, s);
+    let prevX = null, prevT = null;
+    for (let k = 0; k < SCHED.length; k++) {
+      const d = SCHED[k].done;
+      if (d > Math.min(E.t, t1)) break;
+      if (d < t0) continue;
+      const x = (d - t0) / (t1 - t0) * 880 + 10;
+      el('circle', { cx: x, cy: 40, r: 5, fill: '#eb6834' }, s);
+      if (prevX != null && x - prevX > 48) {
+        el('text', { x: (x + prevX) / 2, y: 22, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#eb6834' }, s).textContent = '↔ ' + (d - prevT).toFixed(0) + ' min';
+        el('line', { x1: prevX + 7, y1: 30, x2: x - 7, y2: 30, stroke: '#eb6834', 'stroke-width': 1, 'stroke-dasharray': '3 3' }, s);
+      }
+      prevX = x; prevT = d;
+    }
+  }
+
+  function frame(now) {
+    if (E.playing) {
+      const dt = Math.min(0.1, (now - E.lastReal) / 1000);
+      E.t += dt * E.speed;
+      if (E.tEnd && E.t >= E.tEnd) { E.t = E.tEnd; E.playing = false; $('playBtn').textContent = '▶ Play'; }
+      updateWidgets();
+    }
+    E.lastReal = now;
+    render.lastWaiting = render().waiting;
+    requestAnimationFrame(frame);
+  }
+  function setSpeed(v) { E.baseSpeed = v; E.spdMult = 1; E.speed = v; document.querySelectorAll('.spd').forEach(x => x.classList.toggle('act', x.dataset.s === '1')); }
+  document.querySelectorAll('.spd').forEach(b => b.addEventListener('click', () => {
+    E.spdMult = parseFloat(b.dataset.s);
+    E.speed = (E.baseSpeed || 7) * E.spdMult;
+    document.querySelectorAll('.spd').forEach(x => x.classList.toggle('act', x === b));
+  }));
+  $('endIn').addEventListener('change', () => { const v = parseFloat($('endIn').value); E.tEnd = v > 0 ? v : Infinity; });
+  $('sysmMin').addEventListener('click', () => {
+    updateWidgets.sysmMin = !updateWidgets.sysmMin;
+    $('sysmBody').style.display = updateWidgets.sysmMin ? 'none' : '';
+    $('sysmMin').textContent = updateWidgets.sysmMin ? '+ expand' : '− minimize';
+  });
+  $('playBtn').addEventListener('click', () => { E.playing = !E.playing; $('playBtn').textContent = E.playing ? '❚❚ Pause' : '▶ Play'; });
+  $('resetBtn').addEventListener('click', () => { E.t = 0; updateWidgets(); });
+
+  /* ---------- notebook ---------- */
+  const NB_DEFS = {
+    bn:   { cls: 'e-bn',  sym: () => '',    nm: 'Bottleneck', df: 'The slowest resource — the one with the highest utilization. It sets the pace of the whole system.', fx: () => 'the resource with the largest p (smallest capacity)' },
+    cap:  { cls: 'e-c',   sym: () => NOTA.style === 'jacobs' ? '' : 'c', nm: 'System capacity', df: 'A chain’s maximum output = its slowest link’s capacity. And the system’s throughput obeys ⟦R⟧ = min(demand, system capacity).', fx: () => (NOTA.style === 'jacobs' ? 'system capacity' : 'c(system)') + ' = min of the resource capacities' },
+    sct:  { cls: 'e-CT',  sym: () => 'CT',  nm: 'System cycle time', df: 'At maximum output, one job exits every… = the bottleneck’s p.', fx: () => 'CT(system) = p of the bottleneck' },
+    sft:  { cls: 'e-T',   sym: () => '', nm: () => 'System ' + NT().TtermC.toLowerCase().replace(/^./, c => c.toUpperCase()), df: 'One job’s total time in the system: all waiting + all processing. With no queues, ⟦T⟧ = sum of the processing times; any time spent waiting in buffers inside the system adds to it.', fx: () => '⟦T⟧ (no waiting) = p₁ + p₂ + p₃' },
+    block:{ cls: 'e-bn',  sym: () => '',    nm: 'Blocking', df: 'An activity must stop because there is no place to deposit the job it just finished — the mirror of starving; the cause is downstream. A buffer converts blocked time into buffer waiting; it does not add capacity.', fx: () => 'blocked time per cycle (slower activity downstream) = downstream p − upstream p' },
+    starv:{ cls: 'e-R',   sym: () => '',    nm: 'Starving', df: 'A station idle because upstream feeds it nothing. (Blocking = can’t release downstream — covered with WIP caps later in the course.)', fx: () => '' },
+  };
+  const nbLearned = [];
+  function learn(key) { if (nbLearned.includes(key)) return; nbLearned.push(key); renderNotebook(key); }
+  function renderNotebook(stampKey) {
+    const b = $('nbBody');
+    if (!nbLearned.length) { b.innerHTML = '<div class="empty">Concepts and formulas will appear here as you work through the exercise.</div>'; return; }
+    b.innerHTML = nbLearned.map(k => {
+      const d = NB_DEFS[k];
+      const x = d.fx ? d.fx() : '';
+      const sy = d.sym();
+      return '<div class="nb-entry ' + d.cls + (k === stampKey ? ' stamp' : '') + '">' + (sy ? '<span class="sym">' + sy + '</span> — ' : '') + '<span class="nm">' + (typeof d.nm === 'function' ? d.nm() : d.nm) + '</span><div class="df">' + subN(d.df) + '</div>' + (x ? '<div class="fx">' + subN(x) + '</div>' : '') + '</div>';
+    }).join('');
+  }
+
+  /* ---------- course state, codes ---------- */
+  const C = { name: '', score: 0, step: -1, taskState: {}, poll: null, finished: false };
+  const SALT = 9421;
+  function nameHash(name) {
+    let h = 5381; const s = (name || '').trim().toLowerCase();
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h % 46656;
+  }
+  function makeCode(name, score) {
+    const h = nameHash(name), payload = (2 << 10) | Math.min(1023, score);
+    const chk = (h * 31 + payload * 7 + SALT) % 1296;
+    const b36 = (n, l) => n.toString(36).toUpperCase().padStart(l, '0');
+    return 'E2-' + b36(h, 3) + '-' + b36(payload, 4) + '-' + b36(chk, 2);
+  }
+  function readCode(name, code) {
+    const m = (code || '').trim().toUpperCase().match(/^E2-([0-9A-Z]{3})-([0-9A-Z]{4})-([0-9A-Z]{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 36), payload = parseInt(m[2], 36), chk = parseInt(m[3], 36);
+    if (h !== nameHash(name) || (h * 31 + payload * 7 + SALT) % 1296 !== chk) return null;
+    return { score: payload & 1023 };
+  }
+
+  /* ---------- steps ---------- */
+  const STEPS = [
+    { t: 'home' },
+    { t: 'quiznum', pg: 'calm', dim: true, dimNote: 'Warm-up case — the simulation does not apply.', q: '<span class="qtag off">NEW CASE</span><br><b>Warm-up retrieval #1.</b> A single activity was busy for 21 of the last 30 minutes. Its utilization u is ___%:', unit: '%', ans: 70, tol: 2, pts: 5, hint: 'Utilization = time activated / time available.', hint2: 'Utilization = time activated / time available = 21 minutes ÷ 30 minutes, expressed as a percentage.', ex: 'Utilization = time activated / time available = 21 minutes ÷ 30 minutes = <b>70%</b>. One more warm-up and the new material begins.' },
+    { t: 'quiznum', pg: 'calm', dim: true, dimNote: 'Warm-up case — the simulation does not apply.', q: '<span class="qtag off">NEW CASE</span><br><b>Warm-up retrieval #2.</b> A clinic discharges patients at ⟦R⟧ = 5 per hour. On average, one patient walks out every ___ minutes:', unit: 'min', ans: 12, tol: 0.5, pts: 5, hint: 'Cycle time = 1/⟦R⟧.', hint2: 'Cycle time = 1/⟦R⟧ = 60 minutes ÷ 5 patients — 5 patients leave every 60 minutes, evenly spaced.', ex: 'Cycle time = 1/⟦R⟧ = 60 minutes ÷ 5 patients = <b>12 minutes per patient</b>. Warm-up complete.' },
+    { t: 'read', pg: 'calm', h: '<p><b>Core idea:</b> a process is a chain of activities, and each resource keeps its own processing time and its own capacity.</p><span class="formula">Capacity of one resource = ⟦cap1⟧, computed per activity — independent of the rest of the chain</span><p>The simulation shows the bank’s full pipeline: <b>Intake</b> (processing time p = 3 minutes) → <b>Underwriting</b> (p = 5 minutes) → <b>Closing</b> (p = 2 minutes). Example: Intake’s capacity = 1/p = <span class="frac"><span class="top">1 job</span><span class="bot">3 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 20 jobs/hour. The next questions ask for the other two, the same way.</p><p>Applications currently arrive at a steady rate, one every 8 minutes (7.5 jobs/hour), and no queues form. In the next step, demand will increase.</p><details class="teach"><summary>Why this works</summary><p>In Exercise 1 you analyzed a single activity. Real processes are chains, and a chain behaves in ways no single step can explain. Each p is under its box, and the little orange dial on each activity box sweeps once per job — watch how differently fast the three dials turn. That difference drives everything in this exercise.</p></details>' },
+    { t: 'quiz', pg: 'calm', q: 'Look at <b>Closing</b>, the last activity: p = 2 minutes per application. What is <b>Closing’s capacity</b> — the most this one activity could finish per hour, ignoring the rest of the line?', opts: [{ o: { v: '30 jobs/hour', d: 'capacity = 1/p = 60/2' }, ok: 1 }, { o: '2 jobs/hour', ok: 0 }, { o: { v: '12 jobs/hour', d: 'the same as the whole pipeline' }, ok: 0 }], pts: 5, ex: 'Closing’s capacity = 1/<i>p</i> = <span class="frac"><span class="top">1 job</span><span class="bot">2 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 30 jobs/hour. All three capacities just appeared under their boxes on the map: 20, 12, 30. Each station has its capacity — and the next steps show why Closing will deliver far less than its 30 jobs/hour.', pgAfter: 'calmCap' },
+    { t: 'quiznum', pg: 'calmCap', q: 'One more Exercise 1 calculation. Right now there are no queues anywhere. An application that walks in the door needs ___ minutes to come out funded (<mark class="hl">the SYSTEM ⟦Tterm⟧ ⟦T⟧</mark>):', unit: 'min', ans: 10, tol: 0.5, pts: 5, hint: '⟦TtermC⟧ with no queues = the sum of the processing times of the sequential activities.', hint2: '⟦T⟧ = sum of the processing times = 3 minutes + 5 minutes + 2 minutes.', ex: '<span class="formula">System ⟦Tterm⟧ ⟦T⟧ = one job’s total time in the system = all waiting + all processing</span>⟦T⟧ = 3 + 5 + 2 = 10 minutes. The system’s ⟦Tterm⟧ sums ALL the steps, while its cycle time will come from just ONE of them (the slowest). In the next step demand will exceed capacity, and waiting — not processing — will raise ⟦T⟧ far above 10 minutes.', learn: 'sft' },
+    { t: 'predict', pg: 'calmCapQ', q: '<b>Before continuing, predict the result.</b> Marketing runs a promotion, and applications now arrive faster than the pipeline can fund them. At maximum output, how many funded loans get processed per hour?', opts: [{ v: '20 jobs/hour', d: 'Intake is the first step; it sets the pace' }, { v: '12 jobs/hour', d: 'the slowest step decides for everyone' }, { v: '30 jobs/hour', d: 'Closing is the exit; it sets the pace' }, { v: '62 jobs/hour', d: 'the three capacities add up' }], correct: 1, fb: { ok: 'The run will confirm it: a chain cannot deliver faster than its slowest resource — system capacity = min(20, 12, 30) = 12 jobs/hour.', bad: 'The run will show 12 jobs/hour: a chain cannot deliver faster than its slowest resource — system capacity = min(20, 12, 30) = 12 jobs/hour.' } },
+    { t: 'task', pg: 'flood', h: '<span class="tt">The demand surge</span>Applications now arrive every <b>4 minutes</b> (demand: 15 jobs/hour — red label).<br>Press <b>▶ Play</b> and watch two hours (it stops at t = 120). Watch two things: where does the queue grow, and what is Closing doing while it grows?', unlock: 'Press the ▶ Play button; the exercise unlocks when t reaches 120.', endT: 120, verify() { const m = metrics(); const q = render.lastWaiting ? render.lastWaiting[1].length : 0; return E.t >= 119.9 ? { ok: true, msg: q + ' applications stuck in front of Underwriting after just two hours — while Closing kept flashing STARVED. The queue and the idleness have the same cause: the bottleneck’s limited capacity.' } : { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' / 120 · queue at Underwriting: ' + q : 'Press ▶ Play.' }; } },
+    { t: 'read', pg: 'flood', h: '<p><b>Core measure:</b> utilization is the ratio of the time a resource is actually activated to the time it is available for use.</p><span class="formula">utilization <i>u</i> = time activated / time available · time activated per hour = jobs handled per hour × the processing time of one job · <i>(a calculated result above 100% is called the <b>implied utilization</b>)</i></span><p>The next two questions run this calculation, as if every arriving job had to be handled by that activity: first Intake, then Underwriting — where the result comes out above 100%. What an impossible result means follows immediately.</p><details class="teach"><summary>Why this works</summary><p>The calculation measures the load <i>placed on</i> an activity — the time the arriving work would require — not the work the activity actually does. At or below 100%, the result is simply the activity’s utilization: the activity can deliver what is asked. Above 100%, the result is called the implied utilization — it measures the load placed on the activity, not the activity’s actual state. The activity itself runs at 100% actual utilization, and the excess demand becomes a growing queue.</p></details>' },
+    { t: 'quiznum', pg: 'flood', q: '<b>Intake’s utilization.</b> 15 jobs arrive per hour and each needs <i>p</i> = 3 minutes at Intake. If you calculate the Intake activity’s utilization — time activated / time available, over one hour — what do you get, in %?', unit: '%', ans: 75, tol: 2, pts: 5, hint: 'Utilization = time activated / time available.', hint2: 'Utilization = time activated / time available = (15 jobs × 3 minutes/job) ÷ 60 minutes = 45 minutes ÷ 60 minutes.', ex: 'Utilization = time activated / time available = 45 minutes ÷ 60 minutes = <b>75%</b>. Below 100%: Intake handles everything that arrives and is busy three quarters of its time — this is simply its utilization.' },
+    { t: 'quiznum2', pg: 'flood', q: '<b>Underwriting’s calculation.</b> The same 15 jobs/hour would each need <i>p</i> = 5 minutes at Underwriting — and based on what you have learned, Underwriting is the bottleneck.', q1: { q: 'If you calculated Underwriting’s utilization the same way, what would you get, in %? <i>(this calculation is allowed to exceed 100)</i>', unit: '%', ans: 125, tol: 3, pts: 5, hint: 'The same calculation: utilization = time activated / time available — here, the time the arriving work would require.', hint2: 'Time required: 15 jobs × 5 minutes/job = 75 minutes. Time available: 60 minutes. 75 minutes ÷ 60 minutes.', ex: 'The calculation = 75 minutes ÷ 60 minutes = <b>125%</b>. In reality this cannot happen: a resource cannot be activated for more than the time it is available. A result above 100% is therefore called the <b>implied utilization</b> — it measures the load placed on the activity, not the activity’s actual state.' }, q2: { q: 'What is Underwriting’s <b>actual</b> utilization, in %?', unit: '%', ans: 100, tol: 1, pts: 5, hint: 'Actual utilization = time activated / time available — and time activated cannot exceed time available.', hint2: 'Work keeps arriving faster than Underwriting can process, so it is activated all 60 of its 60 available minutes.', ex: 'Actual utilization = 60 minutes ÷ 60 minutes = <b>100%</b>. Underwriting is activated all of its available time — and never more. The impossible 25 points of the implied calculation do not vanish: they become the growing queue in the simulation. <b>The actual utilization of this activity is 100%.</b>' } },
+    { t: 'quiznum', pg: 'floodU', pgAfter: 'floodUshow', q: 'The system delivers ⟦R⟧ = 12 jobs/hour, so 12 jobs/hour is all <b>Closing</b> receives. Each job needs <i>p</i> = 2 minutes. The Closing activity’s utilization is ___%:', unit: '%', ans: 40, tol: 2, pts: 5, hint: 'Utilization = time activated / time available, using the flow the activity actually receives.', hint2: 'Time activated: 12 jobs × 2 minutes/job = 24 minutes. Time available: 60 minutes. 24 minutes ÷ 60 minutes.', ex: 'Closing’s utilization = 24 minutes ÷ 60 minutes = <b>40%</b>. The load placed on Closing was 15 jobs × 2 minutes/job = 30 minutes ÷ 60 minutes = 50% — Closing runs below even that, because the bottleneck upstream releases less than customers sent. Closing is idle not by choice but by supply: nothing arrives to work on.<span class="formula">Starving = an activity must stop because there is no work to process · the cause is upstream — here, the bottleneck</span>The utilization badges under the three activities just appeared — and watch Closing’s box show the STARVED tag between jobs.', learn: 'starv' },
+    { t: 'quiznum', pg: 'floodQuiet', pgAfter: 'floodUI', q: 'The tiles are hidden until you answer. The three activities’ capacities are 20, 12, and 30 jobs/hour. At maximum output, the whole PIPELINE can fund ___ loans per hour (<mark class="hl">the SYSTEM capacity</mark>):', unit: 'jobs/hour', ans: 12, tol: 0.5, pts: 5, hint: 'System capacity = min of the resource capacities.', hint2: 'System capacity = min(20, 12, 30) jobs/hour — a chain cannot move faster than its slowest link.', ex: '<span class="formula">System capacity = min of the resource capacities = the bottleneck’s capacity · ⟦R⟧(system) = min(demand, system capacity)</span>System capacity = min(20, 12, 30) = 12 jobs/hour — set by the one activity whose implied utilization crossed 100%. <mark class="hl">A process can never run faster than its slowest step.</mark> And it gives you the SYSTEM’s throughput by the same law from Exercise 1, one level up: ⟦R⟧(system) = min(demand, system capacity) = min(15, 12) = 12 jobs/hour. Now check the blue tile: <b>12.0 jobs/hour, exactly</b> — your calculation predicted the simulation.', learn: 'cap' },
+    { t: 'quiznum', pg: 'floodQuiet', pgAfter: 'floodUI', q: 'The tiles and the output ticker are hidden until you answer. At maximum output, how many minutes pass between one funded loan and the next (<mark class="hl">the SYSTEM cycle time</mark>)?', unit: 'min', ans: 5, tol: 0.4, pts: 5, hint: 'System cycle time = 1 / system capacity.', hint2: 'System cycle time = 1 / system capacity = 60 minutes ÷ 12 jobs — 12 exits spread evenly across 60 minutes.', ex: '<span class="formula">System cycle time = average time between two consecutive finished jobs = 1/⟦R⟧(system) · when overloaded, = the bottleneck’s p</span>System cycle time = 1/⟦R⟧(system) = <span class="frac"><span class="top">1 hour</span><span class="bot">12 jobs</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 5 minutes/job = the slowest station’s <i>p</i>. Now check the orange ticker: one dot every 5 minutes, matching the calculation. Intake could go every 3, Closing every 2 — but 5 minutes is the gap everyone gets: when the system is overloaded, the time between finished jobs equals the bottleneck’s processing time.', learn: 'sct' },
+    { t: 'read', pg: 'floodBn', h: '<p><b>Core idea:</b> the bottleneck is the resource with the highest utilization. It sets the system’s capacity and its rhythm.</p><span class="formula">Bottleneck = the resource with the highest (implied) utilization · system capacity = the bottleneck’s capacity · when overloaded, CT(system) = the bottleneck’s p</span><p>The map now outlines <b style="color:var(--red)">Underwriting</b> in red. Check the gold tile: <b>100% · 75% · 40%</b> — the profile you computed activity by activity.</p><details class="teach"><summary>Why this works</summary><p>Look at the choreography around the bottleneck: <b>upstream</b>, work piles up — Buffer 2 keeps growing. <b>Downstream</b>, Closing keeps flashing STARVED — idle because the bottleneck feeds it only one job every 5 minutes, less than Closing can process. The queue and the idleness have the same cause: the bottleneck’s limited capacity.</p></details>', learn: 'bn' },
+    { t: 'quiznum', pg: 'floodBn', q: 'Now the hard arithmetic: 15 jobs/hour arrive, 12 jobs/hour get funded. The queue in front of Underwriting grows by ___ applications every hour (<mark class="hl">the inventory build-up rate</mark>):', unit: 'jobs/hour', ans: 3, tol: 0.5, pts: 5, hint: 'Inventory build-up rate = rate in − rate out.', hint2: 'Inventory build-up rate = rate in − rate out = 15 jobs/hour − 12 jobs/hour. The difference has nowhere to go but the buffer.', ex: '<span class="formula">Inventory build-up = the queue grows at (rate in − rate out), for as long as demand exceeds capacity</span>15 jobs/hour − 12 jobs/hour = 3 jobs/hour for as long as demand stays at 15 jobs/hour — check the red tile: after your two-hour run the pile grew by about 2 × 3 = 6. And notice: this 3 jobs/hour is exactly the impossible part of the implied utilization — the 25% above 100%, times 12 jobs/hour. Your textbook calls this <b>inventory build-up</b> — same idea, two names. Overloaded queues do not settle; the build-up continues until capacity or demand changes.' },
+    { t: 'predict', q: '<b>Before continuing, predict the result.</b> The board approves one upgrade. Which station should receive this approved extra capacity to raise output?', opts: [{ v: 'Underwriting', d: 'the bottleneck; every minute saved there is a minute for the whole system' }, { v: 'Closing', d: 'the exit; faster exit, faster output' }, { v: 'Intake', d: 'it handles every application first' }, 'Split the money across all three'], correct: 0, fb: { ok: 'Only added capacity at the bottleneck raises system capacity. The run shows what happens after Underwriting is upgraded.', bad: 'Only the bottleneck limits output: capacity added anywhere else adds idle time, not throughput. The run shows what happens after Underwriting is upgraded.' } },
+    { t: 'task', pg: 'whack', h: '<span class="tt">Fix the bottleneck — then recheck</span>Two things happen at once. Marketing extends the promotion: applications now arrive every <b>2.5 minutes (24 jobs/hour)</b> — watch Buffer 2 grow. And the board funds <b>a second underwriter</b>: two underwriters share the queue, so a loan clears Underwriting every <b>5 ÷ 2 = 2.5 minutes</b>.<br>Drag the staffing slider down to <b>2.5</b>, press <b>▶ Play</b> (the run restarts when you move it) and run to t = 120. Watch the red BOTTLENECK outline AND the piles — where does the queue live now?', unlock: 'Drag the slider to 2.5 minutes and press the ▶ Play button; the exercise unlocks when the run reaches t = 120.', ctlP2: { min: 2, max: 6, step: 0.5, lab: 'Underwriting min/loan (5 ÷ number of underwriters)' }, endT: 120, verify() { if (E.cfg.stations[1].p > 2.5) return { ok: false, msg: 'Underwriting = ' + E.cfg.stations[1].p + ' min — drag it to 2.5 or less.' }; if (E.t < 119.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the outline and the buffers.' : 'Underwriting = ' + E.cfg.stations[1].p + ' min ✓ — press ▶ Play and run until t = 120 minutes.' }; const q0 = render.lastWaiting ? render.lastWaiting[0].length : 0; const q1 = render.lastWaiting ? render.lastWaiting[1].length : 0; return { ok: true, msg: 'The red outline moved to Intake — and so did the queue: ' + q0 + ' now wait in Buffer 1 while Buffer 2 holds ' + q1 + '. You fixed the bottleneck, and the queue moved to the new bottleneck.' }; } },
+    { t: 'read', pg: 'whack', h: '<p><b>Core idea:</b> fixing the bottleneck moves it. After any capacity change, recompute every resource’s capacity — the new bottleneck is the new smallest.</p><span class="formula">New bottleneck = the new smallest capacity · wherever demand exceeds capacity, the queue grows at (rate in − rate out)</span><p>With Underwriting at 2.5 min, the capacities are 60/3 = 20, 60/2.5 = 24, 60/2 = 30 jobs/hour → system capacity = min(20, 24, 30) = <b>20 jobs/hour</b> (Intake). Demand is 24 jobs/hour, so Buffer 1 grows at 24 − 20 = <b>4 jobs/hour</b>, while Buffer 2 sits empty.</p><details class="teach"><summary>Why this works</summary><p>Two conclusions. First: improvement is repeated — fixing a bottleneck promotes the next-slowest step, and the inventory build-up follows it there. Second: even if demand dropped below 20 jobs/hour tomorrow and every line vanished, Intake would still be the bottleneck — a bottleneck is about capacity, not about visible lines. A queue is a consequence of the constraint, not the constraint itself.</p></details>' },
+    { t: 'quiznum', pg: 'whack', q: 'Confirm the new reality: with Underwriting at 2.5 min, <mark class="hl">the new system capacity</mark> is now ___ jobs/hour:', unit: 'jobs/hour', ans: 20, tol: 1, pts: 5, hint: 'System capacity = min of the resource capacities, at the new processing times.', hint2: 'The new capacities: 60/3 = 20, 60/2.5 = 24, and 60/2 = 30 jobs/hour. System capacity = the smallest.', ex: 'min(20, 24, 30) = 20 jobs/hour — Intake’s number. Demand is 24 jobs/hour, so ⟦R⟧(system) = min(24, 20) = 20 jobs/hour and Buffer 1 keeps growing at 4 jobs/hour. The same growth law now applies at Buffer 1.' },
+    { t: 'quiz', pg: 'blockA', q: '<span class="qtag off">NEW CASE</span><br>An electronics line assembles and tests one product: <b>Assembly</b> (processing time p = 4 minutes) → <b>Testing</b> (p = 8 minutes), one order arriving every 6 minutes (demand: 10 orders/hour, against Testing’s capacity of 7.5 orders/hour). <mark class="hl">The buffer between the two activities has been removed: when Assembly finishes a unit, there is no place to hold it before Testing.</mark> The finished unit stays inside Assembly until Testing can take it.<span class="formula">Blocking = an activity must stop because there is no place to deposit the job it just finished · Starving = an activity is idle because nothing arrives from upstream</span>Press <b>▶ Play</b>, watch Assembly through a few cycles, then answer: <b>while Assembly is blocked, it holds its finished unit and cannot start the next one.</b>', opts: [{ o: 'True', ok: 1 }, { o: 'False', ok: 0 }], pts: 5, ex: 'True. Blocked time is holding time: the work is finished, the unit has nowhere to go, and the next unit cannot enter — the BLOCKED tag, the red arrow, and the slash on the path mark exactly this state.', learn: 'block' },
+    { t: 'quiznum', pg: 'blockA', q: '<b>Assembly’s blocked time.</b> Testing releases one unit every 8 minutes; Assembly finishes its work in 4 minutes. Each cycle, Assembly holds the assembled unit for an extra ___ minutes:', unit: 'min', ans: 4, tol: 0.3, pts: 5, hint: 'Blocked time per cycle = the downstream activity’s processing time − Assembly’s processing time.', hint2: 'Blocked time per cycle = 8 minutes − 4 minutes.', ex: 'Blocked time per cycle = 8 minutes − 4 minutes = <b>4 minutes</b>. Blocked time is not processing: the work is finished, and the unit has nowhere to go.' },
+    { t: 'quiznum', pg: 'blockA', q: '<b>System ⟦Tterm⟧ without the buffer.</b> Follow one unit from the moment it enters Assembly until it leaves Testing: 4 minutes of processing, the blocked wait, then 8 minutes at Testing. Measured from entering Assembly, its system ⟦Tterm⟧ is ___ minutes:', unit: 'min', ans: 16, tol: 0.5, pts: 5, hint: 'System ⟦Tterm⟧ (from entering Assembly) = processing at Assembly + blocked time + processing at Testing.', hint2: 'System ⟦Tterm⟧ = 4 minutes + 4 minutes + 8 minutes.', ex: 'System ⟦Tterm⟧, measured from entering Assembly = 4 minutes + 4 minutes + 8 minutes = <b>16 minutes</b>.' },
+    { t: 'task', pg: 'blockA', h: '<span class="tt">Install the buffer</span>The line can add a rack between Assembly and Testing: a finished unit then moves out of Assembly immediately and waits on the rack.<br>Turn <b>Install the buffer</b> on, press <b>▶ Play</b>, and watch what changes — and what does not. Turning it off removes the rack again.', toggles: [{ label: 'Install the buffer' }], applyToggles(ts) { if (ts.on0) { delete E.cfg.noBufAfter; E.cfg.bufNames = ['Orders', 'Rack']; } else { E.cfg.noBufAfter = 0; E.cfg.bufNames = ['Orders']; } computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, showP: true, showStates: true }); updateWidgets(); if (ts.on0) { const f = document.getElementById('bufName1'); if (f) f.setAttribute('class', 'flashIn'); } }, unlock: 'Turn Install the buffer on, press the ▶ Play button, and let the run reach t = 40.', endT: 40, verify(ts) { if (!ts.on0) return { ok: false, msg: E.t > 2 ? 'Assembly still blocks every cycle. Turn Install the buffer on.' : 'Turn Install the buffer on.' }; if (E.t < 39.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' / 40 — watch Assembly.' : 'Press ▶ Play.' }; return { ok: true, msg: 'BLOCKED is gone: Assembly releases each unit after its 4 minutes of work and the finished units now wait on the rack, which grows at 10 − 7.5 = 2.5 orders/hour. Throughput did not change: Testing still releases one unit every 8 minutes.' }; } },
+    { t: 'quiz', pg: 'blockB', q: 'Compare one unit’s total time from arrival to Shipped, with and without the buffer. With the buffer it is:', opts: [{ o: { v: 'Identical', d: 'Testing releases one unit every 8 minutes in both designs; the buffer moved the waiting, it did not remove any' }, ok: 1 }, { o: { v: 'Shorter', d: 'the blocked wait disappears' }, ok: 0 }, { o: { v: 'Longer', d: 'the rack adds one more stop' }, ok: 0 }], pts: 5, ex: 'Identical. Departure times are set by the bottleneck: Testing releases one unit every 8 minutes in both designs, so every unit ships at the same moment either way. The buffer changed where units wait — on the rack instead of blocked inside Assembly — and it freed Assembly to keep working. It did not add capacity, so it did not change any unit’s ⟦Tterm⟧. When processing times vary rather than repeat exactly, that freedom is what keeps a line moving: buffers absorb variation. The variability simulator develops this.' },
+    { t: 'quiz', dim: true, dimNote: 'New case — the simulation still shows the loan pipeline.', q: '<span class="qtag off">NEW CASE</span><br>An IPO team runs due diligence (4 days per deal) → drafting (6 days) → filing (1 day), three separate teams working in series. A client asks: “Can you take on one new deal every 10 business days?”', opts: [{ o: 'Yes — the slowest team (drafting) releases a deal every 6 days, and one per 6 days is faster than one per 10', ok: 1 }, { o: 'No — a deal takes 4 + 6 + 1 = 11 days start to finish, and 11 > 10', ok: 0 }, { o: 'Yes, easily — filing takes only 1 day', ok: 0 }], pts: 10, ex: 'This question contains two separate questions. <b>RATE (capacity):</b> how often can a deal start? The bottleneck is drafting at 6 days/deal → system capacity = one deal per 6 days. Demand = one per 10 days. 1/6 > 1/10 → yes, comfortably. <b>DURATION (⟦Tterm⟧):</b> ⟦T⟧ = 4 + 6 + 1 = 11 days per deal. The error to avoid is comparing 11 (how long ONE deal is inside) with 10 (the spacing between deals) — a duration and a spacing, two different kinds of quantity. Deals overlap: while deal #1 sits in drafting, deal #2 is already in due diligence — three teams, three deals, all moving at once. Say yes, then tell the client each deal takes ~11 days door to door. Confusing the rate with the duration is how firms overpromise — or turn away work they could easily take.' },
+    { t: 'task', pg: 'caseA', h: '<span class="tt">Business case: the urgent-care clinic</span><span class="qtag off">NEW CASE</span> An urgent-care clinic treats walk-in patients: <b>Registration</b> (processing time p = 2 minutes) → <b>Physician</b> (p = 10 minutes) → <b>Discharge</b> (p = 3 minutes). Patients arrive every 6 minutes (demand: 10 patients/hour). The waiting room fills further every hour, and the clinic can fund one improvement.<br>Turn one option on, press <b>▶ Play</b>, and read the result. Turning an option off restores the original clinic.', toggles: [{ label: 'Hire a physician' }, { label: 'Hire receptionists' }, { label: 'Expand the waiting room (Buffer 2)' }], applyToggles(ts) { E.cfg.stations[0].p = 2; E.cfg.stations[1].p = 10; let flash = null; if (ts.on0) { E.cfg.stations[1].p = 5; flash = 'mapCap1'; } if (ts.on1) { E.cfg.stations[0].p = 1; flash = 'mapCap0'; } if (ts.on2) { flash = 'bufName1'; } computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, showP: true, hotDemand: true }); updateWidgets(); if (flash) { const f = document.getElementById(flash); if (f) f.setAttribute('class', 'flashIn'); } }, unlock: 'Find the option that stops the waiting room from growing; the exercise unlocks after that run reaches t = 60.', endT: 60, verify(ts) { const anyOn = ts.on0 || ts.on1 || ts.on2; if (!anyOn) return { ok: false, msg: E.playing ? 'Running… the waiting room grows at 10 − 6 = 4 patients/hour. Turn one option on.' : 'Turn one option on.' }; if (E.t < 30) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the waiting room.' : 'Press ▶ Play to test this option.' }; if (ts.on0) { if (E.t < 59.9) return { ok: false, msg: 'Running… t = ' + Math.floor(E.t) + ' / 60 — the waiting room has stopped growing.' }; return { ok: true, msg: 'A second physician doubles that capacity: system capacity = min(30, 12, 20) = 12 patients/hour, so throughput = min(10, 12) = 10 patients/hour = demand — the waiting room stops growing. The other options never touched the constraint.' }; } if (ts.on1) return { ok: false, warn: true, msg: 'Registration was not the constraint. System capacity is still min(60, 6, 20) = 6 patients/hour, and the room keeps filling at 4 patients/hour. Turn this off and try another option.' }; return { ok: false, warn: true, msg: 'A larger waiting room holds more waiting patients; the rate of care is unchanged. Throughput = min(10, 6) = 6 patients/hour, and the room keeps filling. Turn this off and try another option.' }; } },
+    { t: 'match', pg: 'floodRecap', pts: 10 },
+    { t: 'task', pg: 'sandbox', h: '<span class="tt">Design your own process</span>Nothing in this step is graded.<br>Set the arrival gap and the three processing times, press <b>▶ Play</b>, and test your predictions in the simulation: where does the bottleneck sit? Does a queue grow, and at what rate?<br><br><b>Challenge:</b> produce a queue in front of <i>Closing</i> — it has never had one. <button class="mini" id="sbHintBtn" style="margin-left:6px">Hint</button><span id="sbHintTxt" style="display:none"><br>Make Closing the slowest step, and give the process more demand than Closing can handle.</span>', unlock: 'Continue unlocks after a 60-minute run.', ctlSB: true, verify() { return E.t >= 60 ? { ok: true, msg: 'Run as many designs as you like and continue whenever you are ready. Current bottleneck: ' + E.cfg.stations[bnIdx()].name + '.' } : { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — give each design at least 60 minutes.' : 'Set your dials and press ▶ Play.' }; } },
+    { t: 'take', h: 'A chain’s capacity equals its slowest resource’s capacity: the <b>bottleneck</b> (highest utilization). When the system is overloaded, the time between finished jobs equals the bottleneck’s p; resources downstream are <b>starved</b>, work accumulates upstream — an <b>inventory build-up</b> growing at (rate in − rate out) — and an activity with no room to release its finished job is <b>blocked</b>; a buffer relocates waiting but does not add capacity. Fix the bottleneck and it <b>moves</b> to the new smallest capacity — and the build-up moves with it. A bottleneck is defined by capacity, not by visible queues.' }
+  ];
+  const SECTIONS = [
+    { lab: 'Warm-up', n: 2 },
+    { lab: 'The chain', n: 3 },
+    { lab: 'The demand surge', n: 2 },
+    { lab: 'Utilization &amp; load', n: 4 },
+    { lab: 'System capacity', n: 2 },
+    { lab: 'Bottleneck', n: 2 },
+    { lab: 'Moving bottleneck', n: 4 },
+    { lab: 'Blocking', n: 5 },
+    { lab: 'Review', n: 5 }
+  ];
+  const MAX_PTS = STEPS.reduce((a, s) => a + (s.pts || 0) + (s.q1 ? (s.q1.pts || 0) + (s.q2.pts || 0) : 0), 0);
+
+  const MATCH_CONCEPTS = [
+    { k: 'bn', lab: 'bottleneck' },
+    { k: 'cap', lab: 'system capacity' },
+    { k: 'sct', lab: 'system cycle time' },
+    { k: 'starv', lab: 'starving' },
+    { k: 'grow', lab: 'queue growth / inventory build-up' },
+    { k: 'T', lab: '⟦T⟧ — ⟦Tterm⟧' }
+  ];
+  const MATCH_PROMPTS = [
+    { q: 'The step everyone else waits on — Underwriting at 5 minutes.', k: 'bn' },
+    { q: 'min(20, 12, 30) = 12 jobs/hour.', k: 'cap' },
+    { q: 'A funded loan exits every 5 minutes at maximum output.', k: 'sct' },
+    { q: 'Closing sits idle — nothing arrives from upstream.', k: 'starv' },
+    { q: '15 jobs/hour in, 12 jobs/hour out — the pile rises by 3 every hour.', k: 'grow' },
+    { q: 'The time one job spends inside the process, start to finish.', k: 'T' }
+  ];
+
+  /* ---------- pages ---------- */
+  function pipeCfg(a, p2) {
+    E.cfg = { stations: [{ name: 'Intake', p: 3 }, { name: 'Underwriting', p: p2 || 5 }, { name: 'Closing', p: 2 }], a: a, doneName: 'Funded', doneWord: 'funded' };
+    computeSchedule();
+  }
+  const PAGES = {
+    ret1: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 7, ic: '🗂' }], a: 10, doneName: 'Done', doneWord: 'done' }; computeSchedule(); drawMap({ icons: true, note: 'a single-activity process like Exercise 1’s, running again — busy, then idle, then busy' }); E.t = 0; E.tEnd = Infinity; E.playing = true; setSpeed(5); setUI({ runbar: true, tiles: {} }); },
+    ret2: () => { E.cfg = { stations: [{ name: 'Treatment', p: 9, ic: '🏥' }], a: 12, doneName: 'Discharged', doneWord: 'discharged', bufNames: ['Waiting room'] }; computeSchedule(); drawMap({ icons: true, note: 'the clinic — watch the ticker: one discharge leaves one dot' }); E.t = 0; E.tEnd = Infinity; E.playing = true; setSpeed(5); setUI({ runbar: true, tiles: {}, ticker: true }); },
+    calm: () => { pipeCfg(8); drawMap({ showArrRate: true }); E.t = 0; E.tEnd = Infinity; E.playing = true; setSpeed(5); setUI({ runbar: true }); },
+    calmCap: () => { pipeCfg(8); drawMap({ showArrRate: true, showCap: true }); },
+    calmCapQ: () => { pipeCfg(8); drawMap({ showCap: true, showR: false }); },
+    flood: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true }); E.t = 0; E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, CT: 1 }, ticker: true }); },
+    blockA: () => { E.cfg = { stations: [{ name: 'Assembly', p: 4 }, { name: 'Testing', p: 8 }], a: 6, doneName: 'Shipped', doneWord: 'shipped', bufNames: ['Orders'], arriveLabel: 'orders arrive', noBufAfter: 0 }; computeSchedule(); drawMap({ showArrRate: true, showCap: true, showP: true, showStates: true }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: {} }); },
+    blockB: () => { E.cfg = { stations: [{ name: 'Assembly', p: 4 }, { name: 'Testing', p: 8 }], a: 6, doneName: 'Shipped', doneWord: 'shipped', bufNames: ['Orders', 'Rack'], arriveLabel: 'orders arrive' }; computeSchedule(); drawMap({ showArrRate: true, showCap: true, showP: true, showStates: true }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: {} }); },
+    caseA: () => { E.cfg = { stations: [{ name: 'Registration', p: 2 }, { name: 'Physician', p: 10 }, { name: 'Discharge', p: 3 }], a: 6, doneName: 'Treated', doneWord: 'treated', bufNames: ['Buffer 1', 'Waiting room'], arriveLabel: 'patients arrive' }; computeSchedule(); drawMap({ showArrRate: true, showCap: true, showP: true, hotDemand: true }); E.t = 0; E.playing = true; $('playBtn').textContent = '❚❚ Pause'; E.tEnd = Infinity; setSpeed(6); setUI({ runbar: true, tiles: { R: 1, Q: 1 } }); },
+    floodU: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true }); if (E.t < 60) E.t = 60; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    floodUshow: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showU: true }); E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    floodQuiet: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showR: false }); E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: {}, ticker: false }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    floodUI: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true }); E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, CT: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    floodBn: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); setSpeed(8); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); if (!E.playing && E.t < 500) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    sandbox: () => { computeSchedule(); drawSandbox(); E.t = 0; E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); },
+    floodRecap: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); E.t = 60; E.playing = true; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); },
+    whack: () => { pipeCfg(2.5, Math.min(E.cfg.stations[1] ? E.cfg.stations[1].p : 5, 5)); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); }
+  };
+  function drawSandbox() {
+    const demand = 60 / E.cfg.a, syscap = Math.min.apply(null, E.cfg.stations.map(st => 60 / st.p));
+    drawMap({ showArrRate: true, showCap: true, showBn: true, showU: true, hotDemand: demand > syscap + 1e-9 });
+  }
+  let curPage = null;
+  function ensurePage(pg) { if (!pg || pg === curPage) return; curPage = pg; PAGES[pg](); const ei = $('endIn'); if (ei) ei.value = (E.tEnd && isFinite(E.tEnd)) ? E.tEnd : ''; updateWidgets(); }
+
+  /* ---------- renderer ---------- */
+  function stopPoll() { if (C.poll) { clearInterval(C.poll); C.poll = null; } }
+  function award(pts, sub) {
+    C.awarded = C.awarded || {};
+    const key = C.step + (sub || '');
+    if (!C.awarded[key]) { C.awarded[key] = 1; C.score += pts; }
+    setScore();
+  }
+  function setScore() {
+    const pct = Math.round(Math.max(0, C.step) / Math.max(1, STEPS.length - 1) * 100);
+    $('scoreEl').textContent = 'Progress ' + pct + '%';
+    $('progEl').style.width = pct + '%';
+  }
+  function shuffleIdx(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function optHTML(o) {
+    if (o && typeof o === 'object' && o.v !== undefined) return subN(o.v) + '<span class="optdetail"> — ' + subN(o.d) + '</span>';
+    return subN(o);
+  }
+  function optionsHTML(items) {
+    const order = shuffleIdx(items.length);
+    let out = '';
+    const hasDet = items.some(it => it.html.indexOf('optdetail') >= 0);
+    if (hasDet) out += '<span class="dettoggle" onclick="this.parentElement.classList.toggle(\'showdet\'); this.textContent = this.parentElement.classList.contains(\'showdet\') ? \'Hide details\' : \'Show more details\';">Show more details</span><br>';
+    order.forEach(i => { out += '<button ' + items[i].attrs + '>' + items[i].html + '</button>'; });
+    return out;
+  }
+  function confetti() {
+    const em = ['🎉', '✅', '📈', '⭐'];
+    for (let i = 0; i < 32; i++) {
+      const d = document.createElement('div');
+      d.className = 'confetti';
+      d.textContent = em[i % em.length];
+      d.style.left = (Math.random() * 100) + 'vw';
+      d.style.animationDuration = (2.4 + Math.random() * 2.2) + 's';
+      d.style.animationDelay = (Math.random() * 0.9) + 's';
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 6200);
+    }
+  }
+  function setDim(on, note) {
+    const sc = document.getElementById('stageCard');
+    if (!sc) return;
+    sc.classList.toggle('dimmed', !!on);
+    const tl = document.querySelector('.tiles'); if (tl) tl.classList.toggle('dimmedcards', !!on);
+    ['ticker', 'occ', 'runbar'].forEach(id => { const e2 = document.getElementById(id); if (e2) e2.classList.toggle('dimmedcards', !!on); });
+    if (on) {
+      if (setDim.wasPlaying === undefined) { setDim.wasPlaying = E.playing; setDim.wasPage = curPage; }
+      E.playing = false; const pb = document.getElementById('playBtn'); if (pb) pb.textContent = '▶ Play';
+    } else if (setDim.wasPlaying !== undefined) {
+      // resume only if we are still on the page that was running when the dim began —
+      // a page change means the new page has already set its own play state
+      if (setDim.wasPlaying && setDim.wasPage === curPage) E.playing = true;
+      setDim.wasPlaying = undefined; setDim.wasPage = undefined;
+      const pb = document.getElementById('playBtn'); if (pb) pb.textContent = E.playing ? '❚❚ Pause' : '▶ Play';
+    }
+    let dn = document.getElementById('dimNote');
+    if (on) {
+      if (!dn) { dn = document.createElement('div'); dn.id = 'dimNote'; dn.className = 'dimnote'; sc.appendChild(dn); }
+      dn.textContent = note || 'This question uses a different process — the simulation does not apply.';
+    } else if (dn) dn.remove();
+  }
+  function renderStep() {
+    stopPoll();
+    const st = STEPS[C.step];
+    const c = $('lessonCard');
+    setScore();
+    let effPg = st.pg;
+    if (!effPg) { for (let k = C.step; k >= 1; k--) { if (STEPS[k].pg) { effPg = STEPS[k].pg; break; } } }
+    if (effPg) ensurePage(effPg);
+    setDim(!!st.dim, st.dimNote);
+    if (!st.endT && isFinite(E.tEnd) && E.t >= E.tEnd - 1e-9) { E.tEnd = Infinity; const ei2 = $('endIn'); if (ei2) ei2.value = ''; }   // a finished timed run must not leave Play dead on later steps
+    { const pbs = $('playBtn'); if (pbs) pbs.textContent = E.playing ? '❚❚ Pause' : '▶ Play'; }
+    let h = (function () {
+      let idx = 1, out = '<div class="pillbar">';
+      SECTIONS.forEach(sec => {
+        const start = idx, end = idx + sec.n - 1;
+        const cls = (C.step >= start && C.step <= end) ? 'active' : (((C.maxStep || 1) > end) ? 'done' : '');
+        const reach = start <= (C.maxStep || 1);
+        out += '<span class="spill ' + cls + (reach ? ' reach' : '') + '" data-start="' + start + '">' + subN(sec.lab) + '<span class="sdots">';
+        for (let k = start; k <= end; k++) out += '<span class="sd' + (k === C.step ? ' cur' : (k < Math.max(C.step, C.maxStep || 1) ? ' past' : '')) + (k <= (C.maxStep || 1) ? ' jump' : '') + '" data-i="' + k + '"></span>';
+        out += '</span></span>';
+        idx = end + 1;
+      });
+      return out + '</div>';
+    })();
+    if (C.step > 0) {
+      const prev = STEPS[C.step - 1];
+      if (prev && prev.t === 'predict' && prev.fb && C.pred && C.pred[C.step - 1]) {
+        const ch = C.pred[C.step - 1];
+        const kind = ch.i === prev.correct ? 'ok' : ((prev.partial || []).indexOf(ch.i) >= 0 ? 'mid' : 'bad');
+        const verdict = kind === 'ok' ? 'Correct.' : (kind === 'mid' ? 'Partly correct.' : 'Not correct.');
+        h += '<div class="predfb ' + kind + '"><b>Your prediction:</b> “' + ch.txt + '” — <b>' + verdict + '</b> ' + subN(prev.fb[kind] || prev.fb.ok) + '</div>';
+      }
+    }
+    h += '<div class="lp-step">';
+    let contDisabled = false;
+
+    if (st.t === 'home') {
+      h += '<p style="font-size:15px"><b>Exercise 2 — Systems &amp; Bottlenecks.</b> This exercise practices the system-level material from class: resource capacity vs. system capacity, implied utilization, the bottleneck, starving, inventory build-up, and the moving bottleneck. Every question can be answered from the definitions in the highlighted boxes; the <b>“Teach me this”</b> panel on any step reopens the full explanation.</p><p style="font-size:12.5px;color:var(--secondary)">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. Submit the completion code in Canvas when you finish. Builds on Exercise 1 (p, capacity, ⟦R⟧, cycle time, ⟦Tterm⟧, u, ⟦I⟧).</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name</b> (use the same spelling on every assignment, for consistent codes):</p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
+      h += '<div class="lp-nav"><button class="primary" id="goBtn">Begin Exercise →</button></div>';
+      h += '<div class="verifybox"><details><summary>Instructor: verify a completion code</summary><input id="vN" placeholder="student name"><input id="vC" placeholder="E2-XXX-XXXX-XX"><button class="mini" id="vB" style="margin-top:6px">Check</button><div id="vOut" style="margin-top:5px"></div></details></div></div>';
+      c.innerHTML = subN(h); h = '';
+      $('goBtn').addEventListener('click', () => {
+        const n = $('nmIn').value.trim();
+        if (!n) { $('nmIn').style.borderColor = 'var(--red)'; return; }
+        C.name = n; C.step = 1; renderStep();
+      });
+      $('vB') && $('vB').addEventListener('click', () => {
+        const r = readCode($('vN').value, $('vC').value);
+        $('vOut').innerHTML = r ? '<span style="color:var(--green);font-weight:700">Valid — Exercise 2 completion verified.</span>' : '<span style="color:var(--red);font-weight:700">Invalid — the name and completion code do not match.</span>';
+      });
+      return;
+    }
+    if (st.t === 'read') { let bodyR = subN(st.h); const NOTE2 = '<p class="contnote">Press <b>Continue</b>.</p>';
+      h += bodyR.includes('<details') ? bodyR.replace('<details', NOTE2 + '<details') : bodyR + NOTE2;
+      if (st.learn) learn(st.learn); }
+    else if (st.t === 'predict') {
+      h += '<p>' + subN(st.q) + '</p><p style="font-size:12px;color:var(--muted)">Choose an answer before viewing the explanation.</p>';
+      h += optionsHTML(st.opts.map((o, i) => ({ html: optHTML(o), attrs: 'class="lp-opt lp-pred" data-i="' + i + '"' })));
+      h += '<div class="lp-fb info" id="fb" style="display:none">Answer recorded. The next step resolves it.</div>';
+      contDisabled = true;
+    } else if (st.t === 'quiz') {
+      h += '<p><b>Learning Check.</b> ' + subN(st.q) + '</p>';
+      h += optionsHTML(st.opts.map(o => ({ html: optHTML(o.o || o), attrs: 'class="lp-opt lp-qz" data-ok="' + o.ok + '"' })));
+      h += '<div class="lp-fb" id="fb"></div>';
+      contDisabled = true;
+    } else if (st.t === 'quiznum') {
+      h += '<p><b>Learning Check.</b> ' + subN(st.q) + '</p>';
+      h += '<div class="lp-num"><input id="numIn" type="number" step="any" placeholder="' + (st.unit || '') + '"><button class="mini" id="numBtn">Submit</button></div><div class="lp-fb" id="fb"></div>';
+      contDisabled = true;
+    } else if (st.t === 'quiznum2') {
+      h += '<p><b>Learning Check.</b> ' + subN(st.q) + '</p>';
+      h += '<p>' + subN(st.q1.q) + '</p>';
+      h += '<div class="lp-num"><input id="numIn" type="number" step="any" placeholder="' + (st.q1.unit || '') + '"><button class="mini" id="numBtn">Submit</button></div><div class="lp-fb" id="fb"></div>';
+      h += '<div id="part2" style="display:none"><p style="margin-top:14px">' + subN(st.q2.q) + '</p>';
+      h += '<div class="lp-num"><input id="numIn2" type="number" step="any" placeholder="' + (st.q2.unit || '') + '"><button class="mini" id="numBtn2">Submit</button></div><div class="lp-fb" id="fb2"></div></div>';
+      contDisabled = true;
+    } else if (st.t === 'task') {
+      h += '<div class="lp-task">' + subN(st.h) + '</div>';
+      (st.acts || []).forEach((a, i) => { h += '<button class="mini pulse" id="act' + i + '" style="margin-top:6px">' + a.label + '</button> '; });
+      (st.toggles || []).forEach((tg, i) => { h += '<label class="switchrow"><span class="switch"><input type="checkbox" id="tg' + i + '"><span class="slider"></span></span><span class="swlab">' + tg.label + '</span></label>'; });
+      if (st.act || st.unlock) h += '<div class="actstrip">' + (st.act ? '<b>YOUR TASK:</b> ' + subN(st.act) + (st.unlock ? ' &nbsp;·&nbsp; ' : '') : '') + (st.unlock ? '<b>TO CONTINUE:</b> ' + subN(st.unlock) : '') + '</div>';
+      if (st.ctlSB) {
+        const sb = [['sbA', 'arrival gap (min between applications)', E.cfg.a, 1, 10],
+                    ['sbP0', 'Intake p (min)', E.cfg.stations[0].p, 1, 8],
+                    ['sbP1', 'Underwriting p (min)', E.cfg.stations[1].p, 1, 8],
+                    ['sbP2', 'Closing p (min)', E.cfg.stations[2].p, 1, 8]];
+        sb.forEach(c => {
+          h += '<div style="margin:6px 0"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--secondary)"><span>' + c[1] + '</span><b id="' + c[0] + 'v">' + c[2] + '</b></div><input type="range" id="' + c[0] + '" min="' + c[3] + '" max="' + c[4] + '" step="0.5" value="' + c[2] + '" style="width:100%;accent-color:var(--navy)"></div>';
+        });
+      }
+      if (st.ctlP2) {
+        const cur = E.cfg.stations[1].p;
+        h += '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--secondary)"><span>' + st.ctlP2.lab + '</span><b id="p2v">' + cur + '</b></div><input type="range" id="p2sl" min="' + st.ctlP2.min + '" max="' + st.ctlP2.max + '" step="' + st.ctlP2.step + '" value="' + cur + '" style="width:100%;accent-color:var(--navy)"></div>';
+      }
+      h += '<div class="lp-status" id="tstat">…</div>';
+      contDisabled = true;
+    } else if (st.t === 'match') {
+      h += '<p><b>Concept check.</b> The simulation shows the original demand surge — 15 jobs/hour against activities of 3, 5, and 2 minutes, before the second underwriter. Every prompt below refers to that world. Match each prompt to the correct concept; incorrect matches return later in the round.</p>';
+      h += '<div class="lp-task" id="mPrompt" style="font-size:14.5px;font-weight:700"></div>';
+      h += '<div class="chips" id="mChips">' + MATCH_CONCEPTS.map(cc => '<button class="chip" data-k="' + cc.k + '">' + subN(cc.lab) + '</button>').join('') + '</div>';
+      h += '<div class="lp-fb" id="fb"></div><div class="lp-status" id="mStat"></div>';
+      contDisabled = true;
+    } else if (st.t === 'take') {
+      if (!C.celebrated) { C.celebrated = true; setTimeout(confetti, 300); }
+      h += '<div class="lp-take"><span class="tt">CORE REFERENCE</span>' + subN(st.h) + '</div>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code (submit this in Canvas):</p><div class="lp-code">' + makeCode(C.name, C.score) + '</div>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">Next: <b>Exercise 3 — Little’s Law</b>, shared in Canvas.</p>';
+      if (!C.finished) { C.finished = true; renderLessonBar(); }
+    }
+    h += '</div>';
+    const last = C.step === STEPS.length - 1;
+    h += '<div class="lp-nav"><button id="backBtn">← Back</button><button class="primary" id="contBtn" ' + (contDisabled ? 'disabled' : '') + '>' + (last ? 'Finish ✓' : 'Continue →') + '</button></div>';
+    c.innerHTML = h;
+    $('backBtn').addEventListener('click', () => { if (C.step > 1) { C.step--; curPage = null; renderStep(); E.playing = false; const pbb = $('playBtn'); if (pbb) pbb.textContent = '▶ Play'; } });
+    C.maxStep = Math.max(C.maxStep || 1, C.step);
+    c.querySelectorAll('.spill .sd.jump').forEach(sp => sp.addEventListener('click', ev => { ev.stopPropagation(); C.step = +sp.dataset.i; curPage = null; renderStep(); }));
+    c.querySelectorAll('.spill.reach').forEach(pl => pl.addEventListener('click', () => { C.step = Math.min(+pl.dataset.start, C.maxStep || 1); curPage = null; renderStep(); }));
+    $('contBtn').addEventListener('click', () => {
+      if (last) { lbNote('Exercise complete — submit your completion code in Canvas.'); }
+      else { C.step++; renderStep(); }
+    });
+
+    if (st.t === 'predict') {
+      c.querySelectorAll('.lp-pred').forEach(b => b.addEventListener('click', () => {
+        c.querySelectorAll('.lp-pred').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+        C.pred = C.pred || {};
+        C.pred[C.step] = { i: +b.dataset.i, txt: b.textContent.split(' — ')[0] };
+        $('fb').style.display = 'block';
+        $('contBtn').disabled = false;
+      }));
+    }
+    if (st.t === 'quiz') {
+      let attempts = 0;
+      const finish = (got, revealed) => {
+        award(got);
+        $('fb').className = 'lp-fb ' + (revealed ? 'info' : 'ok');
+        $('fb').innerHTML = (revealed ? 'Answer shown. Review the walkthrough: ' : 'Correct. ') + subN(st.ex);
+        if (st.learn) learn(st.learn);
+        if (st.pgAfter && PAGES[st.pgAfter]) { curPage = st.pgAfter; PAGES[st.pgAfter](); updateWidgets(); }
+        $('contBtn').disabled = false;
+      };
+      c.querySelectorAll('.lp-qz').forEach(b => b.addEventListener('click', () => {
+        if (!$('contBtn').disabled) return;
+        if (b.dataset.ok === '1') { b.classList.add('ok'); finish(st.pts, false); }
+        else {
+          attempts++; b.classList.add('bad');
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          if (attempts >= 2) { c.querySelectorAll('.lp-qz').forEach(x => { if (x.dataset.ok === '1') x.classList.add('ok'); }); finish(st.pts, true); }
+          else $('fb').innerHTML = 'Not quite. Try again.' + (st.hint ? ' <b>Hint:</b> ' + subN(st.hint) : '');
+        }
+      }));
+    }
+    if (st.t === 'quiznum') {
+      let attempts = 0;
+      const submit = () => {
+        if (!$('contBtn').disabled) return;
+        const v = parseFloat($('numIn').value); if (isNaN(v)) return;
+        if (Math.abs(v - st.ans) <= st.tol) {
+          award(st.pts);
+          $('fb').className = 'lp-fb ok'; $('fb').innerHTML = 'Correct. ' + subN(st.ex);
+          if (st.pgAfter && PAGES[st.pgAfter]) { curPage = st.pgAfter; PAGES[st.pgAfter](); updateWidgets(); }
+          if (st.learn) learn(st.learn);
+          $('contBtn').disabled = false;
+        } else {
+          attempts++;
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          if (attempts === 1) $('fb').innerHTML = 'Not quite. <b>Hint:</b> ' + subN(st.hint || 'The number is in the simulation.');
+          else if (attempts === 2 && st.hint2) $('fb').innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(st.hint2);
+          else {
+            $('fb').className = 'lp-fb info';
+            award(st.pts);
+            $('fb').innerHTML = 'Not correct. The answer is <b>' + st.ans + ' ' + (st.unit || '') + '</b>. Review the walkthrough: ' + subN(st.ex);
+            if (st.pgAfter && PAGES[st.pgAfter]) { curPage = st.pgAfter; PAGES[st.pgAfter](); updateWidgets(); }
+            if (st.learn) learn(st.learn);
+            $('contBtn').disabled = false;
+          }
+        }
+      };
+      $('numBtn').addEventListener('click', submit);
+      $('numIn').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      $('numIn').focus();
+    }
+    if (st.t === 'quiznum2') {
+      const wire = (part, sub, inId, btnId, fbId, after) => {
+        let attempts = 0, settled = false;
+        const submit = () => {
+          if (settled) return;
+          const v = parseFloat($(inId).value); if (isNaN(v)) return;
+          if (Math.abs(v - part.ans) <= part.tol) {
+            settled = true; award(part.pts, sub);
+            $(fbId).className = 'lp-fb ok'; $(fbId).innerHTML = 'Correct. ' + subN(part.ex);
+            after();
+          } else {
+            attempts++;
+            $(fbId).className = 'lp-fb bad'; void $(fbId).offsetWidth;
+            if (attempts === 1) $(fbId).innerHTML = 'Not quite. <b>Hint:</b> ' + subN(part.hint);
+            else if (attempts === 2 && part.hint2) $(fbId).innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(part.hint2);
+            else {
+              settled = true; award(part.pts, sub);
+              $(fbId).className = 'lp-fb info';
+              $(fbId).innerHTML = 'Not correct. The answer is <b>' + part.ans + ' ' + (part.unit || '') + '</b>. Review the walkthrough: ' + subN(part.ex);
+              after();
+            }
+          }
+        };
+        $(btnId).addEventListener('click', submit);
+        $(inId).addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      };
+      wire(st.q1, 'a', 'numIn', 'numBtn', 'fb', () => { $('part2').style.display = 'block'; $('numIn2').focus(); });
+      wire(st.q2, 'b', 'numIn2', 'numBtn2', 'fb2', () => { if (st.learn) learn(st.learn); $('contBtn').disabled = false; });
+      $('numIn').focus();
+    }
+    if (st.t === 'task') {
+      const tkey = 'k' + C.step;
+      const tdata = (C.taskState = C.taskState || {})[tkey] || (C.taskState[tkey] = {});
+      (st.acts || []).forEach((a, i) => $('act' + i).addEventListener('click', () => a.fn(tdata)));
+      (st.toggles || []).forEach((tg, i) => {
+        const cb = $('tg' + i);
+        cb.checked = !!tdata['on' + i];
+        cb.addEventListener('change', () => {
+          if (cb.checked) (st.toggles || []).forEach((o, j) => { if (j !== i) { const ocb = $('tg' + j); if (ocb && ocb.checked) { ocb.checked = false; tdata['on' + j] = false; } } });
+          tdata['on' + i] = cb.checked;
+          if (st.applyToggles) st.applyToggles(tdata);
+        });
+      });
+      if (st.endT) { E.tEnd = st.endT; if ($('endIn')) $('endIn').value = st.endT; }
+      if (st.ctlP2) {
+        $('p2sl').addEventListener('input', () => {
+          const v = parseFloat($('p2sl').value);
+          $('p2v').textContent = v;
+          E.cfg.stations[1].p = v;
+          computeSchedule();
+          E.t = 0; E.playing = false; $('playBtn').textContent = '▶ Play';
+          drawMap(mapOpts); updateWidgets();
+        });
+      }
+      if (st.ctlSB) {
+        $('sbHintBtn') && $('sbHintBtn').addEventListener('click', () => { $('sbHintTxt').style.display = 'inline'; $('sbHintBtn').style.display = 'none'; });
+        [['sbA', v => { E.cfg.a = v; }], ['sbP0', v => { E.cfg.stations[0].p = v; }], ['sbP1', v => { E.cfg.stations[1].p = v; }], ['sbP2', v => { E.cfg.stations[2].p = v; }]].forEach(pair => {
+          $(pair[0]).addEventListener('input', () => {
+            const v = parseFloat($(pair[0]).value);
+            $(pair[0] + 'v').textContent = v;
+            pair[1](v);
+            computeSchedule();
+            E.t = 0; E.playing = false; $('playBtn').textContent = '▶ Play';
+            drawSandbox(); updateWidgets();
+          });
+        });
+      }
+      C.poll = setInterval(() => {
+        const eln = $('tstat'); if (!eln) { stopPoll(); return; }
+        let r; try { r = st.verify(tdata); } catch (e) { r = { ok: false, msg: '…' }; }
+        eln.textContent = r.msg; eln.className = 'lp-status' + (r.ok ? ' pass' : (r.warn ? ' warn' : ''));
+        if (r.ok) { $('contBtn').disabled = false; (st.acts || []).forEach((a2, i2) => { const ab = $('act' + i2); if (ab) ab.classList.remove('pulse'); }); }
+      }, 500);
+    }
+    if (st.t === 'match') {
+      const queue = MATCH_PROMPTS.map((_, i) => i);
+      for (let i = queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [queue[i], queue[j]] = [queue[j], queue[i]]; }
+      let misses = 0, cleared = 0, lock = false;
+      const total = queue.length;
+      const show = () => {
+        if (!queue.length) {
+          const got = st.pts;
+          award(got);
+          $('mPrompt').innerHTML = 'All ' + total + ' concepts matched.';
+          $('mStat').textContent = total + ' / ' + total + ' cleared';
+          $('fb').className = 'lp-fb ok';
+          $('fb').innerHTML = misses === 0 ? 'Complete — all concepts matched on the first pass.' : 'Complete — ' + misses + ' incorrect match' + (misses > 1 ? 'es were' : ' was') + ' resolved during the round.';
+          $('contBtn').disabled = false;
+          return;
+        }
+        $('mPrompt').textContent = '“' + MATCH_PROMPTS[queue[0]].q + '”';
+        $('mStat').textContent = cleared + ' / ' + total + ' cleared' + (misses ? ' · ' + misses + ' miss' + (misses > 1 ? 'es' : '') : '');
+      };
+      show();
+      c.querySelectorAll('#mChips .chip').forEach(ch => ch.addEventListener('click', () => {
+        if (lock || !queue.length) return;
+        const want = MATCH_PROMPTS[queue[0]].k;
+        if (ch.dataset.k === want) {
+          cleared++; queue.shift();
+          $('fb').className = 'lp-fb ok';
+          $('fb').textContent = '✓ ' + subN(MATCH_CONCEPTS.find(x => x.k === want).lab);
+          lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 650);
+        } else {
+          misses++; queue.push(queue.shift());
+          $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
+          $('fb').textContent = 'Not this one. The prompt will return later in the round.';
+          lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 900);
+        }
+      }));
+    }
+  }
+
+
+
+  /* ---------- lesson bar ---------- */
+  function lbNote(msg) {
+    let n = $('lbNote');
+    if (!n) {
+      n = document.createElement('div');
+      n.id = 'lbNote';
+      n.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:640px;';
+      $('lbar').after(n);
+    }
+    n.textContent = msg;
+    clearTimeout(lbNote.t);
+    lbNote.t = setTimeout(() => n.remove(), 6000);
+  }
+  function fileNote(n) {
+    let el2 = document.getElementById('lbNote');
+    if (!el2) {
+      el2 = document.createElement('div');
+      el2.id = 'lbNote';
+      el2.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:680px;';
+      document.getElementById('lbar').after(el2);
+    }
+    el2.textContent = 'To continue, open process101_exercise' + n + '.html directly from your course folder. (Direct links between exercise files are turned off, so you always start each exercise from its newest copy.)';
+    clearTimeout(fileNote.t);
+    fileNote.t = setTimeout(() => el2.remove(), 8000);
+  }
+  function renderLessonBar() {
+    const lb = $('lbar');
+    lb.innerHTML = '<span class="lchip active' + (C.finished ? ' done' : '') + '">' + (C.finished ? '✓ ' : '') + 'Exercise 2 — Systems &amp; Bottlenecks</span>';
+  }
+
+  /* ---------- init ---------- */
+  C.step = 0;
+  renderLessonBar();
+  // play-button flash: only when playing is required to advance (poll survives pauses)
+  setInterval(() => {
+    const pb = $('playBtn'); if (!pb) return;
+    const stq = STEPS[C.step], cb = document.getElementById('contBtn');
+    const needPlay = !!(stq && stq.t === 'task' && !stq.acts && cb && cb.disabled);
+    pb.classList.toggle('pulse', needPlay && !E.playing && !document.getElementById('stageCard').classList.contains('dimmed'));
+  }, 250);
+
+  renderNotebook();
+  computeSchedule();
+  ensurePage('calm');
+  renderStep();
+  requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
+
+  window.__P102 = { C, E, STEPS, metrics, makeCode, readCode, SCHED: () => SCHED, bnIdx, renderStep };
+})();
+</script>
+</body>
+</html>
