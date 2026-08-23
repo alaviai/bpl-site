@@ -1,0 +1,8 @@
+{
+  // Cloudflare config: serve this repo as a static site
+  "name": "bpl-site",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./"
+  }
+}

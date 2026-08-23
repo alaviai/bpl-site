@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Business Process Lab · Exercise 1 — The Anatomy of a Process</title>
+<title>Business Process Lab · Lesson 1 — The Anatomy of a Process</title>
 <style>
   :root {
     --page: #f5f5f2; --surface: #fcfcfb; --ink: #16212b; --navy: #33475b;
@@ -21,8 +21,6 @@
   .hdr-right { display: flex; align-items: center; gap: 12px; }
   .score { font-size: 13px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .prog { width: 180px; height: 8px; background: #e8eae5; border-radius: 5px; overflow: hidden; }
-  .progrow { display: flex; align-items: center; gap: 10px; margin: 0 0 8px 2px; }
-  .progrow .prog { flex: 1; width: auto; }
   .prog > div { height: 100%; background: var(--green); border-radius: 5px; transition: width .5s; }
   select.small { border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; background: #fff; color: var(--ink); }
 
@@ -142,7 +140,7 @@
   .flashIn { animation: flashIn .65s ease 5; }
 
 
- }
+   }
 
   .ntR, .ntT, .ntI { text-transform: none; font-style: italic; }
   .verifybox { margin-top: 14px; font-size: 12px; color: var(--muted); }
@@ -159,11 +157,6 @@
   .lp-dots span.jump { cursor: pointer; }
   .lp-dots span.jump:hover { transform: scale(1.6); }
   .pointTag { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; margin-left: 8px; }
-  /* exercise: collapsed teaching + speed presets */
-  details.teach { margin-top: 9px; border: 1.5px dashed rgba(51,71,91,.3); border-radius: 10px; padding: 6px 11px; background: #fafaf7; }
-  details.teach summary { cursor: pointer; font-size: 11.5px; font-weight: 800; color: var(--navy); letter-spacing: .03em; }
-  details.teach[open] { background: #f4f6f9; padding-bottom: 9px; }
-  details.teach p { margin: 7px 0 0; }
   .spd { min-width: 40px; }
   .spd.act { background: var(--navy); color: #fff; border-color: var(--navy); }
   /* v3: segmented progress pills */
@@ -189,36 +182,31 @@
   .actstrip b { color: var(--navy); letter-spacing: .03em; font-size: 11px; }
   /* v3: dimmed simulation for off-process questions */
   .stagewrap.dimmed svg, .stagewrap.dimmed canvas { opacity: .18; filter: grayscale(.6); }
-  .contnote { font-size: 12px; color: #898781; font-weight: 700; margin: 10px 0 0; }
-  .dimmedcards { opacity: .25 !important; filter: grayscale(.6); }
-  .runbar.dimmedcards { pointer-events: none; }
-  #playBtn.pulse, .mini.pulse { animation: btnpulse 1.15s ease-in-out infinite; border-color: var(--green); color: var(--green); }
-  @keyframes btnpulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(46,125,50,.55); } 55% { box-shadow: 0 0 0 7px rgba(46,125,50,0); } }
   .dimnote { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); background: #fff; border: 1.5px solid #dcdbd4; border-radius: 10px; padding: 8px 14px; font-size: 12.5px; color: #52514e; font-weight: 700; z-index: 5; }
   /* v3: option details toggle */
   .optdetail { display: none; color: var(--muted); font-weight: 400; }
   .showdet .optdetail { display: inline; }
   .dettoggle { font-size: 11.5px; font-weight: 700; color: var(--navy); cursor: pointer; text-decoration: underline; margin: 2px 0 6px; display: inline-block; }
-  .confetti { position: fixed; top: -12px; pointer-events: none; z-index: 90; font-size: 18px; animation: fall linear forwards; }
-  @keyframes fall { to { transform: translateY(105vh) rotate(340deg); opacity: .9; } }
 </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.5</span></h1>
+      <h1>Business Process Lab <span class="ver">v 3.0</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
-      <span class="small" style="font-size:11.5px;color:var(--muted)">Notation: Schmidt (R · T · I)</span>
+      <select class="small" id="notaSel" title="Notation">
+        <option value="schmidt" selected>Notation: Schmidt (R · T · I)</option>
+        <option value="jacobs">Notation: Jacobs (λ · FT · INV)</option>
+      </select>
+      <span class="score" id="scoreEl">0 pts</span>
+      <div class="prog"><div id="progEl" style="width:0%"></div></div>
     </div>
   </div>
 
   <div class="app">
-    <div>
-      <div class="progrow"><span class="score" id="scoreEl">Progress 0%</span><div class="prog"><div id="progEl" style="width:0%"></div></div></div>
-      <div class="card" id="lessonCard"></div>
-    </div>
+    <div class="card" id="lessonCard"></div>
 
     <div>
       <div class="card stagewrap" id="stageCard">
@@ -249,7 +237,7 @@
         <div class="k">Output ticker — every finished job leaves a mark</div>
         <svg id="tickerSvg" viewBox="0 0 900 56" preserveAspectRatio="none"></svg>
       </div>
-      <div class="watch" id="watch">⏱ <b>Job timer:</b> <span class="big" id="watchNum" style="font-size:26px;margin:0 6px">—</span> <span id="watchTxt">waiting to arrive…</span></div>
+      <div class="watch" id="watch">⏱ <b>Jordan’s stopwatch:</b> <span class="big" id="watchNum" style="font-size:26px;margin:0 6px">—</span> <span id="watchTxt">waiting to arrive…</span></div>
       <div class="occ" id="occ">
         <div class="k">Desk occupancy — one hour under the microscope</div>
         <svg id="occSvg" viewBox="0 0 900 64" preserveAspectRatio="none"></svg>
@@ -258,7 +246,7 @@
 
     <div class="card nb" id="nbCard">
       <h2>Process Notebook</h2>
-      <div id="nbBody"><div class="empty">Concepts and formulas will appear here as you work through the exercise.</div></div>
+      <div id="nbBody"><div class="empty">Concepts and formulas will appear here as you work through the lesson.</div></div>
     </div>
   </div>
 
@@ -271,16 +259,15 @@
   const NOTA = { style: 'schmidt' };
   function NT() {
     return NOTA.style === 'jacobs'
-      ? { R: 'λ', T: 'FT', I: 'INV', law: '<i>INV</i> = <i>λ</i> × <i>FT</i>', Tterm: 'flow time', TtermC: 'Flow time', c: 'capacity', ct: 'CT', ctNote: '' }
-      : { R: 'R', T: 'T', I: 'I', law: '<i>I</i> = <i>R</i> × <i>T</i>', Tterm: 'throughput time', TtermC: 'Throughput time', c: '<i>c</i>', ct: '<i>d</i>', ctNote: ' — the interdeparture time <i>d</i> —' };
+      ? { R: 'λ', T: 'FT', I: 'INV', law: '<i>INV</i> = <i>λ</i> × <i>FT</i>', Tterm: 'flow time', TtermC: 'Flow time', c: 'capacity' }
+      : { R: 'R', T: 'T', I: 'I', law: '<i>I</i> = <i>R</i> × <i>T</i>', Tterm: 'throughput time', TtermC: 'Throughput time', c: '<i>c</i>' };
   }
   function subN(s) {
     const N = NT();
     return String(s == null ? '' : s)
       .split('⟦R⟧').join('<i>' + N.R + '</i>').split('⟦T⟧').join('<i>' + N.T + '</i>').split('⟦I⟧').join('<i>' + N.I + '</i>')
-      .split('⟦law⟧').join(N.law).split('⟦c⟧').join(N.c).split('⟦ct⟧').join(N.ct).split('⟦ctNote⟧').join(N.ctNote)
-      .split('⟦TtermC⟧').join(N.TtermC).split('⟦Tterm⟧').join(N.Tterm)
-      .replace(/<span class="formula">([\s\S]*?)<\/span>/g, (m0, inner) => '<span class="formula">' + inner.split(' · ').join(' ·<br>') + '</span>');
+      .split('⟦law⟧').join(N.law).split('⟦c⟧').join(N.c)
+      .split('⟦TtermC⟧').join(N.TtermC).split('⟦Tterm⟧').join(N.Tterm);
   }
   function subNP(s) {   // plain (no HTML) — for SVG text
     const N = NT();
@@ -298,9 +285,9 @@
     // re-render questions too, but only while unanswered (re-rendering an answered
     // step would reset its feedback and allow double scoring)
     const unlocked = $('contBtn') && !$('contBtn').disabled;
-    if (st.t === 'read' || st.t === 'take' || st.t === 'home' || (!unlocked && (st.t === 'quiz' || st.t === 'quiznum' || st.t === 'predict' || st.t === 'task'))) renderStep();
+    if (st.t === 'read' || st.t === 'take' || (!unlocked && (st.t === 'quiz' || st.t === 'quiznum' || st.t === 'predict' || st.t === 'task' || st.t === 'spot'))) renderStep();
   }
-
+  $('notaSel').addEventListener('change', () => { NOTA.style = $('notaSel').value; applyNotation(); });
 
   /* ---------- deterministic stage engine ---------- */
   // Because arrivals are slower than every activity, no queue ever forms:
@@ -353,12 +340,10 @@
     // connectors
     for (let i = 0; i < NODES.length - 1; i++) {
       const a = NODES[i], b = NODES[i + 1];
-      if ((a.type === 'act' && a.m > 1) || (b.type === 'act' && b.m > 1)) continue;   // fork/merge drawn with the parallel boxes
+      if ((a.type === 'act' && a.m > 1) || (b.type === 'act' && b.m > 1)) continue;
       const aw = a.type === 'act' ? ACT_W / 2 : TRI_W / 2;
       const bw = b.type === 'act' ? ACT_W / 2 : TRI_W / 2;
-      let lx1 = a.x + aw + 4, lx2 = b.x - bw - 8;
-      if (lx2 - lx1 < 10) { const lmid = (a.x + aw + b.x - bw) / 2; lx1 = lmid - 6; lx2 = lmid + 6; }   // tight gap: centered right-pointing arrow
-      el('line', { x1: lx1, y1: CY, x2: lx2, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
+      el('line', { x1: a.x + aw + 4, y1: CY, x2: b.x - bw - 8, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
     }
     NODES.forEach((nd, i) => {
       if (nd.type === 'act') {
@@ -379,7 +364,7 @@
           }
           const mb = el('text', { x: nd.x, y: yTop - 44, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, fill: '#33475b', class: 'flashIn' }, SVG);
           mb.textContent = 'm = ' + nd.m + ' (one job per processor)';
-          drawMap.m2 = { y: yTop + bh / 2 + 8, yTop: yTop + bh / 2 + 8, yBot: yBot + bh / 2 + 8 };
+          drawMap.m2 = { y: yTop + bh / 2 + 8 };
         } else {
           drawMap.m2 = null;
           el('rect', { x: nd.x - ACT_W / 2, y: CY - ACT_H / 2, width: ACT_W, height: ACT_H, rx: 10, fill: '#fff', stroke: '#5c6b7a', 'stroke-width': 2.4 }, SVG);
@@ -391,8 +376,7 @@
           ic.textContent = nd.ic;
         }
         if (opts.showP) {
-          const pOff = nd.m > 1 ? 40 : 20;
-          const pb = el('text', { x: nd.x, y: CY + ACT_H / 2 + pOff, 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 800, fill: '#33475b', class: opts.spotP ? 'spot' : '' }, SVG);
+          const pb = el('text', { x: nd.x, y: CY + ACT_H / 2 + (nd.m > 1 ? 40 : 20), 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 800, fill: '#33475b', class: opts.spotP ? 'spot' : '' }, SVG);
           pb.textContent = 'p = ' + nd.p + ' min';
         }
         if (opts.showU) {
@@ -418,9 +402,6 @@
             const rTh = Math.min(60 / E.cfg.a, Math.min.apply(null, caps));
             const rl = el('text', { id: 'mapRout', x: nd.x, y: CY - TRI_H / 2 - 20, 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 800, fill: '#2a78d6', class: opts.spotR ? 'spot' : '' }, SVG);
             rl.textContent = NT().R + ' = ' + (rTh % 1 ? rTh.toFixed(1) : rTh.toFixed(0)) + ' jobs/hour';
-            const ay = CY - TRI_H / 2 - 8;
-            el('line', { x1: nd.x - 24, y1: ay, x2: nd.x + 18, y2: ay, stroke: '#2a78d6', 'stroke-width': 2 }, SVG);
-            el('polygon', { points: (nd.x + 26) + ',' + ay + ' ' + (nd.x + 16) + ',' + (ay - 4.5) + ' ' + (nd.x + 16) + ',' + (ay + 4.5), fill: '#2a78d6' }, SVG);
           }
         }
       }
@@ -482,7 +463,6 @@
     const t = E.t;
     const kMax = Math.floor(t / E.cfg.a) + 2;
     let inside = 0, done = 0, goldenState = null;
-    const servingNow = new Map();
     const donePile = [];
     for (let k = -2; k <= kMax; k++) {
       const segs = jobSegs(k);
@@ -498,9 +478,8 @@
           const x = sg.x0 + (sg.x1 - sg.x0) * (sg.kind === 'travel' ? ease : 0) + (sg.kind !== 'travel' ? 0 : 0);
           const xx = sg.kind === 'travel' ? x : sg.x0;
           const gold = k === E.golden;
-          if (sg.kind === 'serve' && sg.node) servingNow.set(sg.node, (t - sg.from) / Math.max(0.001, sg.to - sg.from));
           const inM2 = sg.kind === 'serve' && drawMap.m2;
-          const py = inM2 ? ((k % 2 === 0 ? drawMap.m2.yTop : drawMap.m2.yBot) + 4) : CY + 12;
+          const py = inM2 ? drawMap.m2.y + 4 : CY + 12;
           drawPerson(inM2 ? xx + 34 : xx, py, inM2 ? 17 : (gold ? 26 : 22), gold ? '#d99a06' : '#2e7d32');
           if (gold) goldenState = { seg: sg.kind, arr: jobArr(k), done: dTime };
           break;
@@ -516,54 +495,6 @@
     });
     const dc = document.getElementById('doneCnt');
     if (dc) dc.textContent = done ? done + ' done' : '';
-    // processing/idle ring on the desk (single-desk worlds): green ring fills once per job
-    const actsAll = NODES.filter(n => n.type === 'act');
-    if (actsAll.length === 1 && (E.cfg.stations[0].m || 1) === 1) {
-      const nd = actsAll[0];
-      const f = servingNow.get(nd);
-      const cxp = nd.x - ACT_W / 2 + 16, cyp = CY - ACT_H / 2 + 16, rr = 10;
-      ctx.save();
-      ctx.lineWidth = 4; ctx.textAlign = 'left'; ctx.font = '800 11px ui-sans-serif, system-ui, sans-serif';
-      if (f !== undefined) {
-        ctx.strokeStyle = '#e8e7e0';
-        ctx.beginPath(); ctx.arc(cxp, cyp, rr, 0, Math.PI * 2); ctx.stroke();
-        ctx.strokeStyle = '#2e7d32';
-        ctx.beginPath(); ctx.arc(cxp, cyp, rr, -Math.PI / 2, -Math.PI / 2 + Math.min(1, f) * 2 * Math.PI); ctx.stroke();
-        ctx.fillStyle = '#2e7d32';
-        ctx.fillText('processing', cxp + rr + 6, cyp + 4);
-      } else {
-        const blink = E.playing ? Math.floor(performance.now() / 220) % 2 === 0 : true;   // flashes only while the simulation runs
-        ctx.globalAlpha = blink ? 0.95 : 0.25;
-        ctx.strokeStyle = '#b7bec6'; ctx.setLineDash([3, 4]);
-        ctx.beginPath(); ctx.arc(cxp, cyp, rr, 0, Math.PI * 2); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#8d99a5';
-        ctx.fillText('idle', cxp + rr + 6, cyp + 4);
-      }
-      ctx.restore();
-    }
-    // temporary per-job clock (only on the step that sets E.clock)
-    if (E.clock) {
-      const acts2 = NODES.filter(n2 => n2.type === 'act');
-      if (acts2.length === 1) {
-        const nd2 = acts2[0];
-        const k2 = Math.floor((t - 1e-9) / E.cfg.a) - 1;      // index of the most recent arrival at or before t
-        let label, frac;
-        if (k2 < 0) { label = 'idle — first job arrives at t = ' + Math.round(jobArr(0)); frac = 0; }
-        else {
-          const arr2 = jobArr(k2), done2 = arr2 + workContent();
-          const pW = workContent(), gap = E.cfg.a - pW;
-          if (t >= arr2 && t < done2) { label = 'processing: ' + Math.max(0, t - arr2).toFixed(1) + ' of ' + pW + ' min'; frac = 1; }
-          else { label = 'idle: ' + Math.max(0, Math.min(gap, t - done2)).toFixed(1) + ' of ' + gap + ' min'; frac = 0; }
-        }
-        ctx.save();
-        ctx.font = '800 13px ui-sans-serif, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = frac ? '#2e7d32' : '#8d99a5';
-        ctx.fillText(label, nd2.x, CY - ACT_H / 2 - 26);
-        ctx.restore();
-      }
-    }
     return { inside, done, goldenState };
   }
 
@@ -585,16 +516,10 @@
   function updateWidgets() {
     const m = metrics();
     $('clockEl').textContent = 't = ' + Math.floor(E.t) + ' min';
-    const pb2 = $('playBtn');
-    if (pb2) {
-      const stq = STEPS[C.step], cb2 = document.getElementById('contBtn');
-      const needPlay = !!(stq && stq.t === 'task' && !stq.acts && cb2 && cb2.disabled);   // flash only when playing is required to advance
-      pb2.classList.toggle('pulse', needPlay && !E.playing && !document.getElementById('stageCard').classList.contains('dimmed'));
-    }
     if (UI.tiles.R) {
       let vv = m.R * 60;
       if (Math.abs(vv - Math.round(vv)) < 0.15) vv = Math.round(vv);   // steady state: suppress between-completion ripple
-      $('vR').innerHTML = E.t > 1 ? vv.toFixed(1) + ' <span style="font-size:12.5px;font-weight:700">jobs/hour</span>' : '—';
+      $('vR').innerHTML = E.t > 1 ? vv.toFixed(1) + ' <span style="font-size:12.5px;font-weight:700">jobs/hr</span>' : '—';
       $('sR').textContent = 'jobs per hour · ' + m.done + ' completed';
     }
     if (UI.tiles.CT) $('vCT').textContent = m.done >= 2 ? (E.cfg.a).toFixed(0) + ' min' : '—';
@@ -640,7 +565,7 @@
     if (UI.watch) updateWatch(rr.goldenState);
     requestAnimationFrame(frame);
   }
-  function setSpeed(v) { E.baseSpeed = v; E.spdMult = 1; E.speed = v; document.querySelectorAll('.spd').forEach(x => x.classList.toggle('act', x.dataset.s === '1')); }
+  function setSpeed(v) { E.baseSpeed = v; E.speed = v * (E.spdMult || 1); }
   document.querySelectorAll('.spd').forEach(b => b.addEventListener('click', () => {
     E.spdMult = parseFloat(b.dataset.s);
     E.speed = (E.baseSpeed || 7) * E.spdMult;
@@ -684,14 +609,14 @@
   /* ---------- notebook ---------- */
   const NB_DEFS = {
     p:  { cls: 'e-p',  sym: () => 'p',      nm: 'Processing time', df: 'Time the activity needs per job.', fx: () => 'units: minutes per job' },
-    c:  { cls: 'e-c',  sym: () => NOTA.style === 'jacobs' ? '' : 'c', nm: 'Capacity', df: 'Fastest possible rate of an activity (or process).', fx: () => { const cc = NOTA.style === 'jacobs' ? 'capacity' : 'c'; return nbLearned.includes('m') ? cc + ' = 1/p · with m parallel processors: total capacity = m/p' : cc + ' = 1/p'; } },
-    R:  { cls: 'e-R',  sym: () => NT().R,   nm: 'Throughput rate', df: 'The output rate the process produces — the rate at which jobs exit. Different from the demand rate (the rate at which jobs arrive).', fx: () => NT().R + ' = min(demand, capacity)' },
-    CT: { cls: 'e-CT', sym: () => NT().ct, nm: 'Cycle time', df: 'Average time between two consecutive finished jobs = 1/⟦R⟧.', fx: () => NT().ct + ' = 1/<i>' + NT().R + '</i>' },
+    c:  { cls: 'e-c',  sym: () => 'c',      nm: 'Capacity', df: 'Fastest possible rate of an activity (or process).', fx: () => 'c = 1/p · with m parallel resources: c = m/p' },
+    R:  { cls: 'e-R',  sym: () => NT().R,   nm: 'Throughput', df: 'The output rate the process produces — the rate at which jobs exit. Different from the demand rate (the rate at which jobs arrive).', fx: () => NT().R + ' = min(demand, capacity)' },
+    CT: { cls: 'e-CT', sym: () => '1/' + NT().R, nm: 'Cycle time', df: 'Gap between consecutive completions.', fx: () => 'CT = 1/' + NT().R },
     T:  { cls: 'e-T',  sym: () => NT().T,   nm: () => NT().TtermC, df: 'One job’s total time in the system: waiting + processing.', fx: () => NT().T + ' = waiting + processing' },
-    u:  { cls: 'e-u',  sym: () => 'u',      nm: 'Utilization', df: 'The ratio of the time a resource is actually activated to the time it is available for use. Actual utilization cannot exceed 100%.', fx: () => nbLearned.includes('m') ? 'u = time activated / time available · rate route: u = ' + NT().R + '·p/m' : 'u = time activated / time available · rate route: u = ' + NT().R + '·p' },
+    u:  { cls: 'e-u',  sym: () => 'u',      nm: 'Utilization', df: 'The ratio of the time a resource is actually activated to the time it is available for use. Actual utilization cannot exceed 100%.', fx: () => 'u = time activated / time available · rate route: u = ' + NT().R + '·p/m' },
     I:  { cls: 'e-I',  sym: () => NT().I,   nm: 'Inventory (WIP)', df: 'Average number of jobs inside the process.', fx: () => 'a time-average — need not be a whole number' }
   };
-  NB_DEFS.m = { cls: 'e-c', sym: () => 'm', nm: 'Number of processors', df: 'Parallel workers or machines at one activity — processors cannot work on the same job. Total capacity = m/p; utilization u = ⟦R⟧·p/m.', fx: () => 'total capacity = m/p · u = ' + NT().R + '·p/m' };
+  NB_DEFS.m = { cls: 'e-c', sym: () => 'm', nm: 'Number of processors', df: 'Parallel workers or machines at one activity. Capacity = m/p; utilization u = ⟦R⟧ × p ÷ m.', fx: () => 'c = m/p · u = ' + NT().R + '·p/m' };
   const nbLearned = [];
   function learn(key) {
     if (nbLearned.includes(key)) return;
@@ -700,32 +625,35 @@
   }
   function renderNotebook(stampKey) {
     const b = $('nbBody');
-    if (!nbLearned.length) { b.innerHTML = '<div class="empty">Concepts and formulas will appear here as you work through the exercise.</div>'; return; }
+    if (!nbLearned.length) { b.innerHTML = '<div class="empty">Concepts and formulas will appear here as you work through the lesson.</div>'; return; }
     b.innerHTML = nbLearned.map(k => {
       const d = NB_DEFS[k];
       const x = d.fx ? d.fx() : '';
-      const sy = d.sym();
-      return '<div class="nb-entry ' + d.cls + (k === stampKey ? ' stamp' : '') + '">' + (sy ? '<span class="sym">' + sy + '</span> — ' : '') + '<span class="nm">' + (typeof d.nm === 'function' ? d.nm() : d.nm) + '</span><div class="df">' + subN(d.df) + '</div>' + (x ? '<div class="fx">' + subN(x) + '</div>' : '') + '</div>';
+      return '<div class="nb-entry ' + d.cls + (k === stampKey ? ' stamp' : '') + '"><span class="sym">' + d.sym() + '</span> — <span class="nm">' + (typeof d.nm === 'function' ? d.nm() : d.nm) + '</span><div class="df">' + subN(d.df) + '</div>' + (x ? '<div class="fx">' + subN(x) + '</div>' : '') + '</div>';
     }).join('');
   }
 
   /* ---------- course state, code ---------- */
-  const C = { name: '', score: 0, step: -1, taskState: {}, poll: null };
-  /* session integrity */
-  const _z4 = 'TVw8Xj5dNF1bXShHRj9KOUQ9WC47SzwrKlNIQldVPz1UUklbSl5HSyJAS1BMRF82TCMjVzpSUFtYSCBETzdISU1ETSFWSExGR1VRQiYkWEdVWlRIQCdJXFFHV0VRWyRRUFhNSV0oUCVXV1ZXW0JfVio7QStRXiVcTCs7TlFEWVNCUCg6QlE5QFpeKik+UVhSMjtSSy44RyxGUjpaTS9eIyVTVUBLSSxSPSBMNkdAXi1JWE9aNzxWVDJCP1gjNEVeJTNVXysoUk1BIjAyXlxDUzA9LDEwRkZbXFxHUzZMWydCSVZLQDdERVZFRFIzQTRYVjhXL0FeVjUpS05OLVRaVjpQSD5RXFQ/XTtIPUhX';
-  function _u9(n) { const r = atob(_z4); let o = ''; for (let i = n * 9; i < n * 9 + 9; i++) o += String.fromCharCode(r.charCodeAt(i) ^ ((i * 7 + 23) & 31)); return o; }
-  const _m2 = {};
-  function _t1(id, ok) { const q = _m2[id] || (_m2[id] = { f: null, s: false, r: false }); if (q.f === null) q.f = !!ok; if (ok) q.s = true; }
-  function _t2(id) { const q = _m2[id] || (_m2[id] = { f: null, s: false, r: false }); if (!q.s) q.r = true; }
-  function _fin(total) {
-    const a = Object.values(_m2);
-    if (a.length < total || a.some(q => !q.s && !q.r)) return null;
-    const p = a.reduce((sm, q) => sm + (q.r || !q.s ? 0 : q.f ? 2 : 1), 0) / (2 * a.length);
-    const g = p >= 0.9 ? 0 : p >= 0.5 ? 1 : 2;
-    return _u9(g * 10 + Math.floor(Math.random() * 10));
+  const C = { name: '', score: 0, step: -1, taskState: {}, poll: null, spotDone: false };
+  const SALT = 4127;
+  function nameHash(name) {
+    let h = 5381; const s = (name || '').trim().toLowerCase();
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h % 46656;
   }
-  const _n0 = () => STEPS.filter(sx => sx.t === 'quiz' || sx.t === 'quiznum').length;
-
+  function makeCode(name, score) {
+    const h = nameHash(name), payload = (1 << 10) | Math.min(1023, score);
+    const chk = (h * 31 + payload * 7 + SALT) % 1296;
+    const b36 = (n, l) => n.toString(36).toUpperCase().padStart(l, '0');
+    return 'P1-' + b36(h, 3) + '-' + b36(payload, 4) + '-' + b36(chk, 2);
+  }
+  function readCode(name, code) {
+    const m = (code || '').trim().toUpperCase().match(/^P1-([0-9A-Z]{3})-([0-9A-Z]{4})-([0-9A-Z]{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 36), payload = parseInt(m[2], 36), chk = parseInt(m[3], 36);
+    if (h !== nameHash(name) || (h * 31 + payload * 7 + SALT) % 1296 !== chk) return null;
+    return { score: payload & 1023 };
+  }
 
   /* ---------- the steps ---------- */
   const CAFE = [{ name: 'Order', p: 8, ic: '🧾' }, { name: 'Brew', p: 8, ic: '☕' }, { name: 'Serve', p: 8, ic: '🛎️' }];
@@ -734,116 +662,101 @@
   const WORLDS = [
     { n: CAFE, d: '☕ campus café — jobs = customers', done: 'Served' },
     { n: MRI, d: '🏥 imaging center — jobs = patients', done: 'Scanned' },
-    { n: LOANS, d: '🏦 loan office — jobs = applications', done: 'Funded' }
+    { n: LOANS, d: '🏦 loan desk — jobs = applications', done: 'Funded' }
   ];
   let worldIdx = 0;
 
   const STEPS = [
     { t: 'home' },
-    { t: 'read', pg: 'shapes0', h: '<p><b>Core idea:</b> every process can be represented with the same three elements.</p><span class="formula">▭ activity (a resource works on a job) · ▽ buffer (jobs wait — inventory) · → flow</span><p>A process transforms inputs into outputs. The simulation shows a café built from exactly these shapes; the green figures are the jobs.</p><details class="teach"><summary>Why this works</summary><p>A hospital, a bank, an Amazon warehouse, and the café you visited this morning are all — underneath — the same machine. Jobs flow in, get worked on, and flow out. Activities are where work happens and value is added. Buffers are where jobs wait; no value is added there — time and money simply sit. Flows connect them. Learn to see these three shapes and you can read any business as a process map.</p></details>' },
-    { t: 'quiz', pg: 'shapes0', q: 'A loan application sits in an underwriter’s inbox, waiting to be opened. Which shape is it in?', opts: [{ o: '▽ a buffer — it is waiting, not being worked on', ok: 1 }, { o: '▭ an activity — reviewing loans is work', ok: 0 }, { o: '→ a flow — it is moving through the bank', ok: 0 }], pts: 5, ex: 'Waiting is a buffer even inside a computer. In most real processes, most of a job’s ⟦Tterm⟧ is spent in buffers. No value is added while a job waits, so most of a long ⟦Tterm⟧ usually comes from the buffers, not from the work itself.' },
-    { t: 'task', pg: 'shapes0', h: '<span class="tt">Same structure, different industry</span>Select <b>Transform business</b> twice. The process structure stays fixed while the labels change: café → imaging center → loan office.', unlock: 'Press the <b>Transform business</b> button twice; Continue unlocks after the second transformation.', acts: [{ label: 'Transform business', fn(ts) { worldIdx = (worldIdx + 1) % 3; E.cfg.stations = WORLDS[worldIdx].n; E.cfg.doneName = WORLDS[worldIdx].done; drawMap({ icons: true }); ts.cycles = (ts.cycles || 0) + 1; } }], verify(ts) { const c = ts.cycles || 0; return c >= 2 ? { ok: true, msg: 'Currently: ' + WORLDS[worldIdx].d + '. Three industries, one process structure. The same operating logic transfers across settings.' } : { ok: false, msg: 'Currently: ' + WORLDS[worldIdx].d + ' — transform ' + (2 - c) + ' more time' + (c === 1 ? '' : 's') + '.' }; } },
-    { t: 'read', pg: 'loan1', h: '<p><b>Core measure:</b> start with the processing time of the resource.</p><span class="formula">Processing time <i>p</i> = the time a resource needs to process one job (minutes/job)</span><p>The simulation now shows a single resource: the bank’s <b>Underwriting activity</b> — one underwriter processing loan applications. Its processing time is <b><i>p</i> = 6 minutes per application</b>; the value is shown under the box.</p><details class="teach"><summary>Why this works</summary><p>This is the simplest process there is: a single activity. This exercise builds the core measures of a single-resource process one at a time. Processing time is the pure work content — the time the activity is actually busy with one job, not counting any waiting. Its units are minutes per job, so it carries a time unit in the numerator.</p></details>', learn: 'p' },
-    { t: 'quiz', pg: 'loan1', q: '<b>Capacity.</b> One application takes <i>p</i> = 6 minutes. Work the calculation: an hour has 60 minutes, so the most the Underwriting activity could fund per hour — <b>the activity’s capacity</b> — is:', opts: [{ o: { v: '10 jobs/hour', d: 'capacity = 1/<i>p</i>' }, ok: 1 }, { o: { v: '6 jobs/hour', d: 'one per processing time' }, ok: 0 }, { o: 'It depends on how many arrive', ok: 0 }], pts: 5, ex: 'The Underwriting activity’s capacity = 1/<i>p</i> = <span class="frac"><span class="top">1 job</span><span class="bot">6 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = <b>10 jobs/hour</b>.<details class="teach"><summary>Why this works</summary>Capacity is the maximum possible rate, not the rate actually observed: the most the activity could do per hour, regardless of how many jobs arrive. The minutes cancel across the two fractions, leaving jobs per hour. The calculation now appears under the activity box in the simulation.</details>', learn: 'c', pgAfter: 'loan1cap' },
-    { t: 'task', pg: 'loan1cap', h: '<span class="tt">Run the process</span>The Underwriting activity is operating in <b>steady state</b>: its normal repeating pattern. Applications arrive like clockwork, one every <b>12 minutes</b>.<br>Press <b>▶ Play</b> and watch until t = 120. Keep an eye on the waiting triangle: does anyone EVER wait?', unlock: 'Press ▶ Play and watch until t = 120.', endT: 120, verify() { return E.t >= 119.9 ? { ok: true, msg: metrics().done + ' applications funded — and the waiting triangle stayed empty all day. The Underwriting activity is always free before the next arrival.' } : { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' / 120' : 'Press ▶ Play to watch the process run.' }; } },
-    { t: 'predict', q: '<b>Before continuing, predict the result.</b> The underwriting activity could process 10 jobs/hour. Applications arrive at 5 jobs/hour. How many applications actually get funded per hour?', opts: [{ v: '10 jobs/hour', d: 'the activity works at its capacity' }, { v: '5 jobs/hour', d: 'it can only fund what arrives' }, { v: '7.5 jobs/hour', d: 'somewhere in between' }, 'Impossible to say'], correct: 1, fb: { ok: 'Throughput is limited by what arrives: ⟦R⟧ = min(demand, capacity) = min(5, 10) = 5 jobs/hour.', bad: 'The observed rate is 5 jobs/hour: the activity cannot fund more applications than arrive. ⟦R⟧ = min(demand, capacity) = min(5, 10) = 5 jobs/hour.' } },
-    { t: 'read', pg: 'loan1R', h: '<p><b>Core measure:</b> the throughput rate is the output rate that the process produces — the rate at which jobs exit the process. It is a different quantity from the demand rate, the rate at which jobs arrive.</p><span class="formula">Throughput rate ⟦R⟧ = the output rate the process produces (jobs/hour) · ⟦R⟧ = min(demand rate, capacity)</span><p>Here: the demand rate is <span class="frac"><span class="top">1 job</span><span class="bot">12 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 5 jobs/hour, and capacity is 10 jobs/hour, so <b>⟦R⟧ = min(5, 10) = 5 jobs/hour</b> — shown at the exit of the process map and on the blue tile.</p><details class="teach"><summary>Why this works</summary><p>Watch the simulation: applications arrive at the demand rate of 5 jobs/hour. The Underwriting activity could process 10 jobs/hour, but only 5 arrive — so only 5 exit. In a demand-limited steady state the exit rate equals the arrival rate numerically, but they remain different measures: demand describes what arrives; throughput describes what the process delivers. The activity’s unused capacity does not create throughput; it creates idle time — a fraction named utilization, defined in a later step.</p></details>', learn: 'R' },
-    { t: 'predict', q: 'Notice the arrival rate: applications arrive at 5 jobs/hour — one every 12 minutes.<br><b>Before continuing, predict the output rhythm.</b> Watch the funded pile grow in the simulation. A finished application gets processed every ___ minutes:', opts: [{ v: 'Every 6 minutes', d: 'the exit rhythm follows the processing time <i>p</i>' }, { v: 'Every 12 minutes', d: 'the exit rhythm follows the arrivals' }, { v: 'Every 18 minutes', d: 'work + wait combined' }, 'It varies'], correct: 1, fb: { ok: 'One finished application every 12 minutes: cycle time = 1/⟦R⟧, and ⟦R⟧ is set by the arrivals, not by <i>p</i>.', bad: 'The observed gap is 12 minutes: cycle time = 1/⟦R⟧, and ⟦R⟧ is set by the arrivals (5 jobs/hour), not by the processing time.' } },
-    { t: 'read', pg: 'loan1CT', h: '<p><b>Core measure:</b> cycle time is the gap between completed jobs; it is determined by throughput, not processing time.</p><span class="formula">Cycle time⟦ctNote⟧ = average time between two consecutive finished jobs · ⟦ct⟧ = 1/⟦R⟧</span><p>Here: cycle time = 1/⟦R⟧ = <span class="frac"><span class="top">1 hour</span><span class="bot">5 jobs</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = <b>12 minutes/job</b>. The orange ticker below the simulation shows it: one dot per finished application, spaced 12 minutes apart — not 6.</p><details class="teach"><summary>Why this works</summary><p>Why 12 and not 6? The activity finishes a job in 6 minutes, then sits idle for 6 minutes waiting for the next arrival. So finished applications leave every 12 minutes: the output rhythm equals the arrival rhythm whenever demand is below capacity. Cycle time follows the throughput. Watch the ticker for a minute and count the spacing yourself.</p></details>', learn: 'CT' },
-    { t: 'predict', q: '<span class="qtag on">CURRENT PROCESS</span><br><b>Use the process shown and predict the result.</b> Use its numbers (p = 6 min, one arrival every 12): over a long morning, what fraction of the time is the underwriter actually working?', opts: [{ v: '100%', d: 'there is always work' }, { v: '50%', d: 'busy 6 of every 12 minutes' }, { v: '25%', d: 'mostly idle' }, 'Impossible to know'], correct: 1, fb: { ok: 'The activity works 6 minutes of every 12-minute cycle: utilization = 30 minutes activated / 60 minutes available = 50%.', bad: 'The measured value is 50%: the activity works 6 minutes of every 12-minute arrival cycle — 30 minutes activated out of 60 available.' } },
-    { t: 'read', pg: 'loan1U', h: '<p><b>Core measure:</b> utilization is the ratio of the time a resource is actually activated to the time it is available for use; actual utilization cannot exceed 100%.</p><span class="formula">Utilization <i>u</i> = Time activated / Time available</span><p>Here: in every 12-minute arrival cycle the Underwriting activity is activated for 6 minutes, so per hour: <i>u</i> = <span class="frac"><span class="top">30 minutes activated</span><span class="bot">60 minutes available</span></span> = 0.5 = <b>50%</b>. Same answer by the rate route: <i>u</i> = ⟦R⟧ × <i>p</i> = <span class="frac"><span class="top">5 jobs</span><span class="bot">1 hour</span></span> × <span class="frac"><span class="top">6 minutes</span><span class="bot">1 job</span></span> = <span class="frac"><span class="top">30 minutes activated</span><span class="bot">60 minutes available</span></span> = 0.5.</p><p>Watch the small ring on the activity box: while an application is inside, the <b style="color:#2e7d32">green ring fills 0 → 100%</b> and the label reads <b style="color:#2e7d32">processing</b>; between jobs the ring turns dashed gray and a flashing <b style="color:#8d99a5">idle</b> label appears. Over a long run the activity is processing 50% of the time — that fraction is <i>u</i>.</p><details class="teach"><summary>Why this works</summary><p>Look at the gold strip below the simulation: one hour of the Underwriting activity. Busy 6 minutes (green), idle 6 (gray), repeating — 30 busy minutes out of every 60, which is the 50% you just computed. Two different calculations reach the same number: the time route (busy minutes ÷ available minutes) and the rate route (⟦R⟧ × p). If the two calculations ever disagree, one of them is wrong — a built-in check on your own arithmetic. One warning for later: a calculation can imply a utilization above 100%, but a real resource cannot be busier than always-busy; that case gets its own name in Exercise 2.</p></details>', learn: 'u' },
-    { t: 'task', pg: 'loan1T', clock: true, h: '<span class="tt">Time each job</span>Watch several jobs pass through the Underwriting activity. A temporary clock above the activity box counts each job’s processing time (up to 6 minutes) and the idle gap between jobs (up to 6 minutes). Estimate how long each job spends in the system.<br>Press <b>▶ Play</b> and watch at least two jobs complete, reading the clock as they pass.', unlock: 'Continue unlocks after two jobs complete.', verify(ts) { const done = metrics().done; if (ts.d0 === undefined || done < ts.d0) ts.d0 = done; const n = done - ts.d0; return n >= 2 ? { ok: true, msg: 'Each job spends 6 minutes in process, and the activity then waits 6 minutes for the next arrival.' } : { ok: false, msg: E.playing ? 'Jobs completed while watching: ' + n + ' of 2. Read the clock as each job passes.' : 'Press ▶ Play.' }; } },
-    { t: 'read', pg: 'loan1T2', clock: true, h: '<p><b>Core measure:</b> ⟦Tterm⟧ is one job’s total time in the system — the quantity you just measured.</p><p>To answer correctly, the system boundary must be specified. Here the boundary contains only the job in process, and no job waits. In later examples jobs sometimes wait before processing; waiting time spent inside the boundary is added to the ⟦Tterm⟧.</p><span class="formula">⟦TtermC⟧ ⟦T⟧ = average time one job spends in the system = waiting + processing (carries a time unit)</span><p>The clock showed it for every job: ⟦T⟧ = 0 minutes waiting + 6 minutes processing = <b>6 minutes</b> in the system.</p><p><b>Keep the two time measures separate.</b> Two tags just appeared on screen: the <span style="color:var(--violet);font-weight:800">violet tag</span> marks <b style="text-transform:uppercase">⟦Tterm⟧</b>; the <span style="color:var(--orange);font-weight:800">orange tag on the ticker</span> marks <b>CYCLE TIME</b>. Look at both before you continue.</p><details class="teach"><summary>Why this works</summary><p>⟦TtermC⟧ answers the customer’s question: “how long will mine take?” Cycle time answers the manager’s question: “how often does one come out?” One job’s time in the system is 6 minutes; the ticker’s gap is 12 minutes. Both are true, and they are never the same question. ⟦T⟧ carries a time unit, and because it is an average it need not be a whole number.</p></details>', learn: 'T' },
-    { t: 'predict', clock: true, q: '<b>Before continuing, estimate the average inventory.</b> At any random moment, how many applications are inside the Underwriting activity on average?', opts: [{ v: 'Exactly 1 job', d: 'there is always one being worked' }, { v: 'Less than 1 job', d: 'sometimes the activity is empty' }, { v: 'About 6 jobs', d: 'one per hour of backlog' }, { v: 'Zero jobs', d: 'they pass right through' }], correct: 1, fb: { ok: 'The activity is empty half of the time, so the average count is below 1: ⟦I⟧ = 0.5 jobs.', bad: 'The average is 0.5 jobs — below 1, because the activity holds one application 50% of the time and none the remaining 50%.' } },
-    { t: 'read', pg: 'loan1I', clock: true, h: '<p><b>Core measure:</b> inventory is the average number of jobs inside the process; as a time-average, it need not be a whole number.</p><span class="formula">Inventory ⟦I⟧ = average number of jobs in the system (dimensionless; an average, so it need not be whole)</span><p>The green tile reads about <b>0.5</b>: the activity holds exactly 1 application 50% of the time and 0 the rest, so the time-average is 30 minutes ÷ 60 minutes = 0.5 jobs.</p><details class="teach"><summary>Why this works</summary><p>A fraction of an application sounds strange until you remember it is an average over time, not a headcount at one moment. Do not confuse u with ⟦I⟧: for a single-processor activity, u and ⟦I⟧ happen to share the number 0.5 — but u is a fraction of <i>time</i> (busy 50% of the time) while ⟦I⟧ is a count of <i>jobs</i> (0.5 applications inside on average). In a large factory u might be 90% while ⟦I⟧ is 1,400. Note also: ⟦R⟧ × ⟦T⟧ = 5 jobs/hour × (6/60) hour = 0.5 — the same number from a completely different direction. This equality is a general law, covered in Exercise 3.</p></details>', learn: 'I' },
-    { t: 'quiz', pg: 'mriCase', clock: true, q: '<span class="qtag off">NEW CASE</span><br>The simulation now shows this case. An MRI machine has processing time <i>p</i> = 20 minutes per scan; patients are scheduled every 30 minutes. What are <b>the machine’s capacity</b> and <b>its throughput rate ⟦R⟧</b>?', opts: [{ o: { v: 'Capacity 3 jobs/hour · ⟦R⟧ = 2 jobs/hour', d: 'demand-limited' }, ok: 1 }, { o: { v: 'Capacity 2 jobs/hour · ⟦R⟧ = 3 jobs/hour', d: '' }, ok: 0 }, { o: { v: 'Both 3 jobs/hour', d: 'the machine sets both' }, ok: 0 }], pts: 5, ex: 'Capacity = 1/<i>p</i> = <span class="frac"><span class="top">1 job</span><span class="bot">20 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 3 jobs/hour. The demand rate is <span class="frac"><span class="top">1 job</span><span class="bot">30 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 2 jobs/hour, so ⟦R⟧ = min(2, 3) = <b>2 jobs/hour</b> — the scanner is idle a third of the time. An idle MRI carries a real hourly cost, which is why utilization matters again in Exercise 2.' },
-    { t: 'quiz', pg: 'loan1I', dim: true, dimNote: 'Hypothetical case — the simulation still shows the current process.', q: 'Extension. One Friday, the demand rate jumps to 12 jobs/hour — but the Underwriting activity’s capacity is still 10 jobs/hour. What happens to <b>the activity’s throughput rate ⟦R⟧</b>?', opts: [{ o: '⟦R⟧ caps at 10 jobs/hour and a line starts growing in the triangle', ok: 1 }, { o: '⟦R⟧ becomes 12 jobs/hour — output follows demand', ok: 0 }, { o: 'The activity speeds up under pressure', ok: 0 }], pts: 5, ex: '⟦R⟧ = min(demand, capacity) = 10 jobs/hour, and the extra 2 jobs/hour accumulate in the buffer. Demand now exceeds capacity by 2 applications per hour, so the queue grows continuously. This is the bottleneck condition developed in Exercise 2.' },
-    { t: 'read', pg: 'loan1m', h: '<p><b>Core measure:</b> m is the number of parallel processors at a resource; capacity scales with m.</p><span class="formula"><i>m</i> = number of parallel processors · (processors cannot work on <u>the same job</u> — each holds one job at a time) · each processor: capacity = 1/<i>p</i> · together: total capacity = <i>m</i> × ⟦c⟧ = <i>m</i>/<i>p</i></span><p>The Friday surge became permanent: applications now arrive at <b>12 jobs/hour</b> — more than one underwriter’s capacity of 10 jobs/hour. The bank adds a second underwriter: <b><i>m</i> = 2</b>, drawn as two parallel processor boxes. The flow forks from the waiting buffer to whichever processor is free and merges again after.</p><p>Each processor completes a job in <i>p</i> = 6 minutes, so each can process 10 jobs/hour; together the two can process 2 × 10 = <b>20 jobs/hour</b>. Equivalently, as a group their effective processing time is one processor’s <i>p</i> divided by <i>m</i>: 6 ÷ 2 = 3 minutes per job, which gives the same 20 jobs/hour. Next, derive the m = 2 utilization yourself, from the definition: the fraction of available time that is busy.</p><details class="teach"><summary>Why this works</summary><p>Real operations staff up: several underwriters, tellers, or MRI machines doing the same activity side by side. The forked layout shows the key assumption: processors cannot work on the same job, so <i>m</i> = 2 means two jobs can be in process at once — not one job finished twice as fast. Capacity multiplies by <i>m</i> because <i>m</i> jobs can be in process at once. Utilization divides by m for the same reason: the same amount of arriving work is now shared across twice as much available time. The next question derives that relationship directly from busy time and available time.</p></details>' },
-    { t: 'quiz', pg: 'loan1m', q: 'Now the important observation. With <i>m</i> = 2 the total capacity is 20 jobs/hour and demand is 12 jobs/hour. What does the blue tile read for <b>the throughput rate ⟦R⟧</b>?', opts: [{ o: { v: '12 jobs/hour', d: '⟦R⟧ = min(demand rate, capacity) = min(12, 20)' }, ok: 1 }, { o: { v: '20 jobs/hour', d: 'the two processors run at full capacity' }, ok: 0 }, { o: { v: '10 jobs/hour', d: 'one processor’s capacity' }, ok: 0 }], pts: 5, ex: '⟦R⟧ = min(demand, capacity) = min(12, 20) = 12 jobs/hour. One underwriter alone (capacity 10 jobs/hour) could not deliver this: the queue would grow at 12 − 10 = 2 jobs/hour. With two, the whole demand is served and the activity holds spare capacity. <mark class="hl">Capacity investments pay off when capacity is the constraint</mark> — knowing when that is true is exactly what Exercise 2 covers. (The reverse also holds: cut m back to 1 and capacity halves — the queue returns.)' },
-    { t: 'quiznum', pg: 'loan1mQ', pgAfter: 'loan1m', q: '<b>Derive utilization from first principles.</b> Work demanded each hour: 12 applications × 6 min = <b>72 processor-minutes</b>. Time supplied each hour: 2 underwriters × 60 min = <b>120 processor-minutes</b>. Utilization = busy processor-minutes ÷ available processor-minutes = ___ %:', unit: '%', ans: 60, tol: 2, pts: 5, hint: 'Utilization = time activated / time available.', hint2: 'Utilization = time activated / time available = 72 processor-minutes ÷ 120 processor-minutes, expressed as a percentage.', ex: 'Utilization <i>u</i> = <span class="frac"><span class="top">72 minutes activated</span><span class="bot">120 processor-minutes available</span></span> = 0.60 = <b>60%</b>. This is exactly the formula <i>u</i> = ⟦R⟧·<i>p</i>/<i>m</i>: ⟦R⟧ × <i>p</i> measures the work demanded, while <i>m</i> measures the parallel time supplied. The gold tile and the badge under the activity box now confirm 60%.<details class="teach"><summary>Why this works</summary>With one underwriter the same 72 minutes of arriving work per hour would exceed the 60 available minutes — the overloaded case from the extension question. With two, the work is shared across 120 available processor-minutes, so utilization is 60%. Cut m back to 1 and the calculation exceeds 100% — a case Exercise 2 names and develops.</details>', learn: 'm' },    { t: 'read', pg: 'loan1I', clock: true, h: '<p><b>Before the concept check, compare the two time measures side by side.</b> They use the same units but answer different questions.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0"><div style="border:2px solid var(--orange);border-radius:12px;padding:10px 12px;background:rgba(235,104,52,.06)"><div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--orange)">CYCLE TIME</div><div style="font-size:26px;font-weight:800;color:var(--orange)">12 min</div><div style="font-size:12.5px">the <b>process view</b>: standing at the exit, timing the gap between two finished jobs.</div><div style="font-size:12px;color:var(--secondary);margin-top:4px">= 1/⟦R⟧ · the output rhythm · “how often?”</div></div><div style="border:2px solid var(--violet);border-radius:12px;padding:10px 12px;background:rgba(122,83,199,.06)"><div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--violet);text-transform:uppercase">⟦Tterm⟧ ⟦T⟧</div><div style="font-size:26px;font-weight:800;color:var(--violet)">6 min</div><div style="font-size:12.5px">the <b>job view</b>: riding on one job’s back, door to door, wait + work.</div><div style="font-size:12px;color:var(--secondary);margin-top:4px">= one job’s journey · “how long?”</div></div></div><p>Same activity, same afternoon, both in minutes — and they answer <b>different questions</b>. A loan comes out every 12 minutes, yet each loan spends only 6 inside. When a question asks <i>“how often…”</i>, use cycle time; <i>“how long…”</i>, use ⟦Tterm⟧. Keep the distinction explicit: cycle time is the output rhythm; ⟦Tterm⟧ is one job’s journey.</p>' },
-    { t: 'match', pg: 'loan1I', clock: true, pts: 10 },
-    { t: 'take', pg: 'loan1I', h: 'Every process is ▭ activities, ▽ buffers, and → flows. One resource is described by: <b>p</b> (min per job) · <b>⟦c⟧ = m/p</b> (jobs/hour) · <b>⟦R⟧ = min(demand, capacity)</b> (jobs/hour) · <b>cycle time = 1/⟦R⟧</b> · <b>u = ⟦R⟧·p/m</b>, never above 100% · <b>⟦T⟧ = waiting + processing</b> · <b>⟦I⟧</b> = average number inside. Keep the units explicit — rates carry “per hour,” times carry minutes — and these measures form the foundation for analyzing a single-resource process.' }
+    { t: 'read', pg: 'shapes0', h: '<p><b>Core idea:</b> a hospital, a bank, a warehouse, and a café share the same process structure: jobs flow in, are worked on, and flow out. Every process can be represented with the same three elements.</p><p>Every process map ever drawn needs at least these three shapes:</p><p><span class="shape-ico">▭</span> <b>Activity</b> — work happens, value is added.<br><span class="shape-ico">▽</span> <b>Buffer</b> — jobs <i>wait</i>. No value — time and money just sit.<br><span class="shape-ico">→</span> <b>Flow</b> — jobs move between them.</p><p>The stage on the right shows a café built from exactly these shapes. Watch the customers (green figures) flow.</p>' },
+    { t: 'quiz', pg: 'shapes0', q: 'A loan application sits in an underwriter’s inbox, waiting to be opened. Which shape is it in?', opts: [{ o: '▽ a buffer — it is waiting, not being worked on', ok: 1 }, { o: '▭ an activity — reviewing loans is work', ok: 0 }, { o: '→ a flow — it is moving through the bank', ok: 0 }], pts: 5, ex: 'Waiting is a buffer even inside a computer. Here is a fact to keep: in most real processes, jobs spend MOST of their life in triangles. No value is added while a job waits, so most of a long ⟦Tterm⟧ usually comes from the buffers, not from the work itself.' },
+    { t: 'task', pg: 'shapes0', h: '<span class="tt">Same structure, different industry</span>Select <b>Transform business</b> twice. The process structure stays fixed while the labels change: café → imaging center → loan desk.', act: 'Select <b>Transform business</b> twice while the simulation runs.', unlock: 'Continue unlocks after two transformations.', acts: [{ label: 'Transform business', fn(ts) { worldIdx = (worldIdx + 1) % 3; E.cfg.stations = WORLDS[worldIdx].n; E.cfg.doneName = WORLDS[worldIdx].done; drawMap({ icons: true }); ts.cycles = (ts.cycles || 0) + 1; } }], verify(ts) { const c = ts.cycles || 0; return c >= 2 ? { ok: true, msg: 'Currently: ' + WORLDS[worldIdx].d + '. Three industries, one process structure. The same operating logic transfers across settings.' } : { ok: false, msg: 'Currently: ' + WORLDS[worldIdx].d + ' — transform ' + (2 - c) + ' more time' + (c === 1 ? '' : 's') + '.' }; } },
+    { t: 'read', pg: 'loan1', h: '<p>Now let’s zoom in — <b>all the way in</b>. One activity, nothing else: the bank’s <b>Underwriting desk</b>. The map has been redrawn with a single ▭ (icons off — we know the shapes now). This is the simplest process in the world, and we’ll squeeze six famous numbers out of it, <b>one at a time</b>.</p><p><b>Processing time.</b> <mark class="hl">Processing time <i>p</i> = the time the activity needs per job.</mark> This desk’s processing time is <span style="color:var(--navy);font-weight:800"><i>p</i> = 6 minutes per application</span>. See it pulsing under the activity box — it just entered your notebook →</p>', learn: 'p' },
+    { t: 'quiz', pg: 'loan1', q: '<b>Capacity.</b> One application takes <i>p</i> = 6 minutes. Work the calculation: an hour has 60 minutes, so the most this desk could fund per hour — <b>the desk’s capacity</b> — is:', opts: [{ o: { v: '10 jobs/hour', d: 'capacity = 1/<i>p</i>' }, ok: 1 }, { o: { v: '6 jobs/hour', d: 'one per processing time' }, ok: 0 }, { o: 'It depends on how many arrive', ok: 0 }], pts: 5, ex: 'The desk’s capacity = 1/<i>p</i> = <span class="frac"><span class="top">1 job</span><span class="bot">6 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = <b>10 jobs/hour</b> — the maximum possible rate, not the rate actually observed. The minutes cancel across the two fractions, leaving jobs per hour. The calculation now appears under the desk in the simulation.', learn: 'c', pgAfter: 'loan1cap' },
+    { t: 'task', pg: 'loan1cap', h: '<span class="tt">Run the process</span>The desk is operating in <b>steady state</b>: its normal repeating pattern. Applications arrive once every <b>10 minutes</b>. Watch the waiting triangle: does anyone ever wait?', act: 'Press ▶ Play and let the simulation run to t = 120 minutes.', unlock: 'Continue unlocks when t reaches 120.', endT: 120, verify() { return E.t >= 119.9 ? { ok: true, msg: metrics().done + ' applications funded — and the waiting triangle stayed empty all day. The desk is always free before the next arrival.' } : { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' / 120' : 'Press ▶ Play to watch the desk at work.' }; } },
+    { t: 'predict', q: '<b>Before continuing, predict the result.</b> The desk could do 10 jobs/hour. Applications arrive at 6 jobs/hour. How many applications actually get funded per hour?', opts: [{ v: '10 jobs/hour', d: 'the desk works at its capacity' }, { v: '6 jobs/hour', d: 'it can only fund what arrives' }, { v: '8 jobs/hour', d: 'somewhere in between' }, 'Impossible to say'], correct: 1, fb: { ok: 'Throughput is limited by what arrives: ⟦R⟧ = min(demand, capacity) = min(6, 10) = 6 jobs/hour.', bad: 'The observed rate is 6 jobs/hour: the desk cannot fund more applications than arrive. ⟦R⟧ = min(demand, capacity) = min(6, 10) = 6 jobs/hour.' } },
+    { t: 'read', pg: 'loan1R', h: '<p><b>Throughput rate.</b> The blue tile that just appeared reads <b>6.0 jobs/hour</b>, not 10 — and it now sits at the exit of the process map. The throughput rate is <mark class="hl">the output rate the process produces: the rate at which jobs exit</mark>. It is a different quantity from the demand rate, the rate at which jobs arrive.</p><span class="formula">Throughput ⟦R⟧ = the output rate the process produces = the rate at which jobs exit the process (jobs/hour)</span><span class="formula">⟦R⟧ = min(demand rate, capacity) = min(6, 10) = 6 jobs/hour</span><p>The demand rate is <span class="frac"><span class="top">1 job</span><span class="bot">10 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 6 jobs/hour (blue demand label, left). The desk’s capacity is 10 jobs/hour (green label, under the desk). <mark class="hl">The output is the smaller of the two.</mark> The desk’s unused capacity does not create throughput; it creates idle time — that idle fraction is named utilization, defined shortly.</p>' },
+    { t: 'predict', q: '<b>Before continuing, predict the output rhythm.</b> Watch the funded pile grow in the simulation. A finished application gets processed every ___ minutes:', opts: [{ v: 'Every 6 minutes', d: 'the exit rhythm follows the processing time <i>p</i>' }, { v: 'Every 10 minutes', d: 'the exit rhythm follows the arrivals' }, { v: 'Every 16 minutes', d: 'work + wait combined' }, 'It varies'], correct: 1, fb: { ok: 'One finished application every 10 minutes: cycle time = 1/⟦R⟧, and ⟦R⟧ is set by the arrivals, not by <i>p</i>.', bad: 'The observed gap is 10 minutes: cycle time = 1/⟦R⟧, and ⟦R⟧ is set by the arrivals (6 jobs/hour), not by the processing time.' } },
+    { t: 'read', pg: 'loan1CT', h: '<p><b>Cycle time.</b> A new strip appeared: the <b>output ticker</b> stamps an orange dot for every funded application. The spacing is one dot every <b>10 minutes</b> — not every 6.</p><span class="formula">Cycle time = average time between two consecutive finished jobs = 1/⟦R⟧</span><p>cycle time = 1/⟦R⟧ = <span class="frac"><span class="top">1 hour</span><span class="bot">6 jobs</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = <b>10 minutes/job</b>. The desk finishes a job in 6 minutes, then waits 4 minutes for the next arrival: the output rhythm equals the arrival rhythm whenever demand is below capacity. Watch the ticker for a minute and count the spacing yourself.</p>' },
+    { t: 'quiznum', dim: true, dimNote: 'New case — the simulation still shows the loan desk.', pg: 'loan1CT', q: '<span class="qtag off">NEW CASE</span><br>A clinic discharges patients at ⟦R⟧ = 4 per hour. On average, a patient walks out every ___ minutes:', unit: 'min', ans: 15, tol: 1, pts: 5, hint: 'Cycle time = 1/⟦R⟧. Sixty minutes, four patients.', hint2: '60 minutes ÷ 4 patients = one discharge every ___ minutes.', ex: 'The clinic’s cycle time = 1/⟦R⟧ = <span class="frac"><span class="top">1 hour</span><span class="bot">4 jobs</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = <b>15 minutes/job</b>. Notice you needed no information about how long treatment takes — cycle time depends only on throughput.' },
+    { t: 'predict', q: '<span class="qtag on">CURRENT PROCESS</span><br><b>Use the current process and predict the result.</b> Use its numbers (<i>p</i> = 6 min, one arrival every 10): over a long morning, what fraction of the time is the underwriter actually working?', opts: [{ v: '100%', d: 'there is always work' }, { v: '60%', d: 'busy 6 of every 10 minutes' }, { v: '40%', d: 'mostly idle' }, 'Impossible to know'], correct: 1, fb: { ok: 'The desk works 6 minutes of every 10-minute cycle: utilization = 36 minutes activated / 60 minutes available = 60%.', bad: 'The measured value is 60%: the desk works 6 minutes of every 10-minute arrival cycle — 36 minutes activated out of 60 available.' } },
+    { t: 'read', pg: 'loan1U', h: '<p><b>Utilization.</b> The gold number is <mark class="hl">the ratio of the time a resource is actually activated to the time it is available for use</mark> — and actual utilization cannot exceed 100%.</p><span class="formula">Utilization <i>u</i> = Time activated / Time available</span><p>Look at the new gold strip: one hour of the desk’s life. Activated 6 minutes, idle 4, repeating: <i>u</i> = <span class="frac"><span class="top">36 minutes activated</span><span class="bot">60 minutes available</span></span> = 0.6 = <b>60%</b>.</p><p>A second calculation gives the same number — the rate route: <i>u</i> = ⟦R⟧ × <i>p</i> = <span class="frac"><span class="top">6 jobs</span><span class="bot">1 hour</span></span> × <span class="frac"><span class="top">6 minutes</span><span class="bot">1 job</span></span> = <span class="frac"><span class="top">36 minutes activated</span><span class="bot">60 minutes available</span></span> = 0.6. If the two calculations ever disagree, one of them is wrong — a built-in check on your arithmetic.</p>' },
+    { t: 'quiznum', pg: 'loan1Upr', q: '<span class="qtag off">NEW CASE</span><br>An MRI machine has <i>p</i> = 20 minutes per scan and serves ⟦R⟧ = 2 jobs/hour. The MRI machine’s utilization, in %:', dim: true, dimNote: 'New case — the simulation still shows the loan desk.', unit: '%', ans: 67, tol: 3, pts: 5, hint: 'u = ⟦R⟧ × p = 2 jobs/hr × 20 min. Convert: 2 × 20 = 40 busy minutes per 60.', ex: 'The MRI’s <i>u</i> = ⟦R⟧ × <i>p</i> = <span class="frac"><span class="top">2 jobs</span><span class="bot">1 hour</span></span> × <span class="frac"><span class="top">20 minutes</span><span class="bot">1 job</span></span> = <span class="frac"><span class="top">40 minutes activated</span><span class="bot">60 minutes available</span></span> ≈ <b>67%</b>. Same answer by the time route: 40 of 60 minutes activated. An MRI idle a third of the time sounds wasteful — the simulator module on queueing.' },
+    { t: 'task', pg: 'loan1T', h: '<span class="tt">Measure one application</span>Track <b>Jordan</b>, the highlighted application, from arrival to completion. The stopwatch below the simulation measures the full journey through the process. Select <b>▶ Play</b> and follow the highlighted job.', act: 'Press ▶ Play and follow Jordan, the highlighted application, to completion.', unlock: 'Continue unlocks when Jordan exits the process.', golden: true, verify() { if (E.golden < -900) return { ok: false, msg: 'Press ▶ Play.' }; return E.t >= jobDone(E.golden) + 1 ? { ok: true, msg: 'You saw it: Jordan walked in, was processed, walked out. The stopwatch has the number.' } : { ok: false, msg: E.playing ? 'Slow motion… watch the gold figure and the flashing clock. t = ' + Math.floor(E.t) : 'Press ▶ Play.' }; } },
+    { t: 'read', pg: 'loan1T2', h: '<p><b>⟦TtermC⟧.</b> The violet number is the quantity you just measured: one job’s total time in the system, entry to exit.</p><span class="formula">⟦TtermC⟧ ⟦T⟧ = waiting + processing = 0 + 6 = 6 minutes</span><p>⟦TtermC⟧ answers the customer’s question (“how long will mine take?”). Cycle time answers the process question (“how often does one come out?”). Jordan’s answer is 6 minutes; the ticker’s answer is 10 minutes. Both are correct; they answer different questions. ⟦T⟧ carries a time unit, and as an average it need not be a whole number.</p>' },
+    { t: 'predict', q: '<b>Before continuing, estimate the average inventory.</b> At any random moment, how many applications are inside the desk on average?', opts: [{ v: 'Exactly 1 job', d: 'there is always one being worked' }, { v: 'Less than 1 job', d: 'sometimes the desk is empty' }, { v: 'About 6 jobs', d: 'one per hour of backlog' }, { v: 'Zero jobs', d: 'they pass right through' }], correct: 1, fb: { ok: 'The desk is empty 40% of the time, so the average count is below 1: ⟦I⟧ = 0.6 jobs.', bad: 'The average is 0.6 jobs — below 1, because the desk holds one application 60% of the time and none the remaining 40%.' } },
+    { t: 'read', pg: 'loan1I', h: '<p><b>Inventory.</b> The teal tile reads about <b>0.6</b>: <mark class="hl">inventory ⟦I⟧ = the average number of jobs inside the process</mark> — a time-average, so it need not be a whole number.</p><p>The desk holds exactly 1 application 60% of the time and 0 the rest: ⟦I⟧ = (1 × 6 + 0 × 4) / 10 = 0.6 jobs. Do not confuse <i>u</i> with ⟦I⟧: <i>u</i> is a fraction of time; ⟦I⟧ is a count of jobs. The same number also equals ⟦R⟧ × ⟦T⟧ = <span class="frac"><span class="top">6 jobs</span><span class="bot">1 hour</span></span> × <span class="frac"><span class="top">6 minutes</span><span class="bot">1 job</span></span> × <span class="frac"><span class="top">1 hour</span><span class="bot">60 minutes</span></span> = 0.6 — a general law, covered in Lesson 3.</p>' },
+    { t: 'quiznum', pg: 'loan1I', q: 'Read the green tile in the simulation: <mark class="hl">the average inventory ⟦I⟧</mark> is about:', unit: 'jobs', ans: 0.6, tol: 0.1, pts: 5, hint: 'The green tile — expect a decimal like 0.x.', hint2: 'The desk holds exactly 1 application 60% of the time and 0 the rest — average those.', ex: '⟦I⟧ ≈ 0.6. Where does the tile get that? It averages over TIME: 1 application is inside while the desk works (6 of every 10 minutes) and 0 while it sits empty (4 of every 10) → ⟦I⟧ = (1×6 + 0×4) ÷ 10 = 0.6. And quietly: ⟦R⟧ × ⟦T⟧ = 0.1/min × 6 min = 0.6 too. The same number also equals ⟦R⟧ × ⟦T⟧ — a general relationship covered in Lesson 3.' },
+    { t: 'quiz', pg: 'mriCase', q: '<span class="qtag off">NEW CASE</span><br>The simulation now shows this case. An MRI machine has processing time <i>p</i> = 20 minutes per scan; patients are scheduled every 30 minutes. What are <b>the machine’s capacity</b> and <b>its throughput rate ⟦R⟧</b>?', opts: [{ o: 'Capacity 3 jobs/hr · throughput ⟦R⟧ = 2 jobs/hr (demand-limited)', ok: 1 }, { o: 'Capacity 2 jobs/hr · throughput 3 jobs/hr', ok: 0 }, { o: 'Both 3 jobs/hr — the machine decides', ok: 0 }], pts: 5, ex: 'c = 1/p = 3 jobs/hr; only 2 jobs/hr arrive → ⟦R⟧ = 2 jobs/hr, scanner idle a third of the time. An idle MRI costs a hospital real money every hour — which is exactly why utilization is Lesson 2 material.' },
+    { t: 'quiz', dim: true, dimNote: 'Hypothetical case — the simulation still shows the current process.', pg: 'loan1I', q: 'Stretch: one Friday, demand doubles to 12 jobs/hr — but the desk’s capacity is still 10 jobs/hr. What happens?', opts: [{ o: '⟦R⟧ caps at 10 jobs/hr and a line starts growing in the triangle', ok: 1 }, { o: '⟦R⟧ becomes 12 jobs/hr — demand always wins', ok: 0 }, { o: 'The desk speeds up under pressure', ok: 0 }], pts: 5, ex: '⟦R⟧ = min(demand, capacity) = 10 jobs/hr, and the extra 2 jobs/hr pile up in the buffer — forever. Congratulations: you just discovered the BOTTLENECK, and that triangle full of angry applicants is precisely where Lesson 2 begins.' },
+    { t: 'read', pg: 'loan1m', h: '<p><b>Number of processors.</b> So far the desk had one underwriter. Real operations staff up: <i>m</i> parallel underwriters, tellers, or MRI machines — the same activity, several people or machines doing it side by side. The simulation now draws <b><i>m</i> = 2</b> as two parallel processor boxes: the flow forks from the waiting buffer to whichever processor is free and merges again after.</p><span class="formula"><i>m</i> = number of parallel processors · <b>processors cannot work on the same job</b> — each holds one job at a time · total capacity = <i>m</i> × ⟦c⟧ = <i>m</i>/<i>p</i></span><p><i>m</i> = 2 means two jobs can be in process at once — not one job finished twice as fast. The next short steps derive the consequences.</p>' },
+    { t: 'quiznum', pg: 'loan1m', q: 'With two underwriters (<i>m</i> = 2) and <i>p</i> = 6 minutes each, <b>the desk’s total capacity</b> is ___ jobs/hour:', unit: 'jobs/hour', ans: 20, tol: 0.5, pts: 5, hint: 'capacity = m × 60 ÷ p = 2 × 60 ÷ 6.', ex: 'Total capacity = <i>m</i>/<i>p</i> = 2 × <span class="frac"><span class="top">1 job</span><span class="bot">6 minutes</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 2 × 10 = <b>20 jobs/hour</b>. The capacity line under the desk updated the moment <i>m</i> became 2: twice the processors, twice the maximum rate.' },
+    { t: 'quiz', pg: 'loan1m', q: 'Now the important observation. Capacity is 20 jobs/hr — yet the blue tile still reads 6.0 /hr, and the second desk in the simulation has not touched a single application. Why?', opts: [{ o: '⟦R⟧ = min(demand, capacity) = min(6, 20) = 6 jobs/hr — demand did not change, so neither did the flow', ok: 1 }, { o: 'The simulation needs a restart to register the new desk', ok: 0 }, { o: 'The second underwriter works at half speed', ok: 0 }], pts: 5, ex: 'Adding processors raises CAPACITY, not demand. Throughput stays min(6, 20) = 6 jobs/hr, and the extra desk sits idle. <mark class="hl">Capacity investments pay off only when capacity is the constraint</mark> — knowing when that is true is exactly where Lesson 2 begins. (The reverse also holds: cut m from 2 to 1 and capacity halves, utilization doubles — the same two formulas, run backwards.)' },
+    { t: 'quiznum', pg: 'loan1m', q: 'Derivation, step 1 — the demand for work. Reason it out directly: 6 applications arrive each hour, and each needs 6 minutes of an underwriter’s attention. How many minutes of work arrive per hour, in total?', unit: 'min of work', ans: 36, tol: 1, pts: 5, hint: '6 applications × 6 minutes each.', ex: '36 minutes of work arrive every hour. Now notice something important: hiring the second underwriter did <b>not</b> change this number. The demand for work belongs to the customers — the staff cannot vote on it.' },
+    { t: 'quiznum', pg: 'loan1m', q: 'Step 2 — the SUPPLY of time. Each of the 2 underwriters offers 60 minutes per hour. How many desk-minutes are available per hour?', unit: 'desk-min', ans: 120, tol: 1, pts: 5, hint: 'm workers × 60 minutes each.', ex: '2 × 60 = 120 desk-minutes available per hour. <mark class="hl">This is where m lives</mark>: processors do not add work — they add available time.' },
+    { t: 'quiznum', pg: 'loan1m', q: 'Step 3 — you now hold both halves. Utilization, by its original definition: u = time activated ÷ time available. In %?', unit: '%', ans: 30, tol: 2, pts: 5, hint: '36 minutes of work, spread over 120 available desk-minutes.', hint2: 'Divide 36 by 120, then multiply by 100.', ex: 'u = 36 ÷ 120 = <b>30%</b> — confirm it on the gold tile and under the desk. And here is what you just built: the textbook shortcut <b>u = ⟦R⟧ × p ÷ m</b> is exactly your division — ⟦R⟧ × p is the work demanded per hour, m × 60 the time supplied. When m doubled, the work stayed at 36 while the available time doubled to 120, so utilization halved: 60% → 30%. <mark class="hl">Adding processors dilutes utilization, because they add time, not work.</mark>', learn: 'm' },
+
+    { t: 'read', pg: 'loan1I', h: '<p><b>Before the concept check, compare the two time measures side by side.</b> They use the same units but answer different questions.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0"><div style="border:2px solid var(--orange);border-radius:12px;padding:10px 12px;background:rgba(235,104,52,.06)"><div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--orange)">CYCLE TIME</div><div style="font-size:26px;font-weight:800;color:var(--orange)">10 min</div><div style="font-size:12.5px">the <b>manager’s</b> stopwatch: standing at the EXIT, timing the gap <b>between</b> two finished jobs.</div><div style="font-size:12px;color:var(--secondary);margin-top:4px">= 1/⟦R⟧ · the rhythm of the process · “how often?”</div></div><div style="border:2px solid var(--violet);border-radius:12px;padding:10px 12px;background:rgba(122,83,199,.06)"><div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--violet)"><span style="text-transform:uppercase">⟦Tterm⟧</span> ⟦T⟧</div><div style="font-size:26px;font-weight:800;color:var(--violet)">6 min</div><div style="font-size:12.5px">the <b>customer’s</b> stopwatch: riding on ONE job’s back, door to door, <b>wait + work</b>.</div><div style="font-size:12px;color:var(--secondary);margin-top:4px">= Jordan’s journey · the experience of one job · “how long?”</div></div></div><p>Same desk, same afternoon, both in minutes — and they answer <b>different questions</b>. A loan comes out every 10 minutes, yet each loan spends only 6 inside. When a question asks <i>“how often…”</i>, reach for the orange number; <i>“how long…”</i>, reach for the violet one. <b>Do not let these two blur.</b> You will meet them on every exam and in every process you ever manage.</p>' },
+    { t: 'match', pg: 'loan1I', pts: 10 },
+    { t: 'spot', pg: 'loan1I' },
+    { t: 'take', pg: 'loan1I', h: 'Every business is <b>▭ activities</b>, <b>▽ buffers</b>, <b>→ flows</b>. Seven core measures describe it — and they are in your notebook: <b><i>p</i> · capacity · ⟦R⟧ · cycle time · <i>u</i> · ⟦T⟧ · ⟦I⟧</b> — plus <i>m</i>, the number of parallel processors. These shapes and numbers apply to any process: a security checkpoint, a restaurant, an email inbox.' }
   ];
   const SECTIONS = [
     { lab: 'Process anatomy', n: 3 },
     { lab: '<i>p</i> &amp; capacity', n: 3 },
     { lab: 'Throughput', n: 2 },
-    { lab: 'Cycle time', n: 2 },
-    { lab: 'Utilization', n: 2 },
+    { lab: 'Cycle time', n: 3 },
+    { lab: 'Utilization', n: 3 },
     { lab: '⟦TtermC⟧', n: 2 },
-    { lab: 'Inventory', n: 4 },
-    { lab: 'Processors <i>m</i>', n: 3 },
-    { lab: 'Review', n: 3 }
+    { lab: 'Inventory', n: 5 },
+    { lab: 'Processors <i>m</i>', n: 6 },
+    { lab: 'Review', n: 4 }
   ];
   const MAX_PTS = STEPS.reduce((a, s) => a + (s.pts || 0), 0);
 
   /* stage page configs */
-  const loanCfg = () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6 }], a: 12, doneName: 'Funded' }; E.golden = -999; E.tEnd = Infinity; };
   const PAGES = {
-    loan1mQ: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6, m: 2 }], a: 5, doneName: 'Funded' }; E.golden = -999; drawMap({ showP: true, showCap: true, showArrRate: true, showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, T: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
     mriCase: () => { E.cfg = { stations: [{ name: 'MRI scan', p: 20 }], a: 30, doneName: 'Scanned' }; E.golden = -999; E.t = 0; E.playing = false; E.tEnd = Infinity; drawMap({ showP: true, showCap: true, showArrRate: true, showR: true }); setSpeed(7); setUI({ runbar: true }); },
     shapes0: () => { E.cfg = { stations: WORLDS[worldIdx].n, a: 10, doneName: WORLDS[worldIdx].done }; drawMap({ icons: true, note: '▭ activities · ▽ buffers · → flows — that’s the whole alphabet.' }); E.t = 0; E.playing = true; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: false }); },
-    loan1: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6 }], a: 12, doneName: 'Funded' }; E.golden = -999; drawMap({ showP: true, spotP: true }); E.t = 0; E.playing = true; E.tEnd = Infinity; setSpeed(7); setUI({ runbar: true }); },
-    loan1cap: () => { loanCfg(); drawMap({ showP: true, showCap: true, spotCap: true }); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; setUI({ runbar: true }); setSpeed(7); },
-    loan1R: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, spotR: true , showR: true }); setUI({ runbar: true, tiles: { R: 1 } }); E.tEnd = Infinity; setSpeed(7); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
-    loan1CT: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true , showR: true }); setUI({ runbar: true, tiles: { R: 1, CT: 1 }, ticker: true }); E.tEnd = Infinity; setSpeed(7); },
-    loan1U: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true }); $('occ').classList.add('show'); drawOcc('u'); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
-    loan1Upr: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true }); },
-    loan1T: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, showU: true, showR: true }); setSpeed(2); E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; E.tEnd = Infinity; E.golden = -999; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true }); },
-    loan1T2: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1 }, ticker: true });
+    loan1: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6 }], a: 10, doneName: 'Funded' }; E.golden = -999; drawMap({ showP: true, spotP: true }); E.t = 0; E.playing = false; E.tEnd = Infinity; setSpeed(7); setUI({}); },
+    loan1cap: () => { drawMap({ showP: true, showCap: true, spotCap: true }); setUI({ runbar: true }); setSpeed(7); },
+    loan1R: () => { drawMap({ showP: true, showCap: true, showArrRate: true, spotR: true , showR: true }); setUI({ runbar: true, tiles: { R: 1 } }); E.tEnd = Infinity; setSpeed(7); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    loan1CT: () => { drawMap({ showP: true, showCap: true, showArrRate: true , showR: true }); setUI({ runbar: true, tiles: { R: 1, CT: 1 }, ticker: true }); E.tEnd = Infinity; setSpeed(7); },
+    loan1U: () => { drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true }); $('occ').classList.add('show'); drawOcc('u'); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    loan1Upr: () => { drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true }); },
+    loan1T: () => { drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(2); E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; E.tEnd = Infinity; E.golden = Math.ceil((E.t + 4) / E.cfg.a); setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1 }, ticker: true, watch: true }); },
+    loan1T2: () => { drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1 }, ticker: true, watch: true });
       if (!document.getElementById('wtTag')) {
         const s1 = document.createElement('span'); s1.id = 'wtTag'; s1.className = 'pointTag flashIn';
         s1.style.cssText = 'background:#f3eefc;color:#7c5cd6;border:1px solid rgba(124,92,214,.45);';
-        s1.textContent = '⬅ one job’s time in the system'; $('tileT').appendChild(s1);
+        s1.textContent = '⬅ THIS number is FLOW TIME (T)'; $('watch').appendChild(s1);
         const s2 = document.createElement('span'); s2.id = 'ckTag'; s2.className = 'pointTag flashIn';
         s2.style.cssText = 'background:#fdeee6;color:#eb6834;border:1px solid rgba(235,104,52,.45);';
         s2.textContent = '⬅ THIS spacing is CYCLE TIME'; $('ticker').querySelector('.k').appendChild(s2);
       } },
-    loan1m: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6, m: 2 }], a: 5, doneName: 'Funded' }; E.golden = -999; drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1, I: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
-    loan1I: () => { loanCfg(); drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1, I: 1 }, ticker: true, watch: false }); $('occ').classList.add('show'); drawOcc('I'); }
+    loan1m: () => { E.cfg = { stations: [{ name: 'Underwriting', p: 6, m: 2 }], a: 10, doneName: 'Funded' }; E.golden = -999; drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1, I: 1 }, ticker: true }); if (!E.playing) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
+    loan1I: () => { E.cfg.stations[0].m = 1; drawMap({ showP: true, showCap: true, showArrRate: true, showU: true , showR: true }); setSpeed(7); setUI({ runbar: true, tiles: { R: 1, CT: 1, U: 1, T: 1, I: 1 }, ticker: true, watch: false }); $('occ').classList.add('show'); drawOcc('I'); }
   };
   function drawOcc(mode) {
     const s = $('occSvg'); s.innerHTML = '';
     const pm = 880 / 60;   // px per minute over one hour
     el('text', { x: 10, y: 14, 'font-size': 12, 'font-weight': 700, fill: '#52514e' }, s).textContent =
       mode === 'I'
-        ? 'same strip, new reading: 1 job inside for 30 of 60 min, 0 otherwise → average inside = 30/60 = 0.5 jobs'
-        : 'busy 6 min (green) + idle 6 min (gray), repeating → u = time activated ÷ time available = 30/60 = 50%';
-    for (let c = 0; c < 5; c++) {
-      const x0 = 10 + c * 12 * pm;
+        ? 'same strip, new reading: 1 job inside for 36 of 60 min, 0 otherwise → average inside = 36/60 = 0.6 jobs'
+        : 'busy 6 min (green) + idle 4 min (gray), repeating → u = time activated ÷ time available = 36/60 = 60%';
+    for (let c = 0; c < 6; c++) {
+      const x0 = 10 + c * 10 * pm;
       el('rect', { x: x0, y: 24, width: 6 * pm - 1, height: 26, rx: 4, fill: 'rgba(46,125,50,.55)' }, s);
-      el('rect', { x: x0 + 6 * pm, y: 24, width: 6 * pm - 1, height: 26, rx: 4, fill: '#e1e0d9' }, s);
+      el('rect', { x: x0 + 6 * pm, y: 24, width: 4 * pm - 1, height: 26, rx: 4, fill: '#e1e0d9' }, s);
       if (c === 0) {
         el('text', { x: x0 + 3 * pm, y: 41, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, fill: '#fff' }, s).textContent = 'busy 6';
-        el('text', { x: x0 + 9 * pm, y: 41, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#898781' }, s).textContent = 'idle 6';
+        el('text', { x: x0 + 8 * pm, y: 41, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#898781' }, s).textContent = 'idle 4';
       }
     }
     el('text', { x: 10, y: 62, 'font-size': 11, fill: '#898781' }, s).textContent = '0 min';
     el('text', { x: 880, y: 62, 'text-anchor': 'end', 'font-size': 11, fill: '#898781' }, s).textContent = '60 min';
   }
   let curPage = null;
-  function setDim(on, note) {
-    const sc = document.getElementById('stageCard');
-    if (!sc) return;
-    sc.classList.toggle('dimmed', !!on);
-    const tl = document.querySelector('.tiles'); if (tl) tl.classList.toggle('dimmedcards', !!on);
-    ['ticker', 'occ', 'runbar'].forEach(id => { const e2 = document.getElementById(id); if (e2) e2.classList.toggle('dimmedcards', !!on); });
-    if (on) {
-      if (setDim.wasPlaying === undefined) { setDim.wasPlaying = E.playing; setDim.wasPage = curPage; }
-      E.playing = false; const pb = document.getElementById('playBtn'); if (pb) pb.textContent = '▶ Play';
-    } else if (setDim.wasPlaying !== undefined) {
-      // resume only if we are still on the page that was running when the dim began —
-      // a page change means the new page has already set its own play state
-      if (setDim.wasPlaying && setDim.wasPage === curPage) E.playing = true;
-      setDim.wasPlaying = undefined; setDim.wasPage = undefined;
-      const pb = document.getElementById('playBtn'); if (pb) pb.textContent = E.playing ? '❚❚ Pause' : '▶ Play';
-    }
-    let dn = document.getElementById('dimNote');
-    if (on) {
-      if (!dn) { dn = document.createElement('div'); dn.id = 'dimNote'; dn.className = 'dimnote'; sc.appendChild(dn); }
-      dn.textContent = note || 'This question uses a different process — the simulation does not apply.';
-    } else if (dn) dn.remove();
-  }
   function ensurePage(pg) {
     if (!pg || pg === curPage) return;
     curPage = pg;
@@ -865,14 +778,14 @@
     { k: 'm', lab: 'm — number of processors' }
   ];
   const MATCH_PROMPTS = [
-    { q: 'The 6 minutes of work one application needs at the underwriting activity.', k: 'p' },
-    { q: 'The most the activity could ever do: 10 jobs/hour.', k: 'c' },
-    { q: 'The 5 jobs/hour that actually flowed through today.', k: 'R' },
-    { q: 'The 12-minute gap between two consecutive funded applications.', k: 'CT' },
-    { q: 'The 50% — the share of available time the activity was actually working.', k: 'u' },
-    { q: 'The total time a job spends within the boundary of the process.', k: 'T' },
-    { q: 'The 0.5 — average number of applications inside at any moment.', k: 'I' },
-    { q: 'Hire a second underwriter and this doubles the activity’s capacity.', k: 'm' }
+    { q: 'The 6 minutes of work one application needs at the desk.', k: 'p' },
+    { q: 'The 10 jobs/hr speed limit — the most the desk could ever do.', k: 'c' },
+    { q: 'The 6 jobs/hr that actually flowed through today.', k: 'R' },
+    { q: 'The 10-minute gap between two consecutive funded applications.', k: 'CT' },
+    { q: 'The 60% — the share of available time the desk was actually working.', k: 'u' },
+    { q: 'Jordan’s 6 minutes, door to door.', k: 'T' },
+    { q: 'The 0.6 — average number of applications inside at any moment.', k: 'I' },
+    { q: 'Hire a second underwriter and this doubles the desk’s capacity.', k: 'm' }
   ];
 
   /* ---------- step renderer ---------- */
@@ -886,30 +799,16 @@
     setScore();
   }
   function setScore() {
-    const pct = Math.round(Math.max(0, C.step) / Math.max(1, STEPS.length - 1) * 100);
-    $('scoreEl').textContent = 'Progress ' + pct + '%';
-    $('progEl').style.width = pct + '%';
+    $('scoreEl').textContent = C.score + ' / ' + MAX_PTS + ' pts';
+    $('progEl').style.width = (Math.max(0, C.step) / (STEPS.length - 1) * 100) + '%';
   }
 
-  function confetti() {
-    const em = ['🎉', '✅', '📈', '⭐'];
-    for (let i = 0; i < 32; i++) {
-      const d = document.createElement('div');
-      d.className = 'confetti';
-      d.textContent = em[i % em.length];
-      d.style.left = (Math.random() * 100) + 'vw';
-      d.style.animationDuration = (2.4 + Math.random() * 2.2) + 's';
-      d.style.animationDelay = (Math.random() * 0.9) + 's';
-      document.body.appendChild(d);
-      setTimeout(() => d.remove(), 6200);
-    }
-  }
   function shuffleIdx(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-  function optHTML(o) {   // option text, or {v: value, d: detail} for numeric options
+  function optHTML(o) {
     if (o && typeof o === 'object' && o.v !== undefined) return subN(o.v) + '<span class="optdetail"> — ' + subN(o.d) + '</span>';
     return subN(o);
   }
-  function optionsHTML(items) {   // shuffled buttons + a details toggle when any option has hidden detail
+  function optionsHTML(items) {
     const order = shuffleIdx(items.length);
     let out = '';
     const hasDet = items.some(it => it.html.indexOf('optdetail') >= 0);
@@ -917,58 +816,68 @@
     order.forEach(i => { out += '<button ' + items[i].attrs + '>' + items[i].html + '</button>'; });
     return out;
   }
+  function setDim(on, note) {
+    const sc = document.getElementById('stageCard');
+    if (!sc) return;
+    sc.classList.toggle('dimmed', !!on);
+    let dn = document.getElementById('dimNote');
+    if (on) {
+      if (!dn) { dn = document.createElement('div'); dn.id = 'dimNote'; dn.className = 'dimnote'; sc.appendChild(dn); }
+      dn.textContent = note || 'This question uses a different process — the simulation does not apply.';
+    } else if (dn) dn.remove();
+  }
   function renderStep() {
     stopPoll();
     const st = STEPS[C.step];
     const c = $('lessonCard');
     setScore();
-    let effPg = st.pg;
-    if (!effPg) { for (let k = C.step; k >= 1; k--) { if (STEPS[k].pg) { effPg = STEPS[k].pg; break; } } }
-    if (effPg) ensurePage(effPg);
-    E.clock = !!st.clock;
+    if (st.pg) ensurePage(st.pg);
     setDim(!!st.dim, st.dimNote);
-    if (!st.endT && isFinite(E.tEnd) && E.t >= E.tEnd - 1e-9) { E.tEnd = Infinity; const ei2 = $('endIn'); if (ei2) ei2.value = ''; }   // a finished timed run must not leave Play dead on later steps
-    { const pbs = $('playBtn'); if (pbs) pbs.textContent = E.playing ? '❚❚ Pause' : '▶ Play'; }
     let h = (function () {
       let idx = 1, out = '<div class="pillbar">';
-      SECTIONS.forEach((sec, si) => {
+      SECTIONS.forEach(sec => {
         const start = idx, end = idx + sec.n - 1;
-        const cls = (C.step >= start && C.step <= end) ? 'active' : ((C.maxStep || 1) > end ? 'done' : '');
+        const cls = C.step > end ? 'done' : (C.step >= start ? 'active' : '');
         const reach = start <= (C.maxStep || 1);
         out += '<span class="spill ' + cls + (reach ? ' reach' : '') + '" data-start="' + start + '">' + subN(sec.lab) + '<span class="sdots">';
-        for (let k = start; k <= end; k++) out += '<span class="sd' + (k === C.step ? ' cur' : (k < Math.max(C.step, C.maxStep || 1) ? ' past' : '')) + (k <= (C.maxStep || 1) ? ' jump' : '') + '" data-i="' + k + '"></span>';
+        for (let k = start; k <= end; k++) out += '<span class="sd' + (k < C.step ? ' past' : k === C.step ? ' cur' : '') + (k <= (C.maxStep || 1) ? ' jump' : '') + '" data-i="' + k + '"></span>';
         out += '</span></span>';
         idx = end + 1;
       });
       return out + '</div>';
     })();
+    if (C.step > 0) {
+      const prevSt = STEPS[C.step - 1];
+      if (prevSt && prevSt.t === 'predict' && prevSt.fb && C.pred && C.pred[C.step - 1]) {
+        const ch = C.pred[C.step - 1];
+        const kind = ch.i === prevSt.correct ? 'ok' : ((prevSt.partial || []).indexOf(ch.i) >= 0 ? 'mid' : 'bad');
+        const verdict = kind === 'ok' ? 'Correct.' : (kind === 'mid' ? 'Partly correct.' : 'Not correct.');
+        h += '<div class="predfb ' + kind + '"><b>Your prediction:</b> “' + ch.txt + '” — <b>' + verdict + '</b> ' + subN(prevSt.fb[kind] || prevSt.fb.ok) + '</div>';
+      }
+    }
     h += '<div class="lp-step">';
     let contDisabled = false, needsPoll = false;
 
     if (st.t === 'home') {
-      h += '<p style="font-size:15px"><b>Exercise 1 — The Anatomy of a Process.</b> This lab applies the process map (activities, buffers, flows) and seven core measures — p, capacity, ⟦R⟧, cycle time, u, ⟦T⟧, and ⟦I⟧ — plus <i>m</i>, the number of parallel processors. Work from the highlighted definitions and the live process model; open <b>“Why this works”</b> when you want the full explanation.</p><p style="font-size:12.5px;color:var(--secondary)">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. Submit the completion code in Canvas when you finish.</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name:</b></p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
-      h += '<div class="lp-nav"><button class="primary" id="goBtn">Begin Exercise →</button><button id="twHome">Platform walkthrough</button></div>';
-      h += '</div>';
-      c.innerHTML = subN(h); h = '';
+      h += '<p style="font-size:15px"><b>☕→🏦 Welcome.</b> This is a 15-minute guided lab. You will learn to see the hidden machine inside every business — and leave with six numbers that describe any process on Earth, from an espresso bar to a mortgage desk.</p><p>The page starts almost empty. <b>That is on purpose:</b> every chart, tile, and formula appears only at the moment you earn it. By the end, the notebook on the right will be your personal formula sheet.</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name</b> (for your completion code — type it the same way every time):</p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
+      h += '<div class="lp-nav"><button class="primary" id="goBtn">Begin Lesson →</button><button id="twHome">Platform walkthrough</button></div>';
+      h += '<div class="verifybox"><details><summary>Instructor: verify a completion code</summary><input id="vN" placeholder="student name"><input id="vC" placeholder="P1-XXX-XXXX-XX"><button class="mini" id="vB" style="margin-top:6px">Check</button><div id="vOut" style="margin-top:5px"></div></details></div></div>';
+      c.innerHTML = h;
       if ($('twHome')) $('twHome').addEventListener('click', () => window.runPlatformTour && window.runPlatformTour());
       $('goBtn').addEventListener('click', () => {
         const n = $('nmIn').value.trim();
         if (!n) { $('nmIn').style.borderColor = 'var(--red)'; return; }
         C.name = n; C.step = 1; renderStep();
       });
+      $('vB') && $('vB').addEventListener('click', () => {
+        const r = readCode($('vN').value, $('vC').value);
+        $('vOut').innerHTML = r ? '<span style="color:var(--green);font-weight:700">✓ Valid — Lesson 1 complete, score ' + r.score + ' / ' + MAX_PTS + '</span>' : '<span style="color:var(--red);font-weight:700">✗ Invalid — name and code do not match.</span>';
+      });
       return;
     }
 
     if (st.t === 'read') {
-      const prev = STEPS[C.step - 1];
-      if (prev && prev.t === 'predict' && prev.fb && C.pred && C.pred[C.step - 1]) {
-        const ch = C.pred[C.step - 1];
-        const kind = ch.i === prev.correct ? 'ok' : ((prev.partial || []).indexOf(ch.i) >= 0 ? 'mid' : 'bad');
-        const verdict = kind === 'ok' ? 'Correct.' : (kind === 'mid' ? 'Partly correct.' : 'Not correct.');
-        h += '<div class="predfb ' + kind + '"><b>Your prediction:</b> “' + ch.txt + '” — <b>' + verdict + '</b> ' + subN(prev.fb[kind] || prev.fb.ok) + '</div>';
-      }
-      { let bodyR = subN(st.h); const NOTE2 = '<p class="contnote">Press <b>Continue</b>.</p>';
-        h += bodyR.includes('<details') ? bodyR.replace('<details', NOTE2 + '<details') : bodyR + NOTE2; }
+      h += subN(st.h);
       if (st.learn) learn(st.learn);
     } else if (st.t === 'predict') {
       h += '<p>' + subN(st.q) + '</p><p style="font-size:12px;color:var(--muted)">Choose an answer before viewing the explanation.</p>';
@@ -976,49 +885,47 @@
       h += '<div class="lp-fb info" id="fb" style="display:none">Answer recorded. The next step resolves it.</div>';
       contDisabled = true;
     } else if (st.t === 'quiz') {
-      h += '<p><b>Learning Check.</b> ' + subN(st.q) + '</p>';
+      h += '<p><b>Check your understanding</b> (' + st.pts + ' pts). ' + subN(st.q) + '</p>';
       h += optionsHTML(st.opts.map(o => ({ html: optHTML(o.o || o), attrs: 'class="lp-opt lp-qz" data-ok="' + o.ok + '"' })));
       h += '<div class="lp-fb" id="fb"></div>';
       contDisabled = true;
     } else if (st.t === 'quiznum') {
-      h += '<p><b>Learning Check.</b> ' + subN(st.q) + '</p>';
+      h += '<p><b>Check your understanding</b> (' + st.pts + ' pts). ' + subN(st.q) + '</p>';
       h += '<div class="lp-num"><input id="numIn" type="number" step="any" placeholder="' + (st.unit || '') + '"><button class="mini" id="numBtn">Submit</button></div><div class="lp-fb" id="fb"></div>';
       contDisabled = true;
     } else if (st.t === 'task') {
       h += '<div class="lp-task">' + subN(st.h) + '</div>';
-      if (st.act || st.unlock) h += '<div class="actstrip">' + (st.act ? '<b>YOUR TASK:</b> ' + subN(st.act) + (st.unlock ? ' &nbsp;·&nbsp; ' : '') : '') + (st.unlock ? '<b>TO CONTINUE:</b> ' + subN(st.unlock) : '') + '</div>';
-      (st.acts || []).forEach((a, i) => { h += '<button class="mini pulse" id="act' + i + '" style="margin-top:6px">' + a.label + '</button> '; });
+      if (st.act) h += '<div class="actstrip"><b>YOUR TASK:</b> ' + subN(st.act) + (st.unlock ? ' &nbsp;·&nbsp; <b>TO CONTINUE:</b> ' + subN(st.unlock) : '') + '</div>';
+      (st.acts || []).forEach((a, i) => { h += '<button class="mini" id="act' + i + '" style="margin-top:6px">' + a.label + '</button> '; });
       h += '<div class="lp-status" id="tstat">…</div>';
       contDisabled = true; needsPoll = true;
     } else if (st.t === 'match') {
-      h += '<p><b>Concept check.</b> Match each prompt to the correct concept. Incorrect matches return later in the round so you can resolve any remaining confusion.</p>';
+      h += '<p><b>Concept check</b> (' + st.pts + ' pts). Match each prompt to the correct concept. Incorrect matches return later in the round so you can resolve any remaining confusion.</p>';
       h += '<div class="lp-task" id="mPrompt" style="font-size:14.5px;font-weight:700"></div>';
       h += '<div class="chips" id="mChips">' + MATCH_CONCEPTS.map(cc => '<button class="chip" data-k="' + cc.k + '">' + subN(cc.lab) + '</button>').join('') + '</div>';
       h += '<div class="lp-fb" id="fb"></div><div class="lp-status" id="mStat"></div>';
       contDisabled = true;
+    } else if (st.t === 'spot') {
+      h += '<p><b>🔭 Spot it in the wild.</b> Pick a place you’ll be this week — then check your instinct:</p><div class="chips">' +
+        ['✈️ Airport security', '🌯 Chipotle line', '🏥 ER triage', '📧 Your inbox'].map((s, i) => '<button class="chip" data-i="' + i + '">' + s + '</button>').join('') + '</div><div class="lp-fb info" id="spotFb" style="display:none"></div>';
+      contDisabled = !C.spotDone;
     } else if (st.t === 'take') {
-      if (!C.celebrated) { C.celebrated = true; setTimeout(confetti, 300); }
       h += '<div class="lp-take"><span class="tt">CORE REFERENCE</span>' + subN(st.h) + '</div>';
-      const cc = _fin(_n0());
-      if (cc) {
-        h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code:</p><div class="lp-code" style="display:flex;align-items:center;gap:12px;justify-content:space-between"><span id="ccOut">' + cc + '</span><button class="mini" id="ccCopy" title="Copy to clipboard" style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy to clipboard</button></div>';
-        h += '<p style="font-size:12.5px;color:var(--secondary)">Enter this code in the Canvas quiz for Exercise 1.</p>';
-      }
-      h += '<p style="font-size:12.5px;color:var(--secondary)">Next: <b>Exercise 2 — Systems &amp; Bottlenecks</b>, which develops the overload case you observed here. Open process101_exercise2.html from your course folder.</p>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code (submit this in Canvas):</p><div class="lp-code">' + makeCode(C.name, C.score) + '</div>';
+      h += '<p style="font-size:12.5px;color:var(--secondary)">Next up — <b>Lesson 2: Systems &amp; Bottlenecks</b>, where that growing Friday line gets explained, measured, and fixed. The button below opens it (keep the lesson files in the same folder).</p>';
       if (!C.finished) { C.finished = true; renderLessonBar(); }
     }
     h += '</div>';
     const last = C.step === STEPS.length - 1;
-    h += '<div class="lp-nav"><button id="backBtn">← Back</button><button class="primary" id="contBtn" ' + (contDisabled ? 'disabled' : '') + '>' + (last ? 'Finish ✓' : 'Continue →') + '</button></div>';
+    h += '<div class="lp-nav"><button id="backBtn">← Back</button><button class="primary" id="contBtn" ' + (contDisabled ? 'disabled' : '') + '>' + (last ? 'Lesson 2 →' : 'Continue →') + '</button></div>';
     c.innerHTML = h;
 
-    $('backBtn').addEventListener('click', () => { if (C.step > 1) { C.step--; curPage = null; renderStep(); E.playing = false; const pbb = $('playBtn'); if (pbb) pbb.textContent = '▶ Play'; } });
+    $('backBtn').addEventListener('click', () => { if (C.step > 1) { C.step--; renderStep(); } });
     C.maxStep = Math.max(C.maxStep || 1, C.step);
-    c.querySelectorAll('.spill .sd.jump').forEach(sp => sp.addEventListener('click', ev => { ev.stopPropagation(); C.step = +sp.dataset.i; curPage = null; renderStep(); }));
-    c.querySelectorAll('.spill.reach').forEach(pl => pl.addEventListener('click', () => { C.step = Math.min(+pl.dataset.start, C.maxStep || 1); curPage = null; renderStep(); }));
-    if ($('ccCopy')) $('ccCopy').addEventListener('click', () => { const tx = $('ccOut').textContent.trim(); (navigator.clipboard ? navigator.clipboard.writeText(tx) : Promise.reject()).then(() => { $('ccCopy').textContent = 'Copied ✓'; }, () => { const r = document.createRange(); r.selectNodeContents($('ccOut')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); document.execCommand('copy'); $('ccCopy').textContent = 'Copied ✓'; }); });
+    c.querySelectorAll('.spill .sd.jump').forEach(sp => sp.addEventListener('click', ev => { ev.stopPropagation(); C.step = +sp.dataset.i; renderStep(); }));
+    c.querySelectorAll('.spill.reach').forEach(pl => pl.addEventListener('click', () => { C.step = Math.min(+pl.dataset.start, C.maxStep || 1); renderStep(); }));
     $('contBtn').addEventListener('click', () => {
-      if (last) { lbNote('Exercise complete — submit your completion code in Canvas.'); }
+      if (last) { fileNote(2); }
       else { C.step++; renderStep(); }
     });
 
@@ -1027,21 +934,18 @@
       const finish = (got, revealed) => {
         award(got);
         $('fb').className = 'lp-fb ' + (revealed ? 'info' : 'ok');
-        $('fb').innerHTML = (revealed ? 'Answer shown. Review the walkthrough: ' : 'Correct. ') + subN(st.ex);
-        if (st.pgAfter) ensurePage(st.pgAfter);
-          if (st.learn) learn(st.learn);
+        $('fb').innerHTML = (revealed ? 'Answer shown. Review the walkthrough: ' : '✓ +' + got + ' pts. ') + subN(st.ex);
+        if (st.learn) learn(st.learn);
         if (st.pgAfter) ensurePage(st.pgAfter);
         $('contBtn').disabled = false;
       };
       c.querySelectorAll('.lp-qz').forEach(b => b.addEventListener('click', () => {
         if (!$('contBtn').disabled) return;
-        if (b.dataset.ok === '1') { _t1('s' + C.step, true); b.classList.add('ok'); finish(st.pts, false); }
+        if (b.dataset.ok === '1') { b.classList.add('ok'); finish(st.pts, false); }
         else {
-          _t1('s' + C.step, false);
           attempts++; b.classList.add('bad');
           $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
           if (attempts >= 2) {
-            _t2('s' + C.step);
             c.querySelectorAll('.lp-qz').forEach(x => { if (x.dataset.ok === '1') x.classList.add('ok'); });
             finish(st.pts, true);
           } else { $('fb').innerHTML = 'Not quite. Try again.' + (st.hint ? ' <b>Hint:</b> ' + subN(st.hint) : ''); }
@@ -1063,10 +967,9 @@
       const submit = () => {
         if (!$('contBtn').disabled) return;
         const v = parseFloat($('numIn').value); if (isNaN(v)) return;
-        _t1('s' + C.step, Math.abs(v - st.ans) <= st.tol);
         if (Math.abs(v - st.ans) <= st.tol) {
           award(st.pts);
-          $('fb').className = 'lp-fb ok'; $('fb').innerHTML = 'Correct. ' + subN(st.ex);
+          $('fb').className = 'lp-fb ok'; $('fb').innerHTML = '✓ +' + st.pts + ' pts. ' + subN(st.ex);
           if (st.learn) learn(st.learn);
           $('contBtn').disabled = false;
         } else {
@@ -1077,10 +980,9 @@
           } else if (attempts === 2 && st.hint2) {
             $('fb').innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(st.hint2);
           } else {
-            _t2('s' + C.step);
             $('fb').className = 'lp-fb info';
             award(st.pts);
-            $('fb').innerHTML = 'Not correct. The answer is <b>' + st.ans + ' ' + (st.unit || '') + '</b>. Review the walkthrough: ' + subN(st.ex);
+            $('fb').innerHTML = 'Answer: <b>' + st.ans + ' ' + (st.unit || '') + '</b>. Review the walkthrough: ' + subN(st.ex) + ' <b>(+' + st.pts + ' pts — full credit for working it through.)</b>';
             if (st.learn) learn(st.learn);
             $('contBtn').disabled = false;
           }
@@ -1104,7 +1006,7 @@
         const eln = $('tstat'); if (!eln) { stopPoll(); return; }
         let r; try { r = st.verify(tdata); } catch (e) { r = { ok: false, msg: '…' }; }
         eln.textContent = r.msg; eln.className = 'lp-status' + (r.ok ? ' pass' : '');
-        if (r.ok) { $('contBtn').disabled = false; (st.acts || []).forEach((a2, i2) => { const ab = $('act' + i2); if (ab) ab.classList.remove('pulse'); }); }
+        if (r.ok) $('contBtn').disabled = false;
       }, 500);
     }
     if (st.t === 'match') {
@@ -1117,9 +1019,8 @@
           const got = st.pts;
           award(got);
           $('mPrompt').innerHTML = 'All ' + total + ' concepts matched.';
-          $('mStat').textContent = total + ' / ' + total + ' cleared';
           $('fb').className = 'lp-fb ok';
-          $('fb').innerHTML = misses === 0 ? 'Complete — all concepts matched on the first pass.' : 'Complete — ' + misses + ' incorrect match' + (misses > 1 ? 'es were' : ' was') + ' resolved during the round.';
+          $('fb').innerHTML = '✓ +' + got + ' pts — ' + (misses === 0 ? 'a PERFECT run. The six numbers are yours.' : misses + ' miss' + (misses > 1 ? 'es' : '') + ', all recovered. Repetition until perfect is exactly how this is supposed to work.');
           $('contBtn').disabled = false;
           return;
         }
@@ -1133,7 +1034,7 @@
         if (ch.dataset.k === want) {
           cleared++; queue.shift();
           $('fb').className = 'lp-fb ok';
-          $('fb').textContent = (MATCH_CONCEPTS.find(x => x.k === want).lab.replace('⟦R⟧', NT().R).replace('⟦T⟧', NT().T).replace('⟦I⟧', NT().I));
+          $('fb').textContent = '✓ ' + (MATCH_CONCEPTS.find(x => x.k === want).lab.replace('⟦R⟧', NT().R).replace('⟦T⟧', NT().T).replace('⟦I⟧', NT().I));
           lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 650);
         } else {
           misses++;
@@ -1144,23 +1045,27 @@
         }
       }));
     }
+    if (st.t === 'spot') {
+      const answers = [
+        'Airport security: the ID-check officer and the scanner are ▭ activities; the snaking rope line is one giant ▽ buffer; you shuffling forward is the →. Next time you’re in it, estimate p at the scanner and count the line — you can now predict your own wait.',
+        'Chipotle: each station (rice, protein, salsa, register) is an ▭; the line of hungry humans is the ▽; the tray sliding along is the →. Notice the register is often the slowest ▭… that’s Lesson 2 vocabulary you’re about to earn.',
+        'ER triage: intake desk, triage nurse, exam rooms = ▭ activities; the waiting room is a ▽ where flow time lives; patients moving between = →. Hospitals pay analysts a lot of money to shrink that triangle.',
+        'Your inbox: every unread email sits in a ▽ buffer. Reading & replying is the ▭ activity (p = a few minutes each). Emails arriving = →. Your inbox at 8 am IS an inventory ⟦I⟧ — and yes, Little’s Law applies to it.'
+      ];
+      c.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+        c.querySelectorAll('.chip').forEach(x => x.classList.remove('sel'));
+        ch.classList.add('sel');
+        $('spotFb').style.display = 'block';
+        $('spotFb').innerHTML = subN(answers[+ch.dataset.i]);
+        C.spotDone = true;
+        $('contBtn').disabled = false;
+      }));
+    }
   }
 
 
 
   /* ---------- lesson bar ---------- */
-  function lbNote(msg) {
-    let n = $('lbNote');
-    if (!n) {
-      n = document.createElement('div');
-      n.id = 'lbNote';
-      n.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:640px;';
-      $('lbar').after(n);
-    }
-    n.textContent = msg;
-    clearTimeout(lbNote.t);
-    lbNote.t = setTimeout(() => n.remove(), 8000);
-  }
   function fileNote(n) {
     let el2 = document.getElementById('lbNote');
     if (!el2) {
@@ -1169,32 +1074,31 @@
       el2.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:680px;';
       document.getElementById('lbar').after(el2);
     }
-    el2.textContent = 'To continue, return to Canvas and open the next assignment from the module.';
+    el2.textContent = '📁 To continue there, open process101_lesson' + n + '.html directly from your course folder. (Direct links between lesson files are turned off, so you always start each lesson from its newest copy.)';
     clearTimeout(fileNote.t);
     fileNote.t = setTimeout(() => el2.remove(), 8000);
   }
   function renderLessonBar() {
     const lb = $('lbar');
-    lb.innerHTML = '<span class="lchip active' + (C.finished ? ' done' : '') + '">' + (C.finished ? '✓ ' : '') + 'Exercise 1 — Anatomy of a Process</span>';
+    lb.innerHTML =
+      '<button class="lchip active' + (C.finished ? ' done' : '') + '" id="lb1">' + (C.finished ? '✓ ' : '') + 'Lesson 1 — Anatomy of a Process</button>' +
+      '<button class="lchip" id="lb2">Lesson 2 — Systems &amp; Bottlenecks</button>' +
+      '<button class="lchip" id="lb3">Lesson 3 — Little’s Law</button>' +
+      '<button class="lchip" id="lb4">Lesson 4 — The Consulting Engagement</button>';
+    $('lb1').addEventListener('click', () => { if (C.name) { C.step = Math.max(1, C.step); renderStep(); } });
+    $('lb2').addEventListener('click', () => fileNote(2));
+    $('lb3').addEventListener('click', () => fileNote(3));
+    $('lb4').addEventListener('click', () => fileNote(4));
   }
 
   /* ---------- init ---------- */
   C.step = 0;
   renderLessonBar();
-  // play-button flash: only when playing is required to advance (poll survives pauses)
-  setInterval(() => {
-    const pb = $('playBtn'); if (!pb) return;
-    const stq = STEPS[C.step], cb = document.getElementById('contBtn');
-    const needPlay = !!(stq && stq.t === 'task' && !stq.acts && cb && cb.disabled);
-    pb.classList.toggle('pulse', needPlay && !E.playing && !document.getElementById('stageCard').classList.contains('dimmed'));
-  }, 250);
-
   ensurePage('shapes0');
   renderStep();
   requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
 
-  applyNotation();
-  window.__P101 = { C, E, STEPS, metrics, jobArr, jobDone, renderStep, tourReset: () => { nbLearned.length = 0; renderNotebook(); curPage = null; } };
+  window.__P101 = { C, E, STEPS, metrics, makeCode, readCode, jobArr, jobDone, renderStep, tourReset: () => { nbLearned.length = 0; renderNotebook(); curPage = null; } };
 })();
 </script>
 <script>
