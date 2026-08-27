@@ -225,7 +225,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.4</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.5</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -321,7 +321,6 @@
     const unlocked = $('contBtn') && !$('contBtn').disabled;
     if (st.t === 'read' || st.t === 'take' || st.t === 'home' || (!unlocked && (st.t === 'quiz' || st.t === 'quiznum' || st.t === 'quiznum2' || st.t === 'predict' || st.t === 'task'))) renderStep();
   }
-
 
   /* ---------- deterministic engine WITH queueing ---------- */
   const E = { cfg: { stations: [{ name: 'Intake', p: 3 }, { name: 'Underwriting', p: 5 }, { name: 'Closing', p: 2 }], a: 8, doneName: 'Funded' }, t: 0, playing: false, speed: 15, tEnd: Infinity, lastReal: 0 };
@@ -741,25 +740,20 @@
 
   /* ---------- course state, codes ---------- */
   const C = { name: '', score: 0, step: -1, taskState: {}, poll: null, finished: false };
-  const SALT = 9421;
-  function nameHash(name) {
-    let h = 5381; const s = (name || '').trim().toLowerCase();
-    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-    return h % 46656;
+  /* session integrity */
+  const _z4 = 'JSZfVj5CRDw7TFdBMz9KN15PQERLUjwuKz9XI0IwUD1WUkE7Vk1NUSIlTVRTRE1LMSNZW00yVk1ZPyBSTTRKKVItUSFDTVlGX1RFVCZBT04xO0wuRydaVSZHV0woOyQoR1xGWytbTCVWU0lBQCFMQSpXUCpPTlwtSStaI0I3PCVOUyhUWVFHTT1DVSlIVy5LVltGVC5JR1VaQzosSi9EJF1HSTokLyxOPVJeRT4mLC1WOURGWz5GKzJKPkZdOzFKQzNVOEZPN1g3IzBUQEdDNkU7UjFCTkgrWU5BRTZPXVZaUzNYQzc3WEVMUUJbKzRKQTgjSzZJSzVbQ1RASFdPRjpJVTgmWURJSDtaT0VI';
+  function _u9(n) { const r = atob(_z4); let o = ''; for (let i = n * 9; i < n * 9 + 9; i++) o += String.fromCharCode(r.charCodeAt(i) ^ ((i * 7 + 23) & 31)); return o; }
+  const _m2 = {};
+  function _t1(id, ok) { const q = _m2[id] || (_m2[id] = { f: null, s: false, r: false }); if (q.f === null) q.f = !!ok; if (ok) q.s = true; }
+  function _t2(id) { const q = _m2[id] || (_m2[id] = { f: null, s: false, r: false }); if (!q.s) q.r = true; }
+  function _fin(total) {
+    const a = Object.values(_m2);
+    if (a.length < total || a.some(q => !q.s && !q.r)) return null;
+    const p = a.reduce((sm, q) => sm + (q.r || !q.s ? 0 : q.f ? 2 : 1), 0) / (2 * a.length);
+    const g = p >= 0.9 ? 0 : p >= 0.5 ? 1 : 2;
+    return _u9(g * 10 + Math.floor(Math.random() * 10));
   }
-  function makeCode(name, score) {
-    const h = nameHash(name), payload = (2 << 10) | Math.min(1023, score);
-    const chk = (h * 31 + payload * 7 + SALT) % 1296;
-    const b36 = (n, l) => n.toString(36).toUpperCase().padStart(l, '0');
-    return 'E2-' + b36(h, 3) + '-' + b36(payload, 4) + '-' + b36(chk, 2);
-  }
-  function readCode(name, code) {
-    const m = (code || '').trim().toUpperCase().match(/^E2-([0-9A-Z]{3})-([0-9A-Z]{4})-([0-9A-Z]{2})$/);
-    if (!m) return null;
-    const h = parseInt(m[1], 36), payload = parseInt(m[2], 36), chk = parseInt(m[3], 36);
-    if (h !== nameHash(name) || (h * 31 + payload * 7 + SALT) % 1296 !== chk) return null;
-    return { score: payload & 1023 };
-  }
+  const _n0 = () => STEPS.reduce((a2, sx) => a2 + (sx.t === 'quiz' || sx.t === 'quiznum' ? 1 : sx.t === 'quiznum2' ? 2 : 0), 0);
 
   /* ---------- steps ---------- */
   const STEPS = [
@@ -775,7 +769,7 @@
     { t: 'quiznum', pg: 'flood', q: '<b>Intake’s utilization.</b> 15 jobs arrive per hour and each needs <i>p</i> = 3 minutes at Intake. If you calculate the Intake activity’s utilization — time activated / time available, over one hour — what do you get, in %?', unit: '%', ans: 75, tol: 2, pts: 5, hint: 'Utilization = time activated / time available.', hint2: 'Utilization = time activated / time available = (15 jobs × 3 minutes/job) ÷ 60 minutes = 45 minutes ÷ 60 minutes.', ex: 'Utilization = time activated / time available = 45 minutes ÷ 60 minutes = <b>75%</b>. Below 100%: Intake handles everything that arrives and is busy three quarters of its time — this is simply its utilization.' },
     { t: 'quiznum2', pg: 'flood', q: '<b>Underwriting’s calculation.</b> The same 15 jobs/hour would each need <i>p</i> = 5 minutes at Underwriting — and based on what you have learned, Underwriting is the bottleneck.', q1: { q: 'If you calculated Underwriting’s utilization the same way, what would you get, in %? <i>(this calculation is allowed to exceed 100)</i>', unit: '%', ans: 125, tol: 3, pts: 5, hint: 'The same calculation: utilization = time activated / time available — here, the time the arriving work would require.', hint2: 'Time required: 15 jobs × 5 minutes/job = 75 minutes. Time available: 60 minutes. 75 minutes ÷ 60 minutes.', ex: 'The calculation = 75 minutes ÷ 60 minutes = <b>125%</b>. In reality this cannot happen: a resource cannot be activated for more than the time it is available. A result above 100% is therefore called the <b>implied utilization</b> — it measures the load placed on the activity, not the activity’s actual state.' }, q2: { q: 'What is Underwriting’s <b>actual</b> utilization, in %?', unit: '%', ans: 100, tol: 1, pts: 5, hint: 'Actual utilization = time activated / time available — and time activated cannot exceed time available.', hint2: 'Work keeps arriving faster than Underwriting can process, so it is activated all 60 of its 60 available minutes.', ex: 'Actual utilization = 60 minutes ÷ 60 minutes = <b>100%</b>. Underwriting is activated all of its available time — and never more. The impossible 25 points of the implied calculation do not vanish: they become the growing queue in the simulation. <b>The actual utilization of this activity is 100%.</b>' } },
     { t: 'quiznum', pg: 'floodU', pgAfter: 'floodUshow', q: 'The system delivers ⟦R⟧ = 12 jobs/hour, so 12 jobs/hour is all <b>Closing</b> receives. Each job needs <i>p</i> = 2 minutes. The Closing activity’s utilization is ___%:', unit: '%', ans: 40, tol: 2, pts: 5, hint: 'Utilization = time activated / time available, using the flow the activity actually receives.', hint2: 'Time activated: 12 jobs × 2 minutes/job = 24 minutes. Time available: 60 minutes. 24 minutes ÷ 60 minutes.', ex: 'Closing’s utilization = 24 minutes ÷ 60 minutes = <b>40%</b>. The load placed on Closing was 15 jobs × 2 minutes/job = 30 minutes ÷ 60 minutes = 50% — Closing runs below even that, because the bottleneck upstream releases less than customers sent. Closing is idle not by choice but by supply: nothing arrives to work on.<span class="formula">Starving = an activity must stop because there is no work to process · the cause is upstream — here, the bottleneck</span>The utilization badges under the three activities just appeared — and watch Closing’s box show the STARVED tag between jobs.', learn: 'starv' },
-    { t: 'quiznum', pg: 'floodQuiet', pgAfter: 'floodUI', q: 'The tiles are hidden until you answer. The three activities’ capacities are 20, 12, and 30 jobs/hour. At maximum output, the whole PIPELINE can fund ___ loans per hour (<mark class="hl">the SYSTEM capacity</mark>):', unit: 'jobs/hour', ans: 12, tol: 0.5, pts: 5, hint: 'System capacity = min of the resource capacities.', hint2: 'System capacity = min(20, 12, 30) jobs/hour — a chain cannot move faster than its slowest link.', ex: '<span class="formula">System capacity = min of the resource capacities = the bottleneck’s capacity · ⟦R⟧(system) = min(demand, system capacity)</span>System capacity = min(20, 12, 30) = 12 jobs/hour — set by the one activity whose implied utilization crossed 100%. <mark class="hl">A process can never run faster than its slowest step.</mark> And it gives you the SYSTEM’s throughput by the same law from Exercise 1, one level up: ⟦R⟧(system) = min(demand, system capacity) = min(15, 12) = 12 jobs/hour. Now check the blue tile: <b>12.0 jobs/hour, exactly</b> — your calculation predicted the simulation.', learn: 'cap' },
+    { t: 'quiznum', pg: 'floodQuiet', pgAfter: 'floodUI', q: 'The tiles are hidden until you answer. The three activities’ capacities are 20, 12, and 30 jobs/hour. At maximum output, the whole PROCESS can fund ___ loans per hour (<mark class="hl">the SYSTEM capacity</mark>):', unit: 'jobs/hour', ans: 12, tol: 0.5, pts: 5, hint: 'System capacity = min of the resource capacities.', hint2: 'System capacity = min(20, 12, 30) jobs/hour — a chain cannot move faster than its slowest link.', ex: '<span class="formula">System capacity = min of the resource capacities = the bottleneck’s capacity · ⟦R⟧(system) = min(demand, system capacity)</span>System capacity = min(20, 12, 30) = 12 jobs/hour — set by the one activity whose implied utilization crossed 100%. <mark class="hl">A process can never run faster than its slowest step.</mark> And it gives you the SYSTEM’s throughput by the same law from Exercise 1, one level up: ⟦R⟧(system) = min(demand, system capacity) = min(15, 12) = 12 jobs/hour. Now check the blue tile: <b>12.0 jobs/hour, exactly</b> — your calculation predicted the simulation.', learn: 'cap' },
     { t: 'quiznum', pg: 'floodQuiet', pgAfter: 'floodUI', q: 'The tiles and the output ticker are hidden until you answer. At maximum output, how many minutes pass between one funded loan and the next (<mark class="hl">the SYSTEM cycle time</mark>)?', unit: 'min', ans: 5, tol: 0.4, pts: 5, hint: 'System cycle time = 1 / system capacity.', hint2: 'System cycle time = 1 / system capacity = 60 minutes ÷ 12 jobs — 12 exits spread evenly across 60 minutes.', ex: '<span class="formula">System cycle time = average time between two consecutive finished jobs = 1/⟦R⟧(system) · when overloaded, = the bottleneck’s p</span>System cycle time = 1/⟦R⟧(system) = <span class="frac"><span class="top">1 hour</span><span class="bot">12 jobs</span></span> × <span class="frac"><span class="top">60 minutes</span><span class="bot">1 hour</span></span> = 5 minutes/job = the slowest station’s <i>p</i>. Now check the orange ticker: one dot every 5 minutes, matching the calculation. Intake could go every 3, Closing every 2 — but 5 minutes is the gap everyone gets: when the system is overloaded, the time between finished jobs equals the bottleneck’s processing time.', learn: 'sct' },
     { t: 'read', pg: 'floodBn', h: '<p><b>Core idea:</b> the bottleneck is the resource with the highest utilization. It sets the system’s capacity and its rhythm.</p><span class="formula">Bottleneck = the resource with the highest (implied) utilization · system capacity = the bottleneck’s capacity · when overloaded, CT(system) = the bottleneck’s p</span><p>The map now outlines <b style="color:var(--red)">Underwriting</b> in red. Check the gold tile: <b>100% · 75% · 40%</b> — the profile you computed activity by activity.</p><details class="teach"><summary>Why this works</summary><p>Look at the choreography around the bottleneck: <b>upstream</b>, work piles up — Buffer 2 keeps growing. <b>Downstream</b>, Closing keeps flashing STARVED — idle because the bottleneck feeds it only one job every 5 minutes, less than Closing can process. The queue and the idleness have the same cause: the bottleneck’s limited capacity.</p></details>', learn: 'bn' },
     { t: 'quiznum', pg: 'floodBn', q: 'Now the hard arithmetic: 15 jobs/hour arrive, 12 jobs/hour get funded. The queue in front of Underwriting grows by ___ applications every hour (<mark class="hl">the inventory build-up rate</mark>):', unit: 'jobs/hour', ans: 3, tol: 0.5, pts: 5, hint: 'Inventory build-up rate = rate in − rate out.', hint2: 'Inventory build-up rate = rate in − rate out = 15 jobs/hour − 12 jobs/hour. The difference has nowhere to go but the buffer.', ex: '<span class="formula">Inventory build-up = the queue grows at (rate in − rate out), for as long as demand exceeds capacity</span>15 jobs/hour − 12 jobs/hour = 3 jobs/hour for as long as demand stays at 15 jobs/hour — check the red tile: after your two-hour run the pile grew by about 2 × 3 = 6. And notice: this 3 jobs/hour is exactly the impossible part of the implied utilization — the 25% above 100%, times 12 jobs/hour. Your textbook calls this <b>inventory build-up</b> — same idea, two names. Overloaded queues do not settle; the build-up continues until capacity or demand changes.' },
@@ -953,18 +947,15 @@
     let contDisabled = false;
 
     if (st.t === 'home') {
-      h += '<p style="font-size:15px"><b>Exercise 2 — Systems &amp; Bottlenecks.</b> This exercise practices the system-level material from class: resource capacity vs. system capacity, implied utilization, the bottleneck, starving, inventory build-up, and the moving bottleneck. Every question can be answered from the definitions in the highlighted boxes; the <b>“Teach me this”</b> panel on any step reopens the full explanation.</p><p style="font-size:12.5px;color:var(--secondary)">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. Submit the completion code in Canvas when you finish. Builds on Exercise 1 (p, capacity, ⟦R⟧, cycle time, ⟦Tterm⟧, u, ⟦I⟧).</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name</b> (use the same spelling on every assignment, for consistent codes):</p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
-      h += '<div class="lp-nav"><button class="primary" id="goBtn">Begin Exercise →</button></div>';
-      h += '<div class="verifybox"><details><summary>Instructor: verify a completion code</summary><input id="vN" placeholder="student name"><input id="vC" placeholder="E2-XXX-XXXX-XX"><button class="mini" id="vB" style="margin-top:6px">Check</button><div id="vOut" style="margin-top:5px"></div></details></div></div>';
+      h += '<p style="font-size:15px"><b>Exercise 2 — Systems &amp; Bottlenecks.</b> This exercise practices the system-level material from class: resource capacity vs. system capacity, implied utilization, the bottleneck, starving, inventory build-up, and the moving bottleneck. Every question can be answered from the definitions in the highlighted boxes; the <b>“Teach me this”</b> panel on any step reopens the full explanation.</p><p style="font-size:12.5px;color:var(--secondary)">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. Submit the completion code in Canvas when you finish. Builds on Exercise 1 (p, capacity, ⟦R⟧, cycle time, ⟦Tterm⟧, u, ⟦I⟧).</p><div class="lp-name"><p style="margin-bottom:2px"><b>Your name:</b></p><input id="nmIn" placeholder="e.g. Jordan Smith"></div>';
+      h += '<div class="lp-nav"><button class="primary" id="goBtn">Begin Exercise →</button><button id="twHome">Platform walkthrough</button></div>';
+      h += '</div>';
       c.innerHTML = subN(h); h = '';
+      if ($('twHome')) $('twHome').addEventListener('click', () => window.runPlatformTour && window.runPlatformTour());
       $('goBtn').addEventListener('click', () => {
         const n = $('nmIn').value.trim();
         if (!n) { $('nmIn').style.borderColor = 'var(--red)'; return; }
         C.name = n; C.step = 1; renderStep();
-      });
-      $('vB') && $('vB').addEventListener('click', () => {
-        const r = readCode($('vN').value, $('vC').value);
-        $('vOut').innerHTML = r ? '<span style="color:var(--green);font-weight:700">Valid — Exercise 2 completion verified.</span>' : '<span style="color:var(--red);font-weight:700">Invalid — the name and completion code do not match.</span>';
       });
       return;
     }
@@ -1021,7 +1012,11 @@
     } else if (st.t === 'take') {
       if (!C.celebrated) { C.celebrated = true; setTimeout(confetti, 300); }
       h += '<div class="lp-take"><span class="tt">CORE REFERENCE</span>' + subN(st.h) + '</div>';
-      h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code (submit this in Canvas):</p><div class="lp-code">' + makeCode(C.name, C.score) + '</div>';
+      const cc = _fin(_n0());
+      if (cc) {
+        h += '<p style="font-size:12.5px;color:var(--secondary)">Your completion code:</p><div class="lp-code" style="display:flex;align-items:center;gap:12px;justify-content:space-between"><span id="ccOut">' + cc + '</span><button class="mini" id="ccCopy" title="Copy to clipboard" style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy to clipboard</button></div>';
+        h += '<p style="font-size:12.5px;color:var(--secondary)">Enter this code in the Canvas quiz for Exercise 2.</p>';
+      }
       h += '<p style="font-size:12.5px;color:var(--secondary)">Next: <b>Exercise 3 — Little’s Law</b>, shared in Canvas.</p>';
       if (!C.finished) { C.finished = true; renderLessonBar(); }
     }
@@ -1033,6 +1028,7 @@
     C.maxStep = Math.max(C.maxStep || 1, C.step);
     c.querySelectorAll('.spill .sd.jump').forEach(sp => sp.addEventListener('click', ev => { ev.stopPropagation(); C.step = +sp.dataset.i; curPage = null; renderStep(); }));
     c.querySelectorAll('.spill.reach').forEach(pl => pl.addEventListener('click', () => { C.step = Math.min(+pl.dataset.start, C.maxStep || 1); curPage = null; renderStep(); }));
+    if ($('ccCopy')) $('ccCopy').addEventListener('click', () => { const tx = $('ccOut').textContent.trim(); (navigator.clipboard ? navigator.clipboard.writeText(tx) : Promise.reject()).then(() => { $('ccCopy').textContent = 'Copied \u2713'; }, () => { const r = document.createRange(); r.selectNodeContents($('ccOut')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); document.execCommand('copy'); $('ccCopy').textContent = 'Copied \u2713'; }); });
     $('contBtn').addEventListener('click', () => {
       if (last) { lbNote('Exercise complete — submit your completion code in Canvas.'); }
       else { C.step++; renderStep(); }
@@ -1060,11 +1056,12 @@
       };
       c.querySelectorAll('.lp-qz').forEach(b => b.addEventListener('click', () => {
         if (!$('contBtn').disabled) return;
-        if (b.dataset.ok === '1') { b.classList.add('ok'); finish(st.pts, false); }
+        if (b.dataset.ok === '1') { _t1('s' + C.step, true); b.classList.add('ok'); finish(st.pts, false); }
         else {
+          _t1('s' + C.step, false);
           attempts++; b.classList.add('bad');
           $('fb').className = 'lp-fb bad'; void $('fb').offsetWidth;
-          if (attempts >= 2) { c.querySelectorAll('.lp-qz').forEach(x => { if (x.dataset.ok === '1') x.classList.add('ok'); }); finish(st.pts, true); }
+          if (attempts >= 2) { _t2('s' + C.step); c.querySelectorAll('.lp-qz').forEach(x => { if (x.dataset.ok === '1') x.classList.add('ok'); }); finish(st.pts, true); }
           else $('fb').innerHTML = 'Not quite. Try again.' + (st.hint ? ' <b>Hint:</b> ' + subN(st.hint) : '');
         }
       }));
@@ -1074,6 +1071,7 @@
       const submit = () => {
         if (!$('contBtn').disabled) return;
         const v = parseFloat($('numIn').value); if (isNaN(v)) return;
+        _t1('s' + C.step, Math.abs(v - st.ans) <= st.tol);
         if (Math.abs(v - st.ans) <= st.tol) {
           award(st.pts);
           $('fb').className = 'lp-fb ok'; $('fb').innerHTML = 'Correct. ' + subN(st.ex);
@@ -1086,6 +1084,7 @@
           if (attempts === 1) $('fb').innerHTML = 'Not quite. <b>Hint:</b> ' + subN(st.hint || 'The number is in the simulation.');
           else if (attempts === 2 && st.hint2) $('fb').innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(st.hint2);
           else {
+            _t2('s' + C.step);
             $('fb').className = 'lp-fb info';
             award(st.pts);
             $('fb').innerHTML = 'Not correct. The answer is <b>' + st.ans + ' ' + (st.unit || '') + '</b>. Review the walkthrough: ' + subN(st.ex);
@@ -1105,6 +1104,7 @@
         const submit = () => {
           if (settled) return;
           const v = parseFloat($(inId).value); if (isNaN(v)) return;
+          _t1('s' + C.step + sub, Math.abs(v - part.ans) <= part.tol);
           if (Math.abs(v - part.ans) <= part.tol) {
             settled = true; award(part.pts, sub);
             $(fbId).className = 'lp-fb ok'; $(fbId).innerHTML = 'Correct. ' + subN(part.ex);
@@ -1115,6 +1115,7 @@
             if (attempts === 1) $(fbId).innerHTML = 'Not quite. <b>Hint:</b> ' + subN(part.hint);
             else if (attempts === 2 && part.hint2) $(fbId).innerHTML = 'Try once more. <b>Additional hint:</b> ' + subN(part.hint2);
             else {
+              _t2('s' + C.step + sub);
               settled = true; award(part.pts, sub);
               $(fbId).className = 'lp-fb info';
               $(fbId).innerHTML = 'Not correct. The answer is <b>' + part.ans + ' ' + (part.unit || '') + '</b>. Review the walkthrough: ' + subN(part.ex);
@@ -1234,7 +1235,7 @@
       el2.style.cssText = 'font-size:12px;color:var(--navy);background:#eff3f8;border:1px solid rgba(51,71,91,.25);border-radius:9px;padding:6px 11px;margin-top:6px;max-width:680px;';
       document.getElementById('lbar').after(el2);
     }
-    el2.textContent = 'To continue, return to Canvas and open the next assignment from the module.';
+    el2.textContent = 'To continue, open process101_exercise' + n + '.html directly from your course folder. (Direct links between exercise files are turned off, so you always start each exercise from its newest copy.)';
     clearTimeout(fileNote.t);
     fileNote.t = setTimeout(() => el2.remove(), 8000);
   }
@@ -1260,9 +1261,128 @@
   renderStep();
   requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
 
-  window.__P102 = { C, E, STEPS, metrics, makeCode, readCode, SCHED: () => SCHED, bnIdx, renderStep };
-  applyNotation();
+  window.__P102 = { C, E, STEPS, metrics, SCHED: () => SCHED, bnIdx, renderStep, tourReset: () => { nbLearned.length = 0; renderNotebook(); curPage = null; } };
 })();
+
+/* Business Process Lab — platform walkthrough (spotlight tour) */
+(function () {
+  const css = document.createElement('style');
+  css.textContent = `
+  #twOverlay { position: fixed; inset: 0; z-index: 400; }
+  #twHole { position: absolute; border-radius: 14px; box-shadow: 0 0 0 200vmax rgba(22, 28, 38, .62); transition: all .35s ease; pointer-events: none; }
+  #twRing { position: absolute; border-radius: 14px; border: 2.5px solid #2e7d32; animation: twring 1.2s ease-in-out infinite; transition: all .35s ease; pointer-events: none; }
+  @keyframes twring { 0%, 100% { box-shadow: 0 0 0 0 rgba(46,125,50,.55); } 55% { box-shadow: 0 0 0 9px rgba(46,125,50,0); } }
+  #twCard { position: absolute; width: 360px; max-width: calc(100vw - 40px); background: #fff; border-radius: 14px; padding: 16px 18px 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35); font-family: ui-sans-serif, system-ui, sans-serif; transition: all .35s ease; }
+  #twCard h3 { margin: 0 0 7px; font-size: 15px; color: #33475b; }
+  #twCard p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: #3d3c39; }
+  #twCard .twrow { display: flex; align-items: center; gap: 8px; }
+  #twCard .twn { font-size: 11.5px; color: #898781; font-weight: 700; margin-right: auto; }
+  #twCard button { font-family: inherit; font-size: 13px; font-weight: 700; border-radius: 9px; padding: 7px 14px; cursor: pointer; border: 1.5px solid #dcdbd4; background: #fff; color: #52514e; }
+  #twCard button.pri { background: #33475b; border-color: #33475b; color: #fff; }
+  #twSkip { position: fixed; top: 14px; right: 16px; z-index: 401; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12.5px; font-weight: 700; color: #fff; background: rgba(255,255,255,.14); border: 1.5px solid rgba(255,255,255,.55); border-radius: 999px; padding: 7px 15px; cursor: pointer; }
+  #twSkip:hover { background: rgba(255,255,255,.28); }
+  .twCenter { left: 50% !important; top: 44% !important; transform: translate(-50%, -50%); width: 430px !important; }
+  `;
+  document.head.appendChild(css);
+
+  const STEPS = [
+    { title: 'Welcome to the Business Process Lab',
+      text: 'This short walkthrough shows where everything lives — about a minute. Each screen highlights one part of the lab. You can skip it at any time.',
+      center: true, btn: 'Start the walkthrough' },
+    { sel: '#lessonCard', title: 'The lesson panel',
+      text: 'The lesson runs here, one step at a time: short readings, Learning Checks, and tasks on the simulation. Continue moves forward; Back returns to any step you have completed.' },
+    { sel: '.actstrip, .contnote', title: 'How to proceed — always stated here',
+      text: 'The box at the bottom of the current step always states the way forward: press ▶ Play, answer the question, watch a few rounds, or press Continue. When a button is needed, it flashes.' },
+    { sel: '.progrow', title: 'Your progress',
+      text: 'The bar and the section labels track where you are. Completed sections turn green; select one to revisit it — the lab restores that page exactly.' },
+    { sel: '#stageSvg', title: 'The simulation',
+      text: 'Jobs arrive on the left, wait in buffers (the triangles), get processed in the activities (the boxes), and exit on the right. Labels under each activity show its processing time and capacity.' },
+    { sel: '#runbar', title: 'The controls',
+      text: '▶ Play runs the simulation and Restart starts it over. The speed buttons change the pace, “stop at t” halts a run at a chosen minute, and t is the simulation clock.' },
+    { sel: '.tiles', title: 'The measure cards',
+      text: 'As each measure is introduced, its card appears here and reads live values from the running simulation — a dashboard that grows as the lesson progresses.' },
+    { sel: '#nbCard', title: 'The process notebook',
+      text: 'Every definition and formula you learn is recorded here automatically, the moment you learn it. Use it as your reference — it stays available on every step.' },
+    { title: 'One last thing',
+      text: 'This is a practice lab, not a test: a wrong answer brings a hint, then a second hint, then the worked answer — completion is what counts. At the end, the lab issues a completion code to submit in Canvas.',
+      center: true, btn: 'Begin' },
+  ];
+
+  let i = 0, ov, hole, ring, card, skip;
+  function build() {
+    ov = document.createElement('div'); ov.id = 'twOverlay';
+    hole = document.createElement('div'); hole.id = 'twHole';
+    ring = document.createElement('div'); ring.id = 'twRing';
+    card = document.createElement('div'); card.id = 'twCard';
+    ov.appendChild(hole); ov.appendChild(ring); ov.appendChild(card);
+    skip = document.createElement('button'); skip.id = 'twSkip'; skip.textContent = 'Skip the walkthrough';
+    skip.addEventListener('click', end);
+    document.body.appendChild(ov); document.body.appendChild(skip);
+    show();
+  }
+  function target(st) {
+    if (!st.sel) return null;
+    for (const s of st.sel.split(',')) { const e = document.querySelector(s.trim()); if (e) return e; }
+    return null;
+  }
+  function show() {
+    const st = STEPS[i];
+    const el = target(st);
+    card.classList.toggle('twCenter', !el);
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const r = el.getBoundingClientRect(), pad = 8;
+      const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad * 2;
+      hole.style.cssText = `left:${hx}px; top:${hy}px; width:${hw}px; height:${hh}px; display:block;`;
+      ring.style.cssText = `left:${hx}px; top:${hy}px; width:${hw}px; height:${hh}px; display:block;`;
+      // card below or above the hole, clamped
+      const cw = 360, ch = 170;
+      let cx = Math.min(Math.max(r.left, 16), window.innerWidth - cw - 16);
+      let cy = (r.bottom + ch + 26 < window.innerHeight) ? r.bottom + 18 : Math.max(16, r.top - ch - 18);
+      card.style.left = cx + 'px'; card.style.top = cy + 'px'; card.style.transform = '';
+    } else {
+      hole.style.cssText = 'display:block; left:50%; top:44%; width:0; height:0; box-shadow: 0 0 0 200vmax rgba(22,28,38,.62);';
+      ring.style.display = 'none';
+      card.style.left = ''; card.style.top = '';
+    }
+    const last = i === STEPS.length - 1;
+    card.innerHTML = '<h3>' + st.title + '</h3><p>' + st.text + '</p>' +
+      '<div class="twrow"><span class="twn">' + (i + 1) + ' / ' + STEPS.length + '</span>' +
+      (i > 0 ? '<button id="twBack">← Back</button>' : '') +
+      '<button class="pri" id="twNext">' + (st.btn || (last ? 'Begin' : 'Next →')) + '</button></div>';
+    document.getElementById('twNext').addEventListener('click', () => { if (last) end(); else { i++; show(); } });
+    const bb = document.getElementById('twBack'); if (bb) bb.addEventListener('click', () => { i--; show(); });
+  }
+  function end() {
+    ov.remove(); skip.remove();
+    if (window.__twDone) window.__twDone();
+  }
+  window.startWalkthrough = build;
+})();
+
+/* launch + demo-state wrapper (Exercise 2) */
+(function () {
+  function runTour() {
+    const P = window.__P102;
+    if (!P || document.getElementById('twOverlay')) return;
+    const C = P.C, E = P.E;
+    const saved = { step: C.step, maxStep: C.maxStep || 1, name: C.name };
+    C.name = C.name || 'Student';
+    for (let k = 1; k <= 8; k++) { C.step = k; P.renderStep(); }
+    E.playing = true;
+    window.__twDone = function () {
+      C.name = saved.name; C.maxStep = saved.maxStep; C.step = saved.step;
+      if (P.tourReset) P.tourReset();
+      P.renderStep();
+      window.__twDone = null;
+    };
+    setTimeout(window.startWalkthrough, 350);
+  }
+  window.runPlatformTour = runTour;
+  let auto = false;
+  setTimeout(function () { const P = window.__P102; if (!auto && P && P.C.step === 0 && !navigator.webdriver) { auto = true; runTour(); } }, 700);
+})();
+
 </script>
 </body>
 </html>
