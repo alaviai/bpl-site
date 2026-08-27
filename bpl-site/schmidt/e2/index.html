@@ -225,7 +225,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.5</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.6</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -1200,7 +1200,7 @@
         if (ch.dataset.k === want) {
           cleared++; queue.shift();
           $('fb').className = 'lp-fb ok';
-          $('fb').textContent = '✓ ' + subN(MATCH_CONCEPTS.find(x => x.k === want).lab);
+          $('fb').innerHTML = '✓ ' + subN(MATCH_CONCEPTS.find(x => x.k === want).lab);
           lock = true; setTimeout(() => { lock = false; $('fb').className = 'lp-fb'; show(); }, 650);
         } else {
           misses++; queue.push(queue.shift());
