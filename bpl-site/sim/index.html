@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Variability Flow Simulator",
+  "schemaVersion": 1,
+  "description": "Live teaching simulator for Operations Management: 3-activity process with waiting areas, adjustable arrival/processing variability, animated jobs, live metrics, and side-by-side queueing-theory (Kingman/VUT, Little's Law) comparison.",
+  "mcpTools": [],
+  "mcpServerNames": []
+}
+</script>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -123,7 +132,8 @@
   .rateline { font-size: 11.5px; color: var(--secondary); margin-top: 8px; line-height: 1.5; }
   .rateline b { color: var(--navy); font-variant-numeric: tabular-nums; }
   .group { border-top: 1px solid var(--grid); margin-top: 12px; padding-top: 9px; }
-  .group.offgroup .ctl, .group.offgroup .cvbadge { opacity: .4; }
+  .group.offgroup .ctl, .group.offgroup .cvbadge, .group.offgroup .bufchk { opacity: .4; }
+  .bufchk { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--secondary); margin-top: 8px; cursor: pointer; }
   .group.offgroup input[type="range"] { pointer-events: none; }
   .offrow td { color: var(--muted); font-style: italic; }
   .gtitle label { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -141,7 +151,7 @@
   .mapwrap { position: relative; }
   #mapSvg { width: 100%; height: auto; display: block; }
   #mapCanvas { position: absolute; left: 0; top: 0; pointer-events: none; }
-  .warn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #fbeaea; color: var(--red); border: 1px solid rgba(165,32,47,.35); font-size: 12.5px; font-weight: 700; padding: 5px 14px; border-radius: 999px; display: none; z-index: 2; white-space: nowrap; }
+  .warn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: #fbeaea; color: var(--red); border: 1px solid rgba(165,32,47,.35); font-size: 12.5px; font-weight: 700; padding: 5px 14px; border-radius: 999px; display: none; z-index: 2; white-space: normal; text-align: center; max-width: calc(100% - 300px); pointer-events: none; }
   .warn.knife { background: #fdf6e3; color: var(--amber); border-color: rgba(181,133,11,.4); }
   .detchk {
     position: absolute; top: 10px; right: 16px; z-index: 2;
@@ -190,7 +200,26 @@
   .recipe ol b { color: var(--navy); }
   .refs { font-size: 11.5px; color: var(--muted); line-height: 1.65; border-top: 1px dashed var(--grid); margin-top: 9px; padding-top: 8px; }
   .refs i { font-style: italic; }
-  .ntR, .ntT, .ntI { text-transform: none; }
+  .ntR, .ntT, .ntI { text-transform: none; font-style: italic; }
+
+  /* --- export dialog --- */
+  .modal { position: fixed; inset: 0; background: rgba(22,33,43,.45); z-index: 60; display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow: auto; }
+  .modal.open { display: flex; }
+  .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(20,30,40,.25); width: min(860px, 100%); padding: 16px 18px 14px; }
+  .modal-card h2 { margin: 0 0 4px; font-size: 13px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: .07em; }
+  .modal-sub { font-size: 12.5px; color: var(--secondary); margin-bottom: 10px; line-height: 1.5; }
+  .exp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  .exp-sec { border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; }
+  .exp-sec .st { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .exp-sec label { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink); padding: 3px 0; cursor: pointer; }
+  .exp-sec label.sub { margin-left: 22px; color: var(--secondary); font-size: 12px; }
+  .exp-sec label.off { opacity: .45; }
+  .exp-prev { border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 6px; margin-bottom: 10px; }
+  .exp-prev svg { width: 100%; height: auto; display: block; }
+  .exp-foot { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .exp-foot .note { margin-right: auto; font-size: 12px; color: var(--muted); }
+  #expDownload { background: var(--navy); color: #fff; border-color: var(--navy); }
+  @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
   .reprow { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
   .repout { font-size: 12.5px; color: var(--secondary); font-variant-numeric: tabular-nums; line-height: 1.5; }
   .repout b { color: var(--navy); }
@@ -220,7 +249,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Variability, Queues &amp; Flow — Live Process Simulator <span class="ver">v 0.14</span></h1>
+      <h1>Variability, Queues &amp; Flow — Live Process Simulator <span class="ver">v 0.26</span></h1>
       <div class="tabs">
         <button class="tab active" id="tabSim">Simulator</button>
         <button class="tab" id="tabLearn">☕ Learn — The Daily Grind</button>
@@ -316,6 +345,7 @@
             <div class="lab"><span>Std. deviation</span><input class="val" id="n-s1" type="number" min="0" max="30" step="0.5" value="8"></div>
             <input type="range" id="r-s1" min="0" max="30" step="0.5" value="8" />
           </div>
+          <div class="bufchk" style="cursor:default" title="The arrival queue always exists — jobs that have not yet entered the process wait here. It lies outside the process boundary.">▽ Buffer 1 — the arrival queue, always present (outside the process boundary)</div>
         </div>
 
         <div class="group" id="grp-2">
@@ -328,6 +358,7 @@
             <div class="lab"><span>Std. deviation</span><input class="val" id="n-s2" type="number" min="0" max="30" step="0.5" value="8"></div>
             <input type="range" id="r-s2" min="0" max="30" step="0.5" value="8" />
           </div>
+          <label class="bufchk"><input type="checkbox" id="buf-2" checked title="Remove the buffer and a finished job upstream can move only when Activity 2 is free — otherwise the upstream activity is blocked"> ▽ Buffer 2 before this activity</label>
         </div>
 
         <div class="group" id="grp-3">
@@ -340,6 +371,7 @@
             <div class="lab"><span>Std. deviation</span><input class="val" id="n-s3" type="number" min="0" max="30" step="0.5" value="8"></div>
             <input type="range" id="r-s3" min="0" max="30" step="0.5" value="8" />
           </div>
+          <label class="bufchk"><input type="checkbox" id="buf-3" checked title="Remove the buffer and a finished job upstream can move only when Activity 3 is free — otherwise the upstream activity is blocked"> ▽ Buffer 3 before this activity</label>
         </div>
       </div>
 
@@ -367,7 +399,7 @@
         <div class="ctl" style="margin-top:9px">
           <label style="font-size:12.5px;color:var(--secondary);cursor:pointer;display:flex;gap:6px;align-items:flex-start">
             <input type="checkbox" id="cntOutside" style="margin-top:2px">
-            <span>Count jobs waiting <b>outside</b> the line in WIP &amp; throughput time (whole-system view). Default: line only.</span>
+            <span>Extend the “incl. the arrival queue” readouts to also count jobs held <b>outside</b> the line by WIP caps (whole-system view).</span>
           </label>
         </div>
       </div>
@@ -376,25 +408,28 @@
     <main>
       <div class="card mapwrap" id="mapWrap">
         <label class="detchk"><input type="checkbox" id="detailsChk"> details</label>
-        <div class="warn" id="warnBanner">Unstable: demand ≥ capacity at a station — its queue will grow without bound (theory Wq = ∞)</div>
+        <button class="detchk" id="exportBtn" style="right:112px" title="Export the process diagram as an SVG figure">⤓ Export SVG</button>
+        <div class="warn" id="warnBanner">Unstable: demand ≥ capacity at an activity — its queue will grow without bound (theory Wq = ∞)</div>
         <svg id="mapSvg" viewBox="0 0 1240 330" aria-label="process map"></svg>
         <canvas id="mapCanvas"></canvas>
         <div class="maplegend">
           <span class="item det"><svg class="fig" viewBox="0 0 11 13"><circle cx="5.5" cy="3" r="2.7" fill="#2e7d32"/><rect x="1.6" y="6.4" width="7.8" height="6.2" rx="2.6" fill="#2e7d32"/></svg> job</span>
           <span class="item det"><svg class="fig" viewBox="0 0 11 13"><circle cx="5.5" cy="3" r="2.7" fill="#a5202f"/><rect x="1.6" y="6.4" width="7.8" height="6.2" rx="2.6" fill="#a5202f"/></svg> longer-than-average job (&gt; 1.5× mean)</span>
-          <span class="item det"><svg class="fig" viewBox="0 0 11 13"><circle cx="5.5" cy="3" r="2.7" fill="#b5850b"/><rect x="1.6" y="6.4" width="7.8" height="6.2" rx="2.6" fill="#b5850b"/></svg> <b style="color:var(--amber);font-size:10px;letter-spacing:.06em">BLOCKED</b> downstream buffer full</span>
-          <span class="item det"><b style="color:var(--series1);font-size:10px;letter-spacing:.06em">STARVED</b> no input from upstream</span>
-          <span class="item det"><b style="color:var(--muted);font-size:10px;letter-spacing:.06em">IDLE</b> no demand (Activity 1)</span>
+          <span class="item"><svg class="fig" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5" fill="none" stroke="#e1e0d9" stroke-width="2.6"/><circle cx="7" cy="7" r="5" fill="none" stroke="#eb6834" stroke-width="2.6" pathLength="100" stroke-dasharray="65 100" stroke-linecap="round" transform="rotate(-90 7 7)"/></svg> progress dial — one sweep = one job</span>
+          <span class="item"><b style="color:#a5202f;font-size:10px;letter-spacing:.06em">BLOCKED</b>&nbsp;no room downstream — red slashed arrow marks the held hand-off</span>
+          <span class="item"><b style="color:#2a78d6;font-size:10px;letter-spacing:.06em">STARVED</b>&nbsp;/ <span style="color:#b7b5ac;font-weight:700;font-size:11px">idle</span> — shown inside an empty activity</span>
+          <span class="item det"><svg class="fig" viewBox="0 0 11 13"><circle cx="5.5" cy="3" r="2.7" fill="#c47f16"/><rect x="1.6" y="6.4" width="7.8" height="6.2" rx="2.6" fill="#c47f16"/></svg> held (blocked) job</span>
           <span class="item"><span style="display:inline-block;width:13px;height:11px;border:2px solid var(--red);border-radius:3px"></span> highest-utilization activity</span>
-          <span class="item" style="color:var(--muted)">▽ waiting / storage &nbsp;·&nbsp; ▭ activity (single server)</span>
+          <span class="item" style="color:var(--muted)">▭ activities &nbsp;·&nbsp; ▽ buffers (jobs wait — inventory) &nbsp;·&nbsp; → flows</span>
+          <span class="item" style="color:var(--muted)"><span style="display:inline-block;width:16px;height:11px;border:1.5px dashed #8d99a5;border-radius:4px;opacity:.7"></span> process boundary — Buffer 1 &amp; Finished goods lie outside</span>
         </div>
       </div>
 
       <div class="tiles">
         <div class="tile"><div class="k">Jobs completed</div><div class="v" id="mCompleted">0</div><div class="s" id="mArrived">0 arrived</div></div>
-        <div class="tile"><div class="k">Throughput (<span class="ntR">R</span>)</div><div class="v" id="mTH">—</div><div class="s">jobs/min · theory <span class="ntR">R</span> = <b id="mTHth">—</b></div><div class="s">cycle time 1/<span class="ntR">R</span> = <b id="mCT">—</b> · theory <b id="mCTth">—</b></div></div>
-        <div class="tile"><div class="k">Avg throughput time (<span class="ntT">T</span>)</div><div class="v" id="mT">—</div><div class="s"><span id="mTlab">min, arrival → finish</span> · theory ≈ <b id="mTth">—</b></div><div class="s">of which in queues: <b id="mQT">—</b> · theory <b id="mQTth">—</b></div><div class="s" id="mTLrow" style="display:none"><span id="mTLlab"></span> <b id="mTL">—</b></div></div>
-        <div class="tile"><div class="k">Avg inventory I (<span class="ntI">I</span>)</div><div class="v" id="mWIP">—</div><div class="s"><span id="mWIPlab">time-avg jobs in process</span> · theory ≈ <b id="mWIPth">—</b></div><div class="s" id="mWIPex" style="display:none">excluding those waiting outside: <b id="mWIPexv">—</b></div></div>
+        <div class="tile"><div class="k">Throughput (<span class="ntR">R</span>)</div><div class="v" id="mTH">—</div><div class="s">jobs/hour · theory <span class="ntR">R</span> = <b id="mTHth">—</b></div><div class="s">cycle time 1/<span class="ntR">R</span> = <b id="mCT">—</b> · theory <b id="mCTth">—</b></div></div>
+        <div class="tile"><div class="k">Avg <span class="ntTterm">throughput time</span> (<span class="ntT">T</span>)</div><div class="v" id="mT">—</div><div class="s">min, inside the process boundary · theory ≈ <b id="mTth">—</b></div><div class="s">waiting / blocked inside: <b id="mQT">—</b> · theory <b id="mQTth">—</b></div><div class="s" id="mTsub"></div></div>
+        <div class="tile"><div class="k">Avg inventory (<span class="ntI">I</span>)</div><div class="v" id="mWIP">—</div><div class="s">jobs inside the boundary, time-averaged · theory ≈ <b id="mWIPth">—</b></div><div class="s" id="mIsub"></div></div>
       </div>
       <div class="pinstrip" id="pinStrip">
         <button class="mini" id="pinBtn">📌 Pin this run for comparison</button>
@@ -446,15 +481,15 @@
       <div class="theory-metrics-row" style="margin-top:12px">
         <div class="card">
           <div class="cardhead">
-            <h2>Observed vs. queueing theory (per station)</h2>
+            <h2>Observed vs. queueing theory (per activity)</h2>
             <div class="ctools"><button class="tbtn coll" title="Minimize card">–</button></div>
           </div>
           <table id="theoryTable">
             <thead>
               <tr>
-                <th>Station</th>
+                <th>Activity</th>
                 <th>Capacity</th>
-                <th>Util obs</th><th>Util theory</th>
+                <th>u obs</th><th>u theory</th>
                 <th>Tq obs</th><th>Tq theory</th>
                 <th>Lq obs</th><th>Lq theory</th>
                 <th>CVa</th><th>CVp</th>
@@ -463,7 +498,7 @@
             <tbody id="theoryBody"></tbody>
           </table>
           <div class="capline" id="capLine"></div>
-          <div class="limnote" id="limNote">⚠ WIP limits are active — Kingman/VUT theory assumes unlimited buffers, so observed values will (instructively!) deviate from it.</div>
+          <div class="limnote" id="limNote">⚠ WIP limits or removed buffers are active — Kingman/VUT theory assumes unlimited buffers, so observed values will (instructively!) deviate from it.</div>
           <div class="reprow">
             <button class="mini" id="repBtn">Run 20 silent replications</button>
             <span class="repout" id="repOut">Repeats the current scenario 20× in the background and reports averages with 95% confidence intervals — one animated run is just one sample.</span>
@@ -493,7 +528,7 @@
         </div>
         <div class="card chartcard">
           <div class="cardhead">
-            <h2>Throughput time of each completed job</h2>
+            <h2><span class="ntTtermC">Throughput time</span> of each completed job</h2>
             <div class="ctools"><button class="tbtn coll" title="Minimize card">–</button></div>
           </div>
           <div class="chartlegend">
@@ -527,10 +562,12 @@
           </div>
           <p><b>Pin this run</b> freezes the current R, T, and WIP in a strip under the tiles — change one thing, run again, and compare against the pinned numbers.</p>
           <p><b>Repeatable randomness</b> makes the same seed reproduce the identical run (applies at Reset) — rehearse the exact demo you will show in class, or give two sections the same run.</p>
-          <p><b>WIP limits</b> add a line-wide cap (CONWIP: a new job is released only when one finishes) or per-buffer caps. A full buffer <b>blocks</b> the upstream activity (amber figure); jobs that cannot enter wait outside the first buffer. Kingman theory assumes unlimited buffers, so expect instructive deviations. Note that a WIP cap changes <i>where</i> instability shows up: the line itself stays bounded, but if demand exceeds what the capped line can process — which can happen even below 100% utilization, because tight caps throttle throughput — the backlog outside the line grows without bound and total throughput time still explodes. The <b>“count jobs waiting outside”</b> checkbox picks the scope for WIP, throughput time, Little’s Law, pinning, and replications. Default (unchecked): line only — WIP counts only jobs inside the process and throughput time runs from release into the line to finish, so students see exactly what the cap controls (WIP = R × T holds for the line by itself). Checked: whole-system view — WIP and throughput time include the wait outside (the customer’s experience, which diverges under overload), with the line-only numbers shown as a sub-line for comparison. Little’s Law holds at either scope, each with its own WIP and T.</p>
-          <p><b>One, two, or three activities.</b> Uncheck the box next to Activity 2 or Activity 3 to remove that step from the process — the station and its buffer fade on the map, jobs flow past them, and every calculation (theory table, capacity, charts, replications) uses only the active stations. With just Activity 1 you have the textbook single-server queue, so students can verify the Kingman formula by hand. Toggling resets the run; parameters are kept and restored when you re-check the box.</p>
-          <p><b>Station states.</b> An empty station shows a live tag: <b>IDLE</b> at Activity 1 (no demand has arrived) or <b>STARVED</b> at Activities 2–3 (upstream has nothing to hand over); a station holding a finished job it cannot pass on shows <b>BLOCKED</b>. Under each station, the accumulated percentage of time in each state builds the classic utilization decomposition: busy + starved/idle + blocked = 100%.</p>
-          <p><b>Screen space.</b> Every analysis card has a <b>–</b> button to minimize it, so you can pair the process map with just the chart you are teaching from. The Little’s Law chart adds <b>+ / − / A</b> y-axis zoom; the waiting-time chart has a selector for each activity or the whole line. The <b>details</b> checkbox on the process map reveals the state legend, live IDLE/STARVED/BLOCKED tags, time-in-state percentages, and each buffer’s observed Tq (avg wait) and Iq (avg queue length) — keep it off for a clean map when introducing the layout.</p>
+          <p><b>WIP limits</b> add a line-wide cap (CONWIP: a new job is released only when one finishes) or per-buffer caps. A full buffer <b>blocks</b> the upstream activity (amber figure); jobs that cannot enter wait outside the first buffer. Kingman theory assumes unlimited buffers, so expect instructive deviations. Note that a WIP cap changes <i>where</i> instability shows up: the line itself stays bounded, but if demand exceeds what the capped line can process — which can happen even below 100% utilization, because tight caps throttle throughput — the backlog outside the line grows without bound and total <span class="ntTterm">throughput time</span> still explodes. The headline tiles keep reporting the process (inside the boundary); the <b>“incl. the arrival queue”</b> sub-lines report the queue-inclusive journey, and the checkbox in this panel extends those sub-lines to also count jobs held outside by the caps — the customer’s experience, which diverges under overload. Little’s Law holds at every scope, each with its own WIP and T.</p>
+          <p><b>One, two, or three activities.</b> Uncheck the box next to Activity 2 or Activity 3 to remove that step from the process — the activity and its buffer are removed from the map, the remaining shapes re-space themselves, and every calculation (theory table, capacity, charts, replications) uses only the active activities. With just Activity 1 you have the textbook single-server queue, so students can verify the Kingman formula by hand. Toggling resets the run; parameters are kept and restored when you re-check the box.</p>
+          <p><b>Process boundary, and the three nested scopes.</b> The dashed outline on the map marks the process being analyzed: the activities and the buffers between them. The input buffer (Buffer 1) and Finished goods always lie outside it. The outline follows the stage as activities and buffers are added or removed, and appears in exported figures (it can be unchecked in the export dialog). Little's Law holds for <i>any</i> boundary you draw (Lesson 3's doctrine), and the simulator reports the nested scopes explicitly, each with its own <span class="ntI">I</span>, <span class="ntR">R</span>, and <span class="ntT">T</span>: the <b>headline <span class="ntT">T</span> and <span class="ntI">I</span> tiles report the process — inside the boundary</b>: the clock starts when a job enters Activity 1, and the count covers the activities and interior buffers. Under overload this scope stays finite and bottleneck-regulated, because all the queueing piles up in Buffer 1, outside the process. The <b>"incl. the arrival queue" sub-line</b> adds Buffer 1 — the full arrival-to-finish journey; this queue-inclusive scope is what Kingman/VUT predicts (its theory value sits beside it) and what the per-buffer Tq/Iq analysis describes. The <b>checkbox in the WIP-limits panel</b> extends that sub-line to also count jobs held outside the line by WIP caps — the customer's whole-system view. The Little's-Law panel, the pin, and the replications all report the headline (boundary) scope.</p>
+          <p><b>Interior buffers are optional; the entrance buffer is not.</b> Buffer 1 is the arrival queue — jobs that have not yet entered the process wait there, which is why it always exists and always lies <i>outside</i> the process boundary. Activities 2 and 3 each have a <b>▽ Buffer before this activity</b> checkbox. Removing an interior buffer removes the waiting room in front of that activity: a job finished upstream can be handed over only when the activity is free, so the upstream activity holds its finished job and shows <b>BLOCKED</b> — this is how unbuffered lines couple neighboring activities. Blocking, starving, and inventory build-up relocate accordingly, and Kingman/VUT theory (which assumes unlimited buffers) will instructively deviate — see the note under the theory table. Toggling a buffer resets the run.</p>
+          <p><b>Activity states.</b> The map uses the lab exercises' conventions. Each activity carries a small <b>progress dial</b> at its top-right corner — one sweep of the orange arc is one job (red for a longer-than-average job); while blocked the dial sits full. State words appear <i>inside</i> the box: <b style="color:var(--red)">BLOCKED</b> (steady red) when the activity holds a finished job it cannot pass on — the outgoing arrow also turns red with a slash across it, and the held job sinks to the floor of the box in amber; <b style="color:#2a78d6">STARVED</b> (blinking blue) when upstream feeds it nothing; lowercase <span style="color:#b7b5ac;font-weight:700">idle</span> (blinking, muted) at Activity 1 when no demand has arrived. Nothing is shown while the activity is simply working — the dial carries that. With the details checkbox on, the accumulated percentage of time in each state appears under the activity — the classic utilization decomposition: busy + starved/idle + blocked = 100%.</p>
+          <p><b>Screen space.</b> Every analysis card has a <b>–</b> button to minimize it, so you can pair the process map with just the chart you are teaching from. The Little’s Law chart adds <b>+ / − / A</b> y-axis zoom; the waiting-time chart has a selector for each activity or the whole line. The <b>details</b> checkbox on the process map reveals time-in-state percentages, each activity’s capacity, and each buffer’s observed Tq (avg wait) and Iq (avg queue length) — keep it off for a clean map when introducing the layout.</p>
           <p><b>Verify a student completion code</b> (from the Learn tab):</p>
           <input id="vcName" placeholder="student name (exactly as they typed it)" style="width:100%;margin:2px 0 6px;border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-family:var(--sans);font-size:12.5px">
           <div style="display:flex;gap:6px">
@@ -545,11 +582,11 @@
             <h2>The science: Little’s Law, queueing &amp; variability</h2>
             <div class="ctools"><button class="tbtn coll" title="Minimize card">–</button></div>
           </div>
-          <p><b>Little’s Law — WIP = R × T.</b> The long-run average number of jobs in a system equals throughput times average throughput time. Remarkably, it holds for <i>any</i> stable system — regardless of arrival pattern, service distributions, or queue discipline — which is why it is often called the most general law in operations. Proven formally by Little (1961); see Little (2011) for a 50-year retrospective. In Cachon &amp; Terwiesch notation it reads I = R × T. Note it relates <i>long-run averages</i>: the instantaneous WIP fluctuates constantly (the gray line in the Little’s Law panel) even while the law holds exactly for the averages.</p>
+          <p><b>Little’s Law — WIP = R × T.</b> The long-run average number of jobs in a system equals throughput times average <span class="ntTterm">throughput time</span>. Remarkably, it holds for <i>any</i> stable system — regardless of arrival pattern, service distributions, or queue discipline — which is why it is often called the most general law in operations. Proven formally by Little (1961); see Little (2011) for a 50-year retrospective. In Cachon &amp; Terwiesch notation it reads I = R × T. Note it relates <i>long-run averages</i>: the instantaneous WIP fluctuates constantly (the gray line in the Little’s Law panel) even while the law holds exactly for the averages.</p>
           <p><b>Why queues form — the VUT equation.</b> Kingman’s heavy-traffic approximation decomposes waiting into Variability × Utilization × Time: Tq ≈ [(CVa² + CVp²)/2] · [ρ/(1−ρ)] · p (Kingman 1961). With no variability there is no queue at any utilization up to and including 100% — a deterministic line can balance exactly at capacity (a knife-edge). With any variability, waiting explodes nonlinearly as ρ → 1 (the “hockey stick” panel) and ρ = 100% becomes unsustainable: the queue behaves like an un-drifted random walk and grows without bound. The formula is exact for the M/M/1 queue (CV = 1) and, with the (1+CVp²)/2 factor, for M/G/1 via Pollaczek–Khinchine.</p>
-          <p><b>Variability propagates.</b> A station’s departures inherit variability from both its arrivals and its own processing: CVd² = ρ²CVp² + (1−ρ²)CVa². This “linking equation,” used in Whitt’s Queueing Network Analyzer (1983) and popularized by <i>Factory Physics</i>, explains why one variable step creates queues at downstream stations that are themselves perfectly steady (Scenario 6).</p>
-          <p><b>Bottlenecks &amp; capacity.</b> Each station’s capacity is 1/p; a serial line’s capacity is the <i>minimum</i> — the process can never produce faster than its slowest step. System utilization = R / capacity. Balancing flow to the bottleneck is the heart of the Theory of Constraints (Goldratt &amp; Cox, <i>The Goal</i>).</p>
-          <p><b>WIP caps &amp; CONWIP.</b> Capping WIP stabilizes throughput time (by Little’s Law, T = WIP/R when WIP is fixed) at some cost in throughput — the pull logic behind kanban and CONWIP (Spearman, Woodruff &amp; Hopp 1990).</p>
+          <p><b>Variability propagates.</b> An activity’s departures inherit variability from both its arrivals and its own processing: CVd² = ρ²CVp² + (1−ρ²)CVa². This “linking equation,” used in Whitt’s Queueing Network Analyzer (1983) and popularized by <i>Factory Physics</i>, explains why one variable step creates queues at downstream activities that are themselves perfectly steady (Scenario 6).</p>
+          <p><b>Bottlenecks &amp; capacity.</b> Each activity’s capacity is 1/p; a serial line’s capacity is the <i>minimum</i> — the process can never produce faster than its slowest step. System utilization = R / capacity. Balancing flow to the bottleneck is the heart of the Theory of Constraints (Goldratt &amp; Cox, <i>The Goal</i>).</p>
+          <p><b>WIP caps &amp; CONWIP.</b> Capping WIP stabilizes <span class="ntTterm">throughput time</span> (by Little’s Law, T = WIP/R when WIP is fixed) at some cost in throughput — the pull logic behind kanban and CONWIP (Spearman, Woodruff &amp; Hopp 1990).</p>
           <p><b>Simulation practice.</b> One animated run is a single random sample; short runs are biased by the empty-system warm-up. Standard remedies — deleting the warm-up (Reset stats) and averaging independent replications with confidence intervals — follow Law’s <i>Simulation Modeling and Analysis</i>.</p>
           <div class="refs">
             Little, J.D.C. (1961), “A Proof for the Queuing Formula: L = λW,” <i>Operations Research</i> 9(3), 383–387 ·
@@ -565,6 +602,53 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <div class="modal" id="expModal">
+    <div class="modal-card">
+      <h2>Export process diagram (SVG)</h2>
+      <div class="modal-sub">The figure mirrors the current stage — activities, buffers, parameters, notation, bottleneck marking, and status rings. Buffers follow the stage; set them in the parameters panel. Choose which labels appear; unchecked activities are removed from the drawing, not dimmed. The animated figure loops jobs through the process (dwell time in an activity is proportional to its utilization) with a play/pause button — pausing shows the static figure. The SVG plays when opened in a browser; PowerPoint and Keynote import SVG as a static picture, so for slides use <b>⤓ GIF for slides</b> — the same animation as a looping GIF, which plays in the slide show. SVG scales without loss either way.</div>
+      <div class="exp-grid">
+        <div class="exp-sec" id="expActs">
+          <div class="st">Activities &amp; buffers</div>
+        </div>
+        <div class="exp-sec">
+          <div class="st">Measures shown</div>
+          <label><input type="checkbox" id="exp-mp" checked> Processing time (p)</label>
+          <label><input type="checkbox" id="exp-mcap" checked> Capacity</label>
+          <label><input type="checkbox" id="exp-mu" checked> Utilization (u)</label>
+          <label class="sub"><input type="radio" name="expUtil" id="exp-uth" checked> theory: demand / capacity</label>
+          <label class="sub"><input type="radio" name="expUtil" id="exp-uobs"> observed (current run)</label>
+          <label><input type="checkbox" id="exp-mcv"> Variability (CV)</label>
+          <div class="st" style="margin-top:8px">Buffer measures</div>
+          <label><input type="checkbox" id="exp-bufn"> Waiting count</label>
+          <label><input type="checkbox" id="exp-tq"> Queue time (Tq)</label>
+          <label><input type="checkbox" id="exp-iq"> Queue length (Iq)</label>
+          <div class="st" style="margin-top:8px">Figure type</div>
+          <label><input type="radio" name="expKind" id="exp-anim" checked> Animated (jobs flow; play / pause)</label>
+          <label><input type="radio" name="expKind" id="exp-static"> Static figure</label>
+        </div>
+        <div class="exp-sec">
+          <div class="st">Diagram elements</div>
+          <label><input type="checkbox" id="exp-dem" checked> Demand rate at the entry</label>
+          <label><input type="checkbox" id="exp-rout" checked> Throughput rate (<span class="ntR">R</span>) at the exit</label>
+          <label><input type="checkbox" id="exp-fg" checked> Finished-goods triangle</label>
+          <label><input type="checkbox" id="exp-blab" checked> Buffer labels</label>
+          <label><input type="checkbox" id="exp-ring" checked> Progress dials</label>
+          <label><input type="checkbox" id="exp-bnd" checked> Process boundary</label>
+          <div class="st" style="margin-top:8px">Values</div>
+          <label><input type="radio" name="expSrc" id="exp-vth" checked> Planned (from the parameters)</label>
+          <label><input type="radio" name="expSrc" id="exp-vobs"> Observed (current run)</label>
+        </div>
+      </div>
+      <div class="exp-prev" id="expPrev"></div>
+      <div class="exp-foot">
+        <span class="note" id="expNote"></span>
+        <button class="mini" id="expClose">Close</button>
+        <button class="mini" id="expGif" title="Animated GIF — plays in the PowerPoint/Keynote slide show (loops; slide apps give playback controls only to videos)">⤓ GIF for slides</button>
+        <button id="expDownload">⤓ Download SVG</button>
+      </div>
+    </div>
   </div>
 
   <div class="tooltip" id="tooltip"></div>
@@ -612,19 +696,24 @@
   }
 
   /* ============================== parameters & limits ============================== */
-  const P = { aMean: 10, aSd: 10, m: [8, 8, 8], s: [8, 8, 8], on: [true, true, true] };
+  const P = { aMean: 10, aSd: 10, m: [8, 8, 8], s: [8, 8, 8], on: [true, true, true], buf: [true, true, true] };
+  // buffersRemoved: any active activity whose buffer has been taken off the stage
+  function buffersRemoved() { return [0, 1, 2].some(i => P.on[i] && !P.buf[i]); }
   const STATION_NAMES = ['Activity 1', 'Activity 2', 'Activity 3'];
   const actName = i => STATION_NAMES[i];
   const NOTA = { style: 'schmidt' };
   function NT() {
     return NOTA.style === 'jacobs'
-      ? { R: 'λ', T: 'FT', I: 'INV', law: 'INV = λ × FT' }
-      : { R: 'R', T: 'T', I: 'I', law: 'I = R × T' };
+      ? { R: 'λ', T: 'FT', I: 'INV', law: 'INV = λ × FT', Tterm: 'flow time', TtermC: 'Flow time' }
+      : { R: 'R', T: 'T', I: 'I', law: 'I = R × T', Tterm: 'throughput time', TtermC: 'Throughput time' };
   }
   function subN(s) {
     const N = NT();
-    return String(s == null ? '' : s).split('⟦R⟧').join(N.R).split('⟦T⟧').join(N.T).split('⟦I⟧').join(N.I).split('⟦law⟧').join(N.law);
+    return String(s == null ? '' : s).split('⟦R⟧').join(N.R).split('⟦T⟧').join(N.T).split('⟦I⟧').join(N.I).split('⟦law⟧').join(N.law)
+      .split('⟦TtermC⟧').join(N.TtermC).split('⟦Tterm⟧').join(N.Tterm);
   }
+  // rate formatting convention (shared with the exercises): whole numbers plain, otherwise one decimal
+  function fmtRate(v) { return !isFinite(v) ? '∞' : (Math.abs(v - Math.round(v)) < 0.05 ? Math.round(v).toFixed(0) : v.toFixed(1)); }
   function setStationNames(names) {
     for (let i = 0; i < 3; i++) {
       STATION_NAMES[i] = names[i];
@@ -635,6 +724,13 @@
   function nextActive(i) { for (let j = i + 1; j < 3; j++) if (P.on[j]) return j; return -1; }
   function activeIdx() { return [0, 1, 2].filter(i => P.on[i]); }
   const L = { conwip: Infinity, caps: [Infinity, Infinity, Infinity] };
+  // Can a job be handed to stage j right now?  With a buffer: while the buffer has room.
+  // Without a buffer: only when the activity itself is free (a momentary pass-through — the
+  // job never waits in front of stage j; the upstream activity is blocked instead).
+  function canAccept(j) {
+    if (P.buf[j]) return S.buffers[j].length < L.caps[j];
+    return !S.servers[j] && S.buffers[j].length === 0;
+  }
   function readParam(key) {
     if (key === 'aMean') return P.aMean;
     if (key === 'aSd') return P.aSd;
@@ -654,6 +750,12 @@
   function computeTheory() {
     const R = 1 / P.aMean;
     let ca2 = Math.pow(P.aSd / P.aMean, 2);
+    // Rf is the rate actually FLOWING toward the next activity. An activity's arrivals are
+    // throttled by every upstream capacity: a saturated activity passes on only 1/p, so
+    // activities downstream of a bottleneck see the bottleneck's output, not raw demand.
+    // (Reported by Syd 2026-08-25: theory u downstream of an overloaded activity was
+    // computed from raw demand — e.g. 67% where the true long-run utilization is 40%.)
+    let Rf = R;
     const st = [];
     let totalT = 0, unstable = false, overloaded = false, knife = false;
     for (let i = 0; i < 3; i++) {
@@ -663,24 +765,38 @@
         continue;
       }
       const p = P.m[i], cs2 = Math.pow(P.s[i] / p, 2);
-      const rho = R * p;
+      const rho = Rf * p;                 // offered load, given upstream throttling
       const v = (ca2 + cs2) / 2;
       let wq;
       if (rho > 1 + 1e-9) {
-        wq = Infinity; unstable = true; overloaded = true;          // demand truly exceeds capacity
+        wq = Infinity; unstable = true; overloaded = true;          // arrivals truly exceed capacity here
       } else if (rho >= 0.999) {
         if (v < 1e-12) { wq = 0; knife = true; }                    // deterministic knife-edge: ρ=1 is sustainable
         else { wq = Infinity; unstable = true; }                    // ρ→1 with variability: queue diverges
       } else {
         wq = v * (rho / (1 - rho)) * p;
       }
-      st.push({ rho, wq, lq: R * wq, ca: Math.sqrt(ca2), cp: Math.sqrt(cs2), ca2, cs2, p });
+      st.push({ rho, wq, lq: isFinite(wq) ? Rf * wq : Infinity, ca: Math.sqrt(ca2), cp: Math.sqrt(cs2), ca2, cs2, p });
       totalT += (isFinite(wq) ? wq : 0) + p;
       const rEff = Math.min(rho, 1);   // a saturated server's departures follow its service process
       ca2 = rEff * rEff * cs2 + (1 - rEff * rEff) * ca2;
+      Rf = Math.min(Rf, 1 / p);        // what a saturated activity passes downstream
     }
     const anyInf = st.some(s => !isFinite(s.wq));
-    return { R, st, totalT: anyInf ? Infinity : totalT, wip: anyInf ? Infinity : R * totalT, unstable, overloaded, knife };
+    // boundary scope: activities + interior buffers. Buffer 1's wait (the first active
+    // station's Wq) lies outside the boundary, so it is excluded here.
+    let pSum = 0, bndWait = 0, uSum = 0, lqBnd = 0, firstSeen = false;
+    for (let i = 0; i < 3; i++) {
+      const s = st[i];
+      if (s.off) continue;
+      pSum += s.p;
+      uSum += Math.min(s.rho, 1);
+      if (firstSeen) { bndWait += s.wq; lqBnd += s.lq; }
+      firstSeen = true;
+    }
+    const tBnd = isFinite(bndWait) ? pSum + bndWait : Infinity;
+    const iBnd = isFinite(bndWait) && isFinite(lqBnd) ? uSum + lqBnd : Infinity;
+    return { R, st, totalT: anyInf ? Infinity : totalT, wip: anyInf ? Infinity : R * totalT, tBnd, iBnd, unstable, overloaded, knife };
   }
 
   /* ============================== live simulation state ============================== */
@@ -691,7 +807,7 @@
     backlog: [], buffers: [[], [], []], servers: [null, null, null], finished: [],
     arrived: 0, completed: 0,
     // statistics window (cleared by Reset stats)
-    statsT0: 0, statCompleted: 0, sumFlow: 0, sumLineFlow: 0,
+    statsT0: 0, statCompleted: 0, sumFlow: 0, sumLineFlow: 0, sumBndFlow: 0, bndArea: 0,
     busyI: [0, 0, 0], blkI: [0, 0, 0], empI: [0, 0, 0],
     sumWait: [0, 0, 0], nWait: [0, 0, 0],
     lqArea: [0, 0, 0], wipArea: 0, sysArea: 0, lastIntT: 0,
@@ -705,12 +821,18 @@
            S.servers.filter(Boolean).length;
   }
   function sysWip() { return lineWip() + S.backlog.length; }
+  // inventory inside the drawn process boundary: activities + interior buffers.
+  // Buffer 1 (the arrival queue) lies outside the boundary.
+  function bndWip() {
+    return S.buffers[1].length + S.buffers[2].length + S.servers.filter(Boolean).length;
+  }
 
   function advanceIntegrals(to) {
     const dt = to - S.lastIntT;
     if (dt <= 0) return;
     S.wipArea += lineWip() * dt;
     S.sysArea += sysWip() * dt;
+    S.bndArea += bndWip() * dt;
     for (let i = 0; i < 3; i++) {
       S.lqArea[i] += S.buffers[i].length * dt;
       const sv = S.servers[i];
@@ -730,16 +852,18 @@
     job.release = t;          // moment the job enters the LINE (vs. arrival = joins the system)
     job.enter = t;
     S.buffers[0].push(id);
-    addAnim(id, from, nodePos('buf0'), false);
+    addAnim(id, from, NODES.buf0 ? nodePos('buf0') : nodePos('act0'), false);
   }
   function startService(i, t) {
     const id = S.buffers[i].shift();
     const job = S.jobs.get(id);
+    if (i === 0) job.bndEnter = t;   // the moment the job crosses into the process boundary
     S.sumWait[i] += t - job.enter; S.nWait[i]++;
     const d = durationR(S.rand, P.m[i], P.s[i]);
     S.servers[i] = { jobId: id, start: t, dur: d, slow: d > 1.5 * P.m[i], blocked: false };
     pushEvent({ time: t + d, type: 'done', station: i, jobId: id });
-    addAnim(id, nodePos('buf' + i, 'exit'), nodePos('act' + i), S.servers[i].slow);
+    // with no buffer the job was already animated straight to the activity by whoever handed it over
+    if (NODES['buf' + i]) addAnim(id, nodePos('buf' + i, 'exit'), nodePos('act' + i), S.servers[i].slow);
   }
   function propagate(t) {
     let changed = true, guard = 0;
@@ -749,18 +873,18 @@
         const sv = S.servers[i];
         if (!sv || !sv.blocked) continue;
         const j = nextActive(i);
-        if (j >= 0 && S.buffers[j].length < L.caps[j]) {
+        if (j >= 0 && canAccept(j)) {
           const job = S.jobs.get(sv.jobId);
           job.enter = t;
           S.buffers[j].push(sv.jobId);
-          addAnim(sv.jobId, nodePos('act' + i), nodePos('buf' + j), false);
+          addAnim(sv.jobId, nodePos('act' + i), NODES['buf' + j] ? nodePos('buf' + j) : nodePos('act' + j), false);
           S.servers[i] = null; changed = true;
         }
       }
       for (let i = 0; i < 3; i++) {
         if (P.on[i] && !S.servers[i] && S.buffers[i].length) { startService(i, t); changed = true; }
       }
-      while (S.backlog.length && lineWip() < L.conwip && S.buffers[0].length < L.caps[0]) {
+      while (S.backlog.length && lineWip() < L.conwip && canAccept(0)) {
         releaseJob(t); changed = true;
       }
     }
@@ -792,14 +916,15 @@
         const flow = t - job.arrival;
         S.sumFlow += flow;
         S.sumLineFlow += t - (job.release != null ? job.release : job.arrival);
+        S.sumBndFlow += t - (job.bndEnter != null ? job.bndEnter : job.arrival);
         S.finished.push(e.jobId);
         if (S.finished.length > 12) S.jobs.delete(S.finished.shift());
         S.fHist.push({ t, v: flow, avg: S.sumFlow / S.statCompleted });
         addAnim(e.jobId, nodePos('act' + i), nodePos('fg'), false);
-      } else if (S.buffers[j].length < L.caps[j]) {
+      } else if (canAccept(j)) {
         job.enter = t;
         S.buffers[j].push(e.jobId);
-        addAnim(e.jobId, nodePos('act' + i), nodePos('buf' + j), false);
+        addAnim(e.jobId, nodePos('act' + i), NODES['buf' + j] ? nodePos('buf' + j) : nodePos('act' + j), false);
         S.servers[i] = null;
       } else {
         sv.blocked = true;
@@ -812,10 +937,11 @@
       const Ro = S.statCompleted / elapsed;
       const To = S.statCompleted ? S.sumFlow / S.statCompleted : NaN;
       const Tl = S.statCompleted ? S.sumLineFlow / S.statCompleted : NaN;
+      const Tb = S.statCompleted ? S.sumBndFlow / S.statCompleted : NaN;
       S.lHist.push({
-        t, now: sysWip(), nowL: lineWip(),
-        avg: S.sysArea / elapsed, avgL: S.wipArea / elapsed,
-        rt: isNaN(To) ? NaN : Ro * To, rtL: isNaN(Tl) ? NaN : Ro * Tl
+        t, now: sysWip(), nowL: lineWip(), nowB: bndWip(),
+        avg: S.sysArea / elapsed, avgL: S.wipArea / elapsed, avgB: S.bndArea / elapsed,
+        rt: isNaN(To) ? NaN : Ro * To, rtL: isNaN(Tl) ? NaN : Ro * Tl, rtB: isNaN(Tb) ? NaN : Ro * Tb
       });
     }
     trimHist();
@@ -831,7 +957,7 @@
   }
 
   function clearStats(t0) {
-    S.statsT0 = t0; S.statCompleted = 0; S.sumFlow = 0; S.sumLineFlow = 0;
+    S.statsT0 = t0; S.statCompleted = 0; S.sumFlow = 0; S.sumLineFlow = 0; S.sumBndFlow = 0; S.bndArea = 0;
     S.busyI = [0, 0, 0]; S.blkI = [0, 0, 0]; S.empI = [0, 0, 0];
     S.sumWait = [0, 0, 0]; S.nWait = [0, 0, 0];
     S.lqArea = [0, 0, 0]; S.wipArea = 0; S.sysArea = 0; S.lastIntT = t0;
@@ -858,12 +984,26 @@
 
   /* ============================== geometry / map ============================== */
   const CY = 165;
-  const NODES = {
-    buf0: { x: 120 }, act0: { x: 285 },
-    buf1: { x: 455 }, act1: { x: 620 },
-    buf2: { x: 790 }, act2: { x: 955 },
-    fg:   { x: 1125 }
-  };
+  const NODES = {};   // recomputed from the active activities — excluded activities are removed, not dimmed
+  function mapSeq() {
+    const seq = ['buf0'];   // the arrival queue is always on the stage (outside the process boundary)
+    seq.push('act0');
+    if (P.on[1]) { if (P.buf[1]) seq.push('buf1'); seq.push('act1'); }
+    if (P.on[2]) { if (P.buf[2]) seq.push('buf2'); seq.push('act2'); }
+    seq.push('fg');
+    return seq;
+  }
+  function firstNode() {
+    return NODES.buf0 ? { x: NODES.buf0.x, hw: TRI_W / 2 } : { x: NODES.act0.x, hw: ACT_W / 2 };
+  }
+  function layoutNodes() {
+    for (const k in NODES) delete NODES[k];
+    const seq = mapSeq();
+    // when the first node is an activity (no Buffer 1), leave room for the
+    // entry labels so the process boundary doesn't collide with them
+    const x0 = P.buf[0] ? 120 : 250, x1 = 1125, stepX = (x1 - x0) / (seq.length - 1);
+    seq.forEach((k, i) => { NODES[k] = { x: x0 + i * stepX }; });
+  }
   const ACT_W = 128, ACT_H = 74, TRI_W = 96, TRI_H = 78;
   function nodePos(key, mode) {
     const n = NODES[key];
@@ -872,7 +1012,8 @@
     return { x: n.x, y: CY + TRI_H / 2 - 14 };
   }
   function backlogPos(idx) {
-    return { x: NODES.buf0.x - TRI_W / 2 - 30 - idx * 16, y: CY + 8 };
+    const f = firstNode();
+    return { x: f.x - f.hw - 30 - idx * 16, y: CY + 8 };
   }
 
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -884,17 +1025,29 @@
   }
   const svg = document.getElementById('mapSvg');
   function buildMap() {
+    layoutNodes();
     svg.innerHTML = '';
     const defs = el('defs', {}, svg);
     const mk = el('marker', { id: 'arr', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
     el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#8d99a5' }, mk);
 
-    const seq = ['buf0', 'act0', 'buf1', 'act1', 'buf2', 'act2', 'fg'];
-    el('line', { x1: 14, y1: CY, x2: NODES.buf0.x - TRI_W / 2 - 10, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, svg);
-    const rr1 = el('text', { id: 'arr-R1', x: 8, y: CY - 76, 'font-size': 11.5, fill: '#33475b', 'font-weight': 700 }, svg);
-    rr1.textContent = '';
-    const rr2 = el('text', { id: 'arr-R2', x: 8, y: CY - 61, 'font-size': 11, fill: '#898781' }, svg);
-    rr2.textContent = '';
+    const seq = mapSeq();
+    // process boundary (dashed, dimmed): the activities and the buffers between them are inside;
+    // the input buffer (if present) and finished goods always fall outside
+    const actsOn = [0, 1, 2].filter(i => P.on[i]);
+    const lastAct = actsOn[actsOn.length - 1];
+    const bnd = {
+      x1: NODES.act0.x - ACT_W / 2 - 16, x2: NODES['act' + lastAct].x + ACT_W / 2 + 16,
+      y1: CY - ACT_H / 2 - 26, y2: CY + TRI_H / 2 + 4
+    };
+    el('rect', {
+      x: bnd.x1, y: bnd.y1, width: bnd.x2 - bnd.x1, height: bnd.y2 - bnd.y1,
+      rx: 13, fill: 'none', stroke: '#8d99a5', 'stroke-width': 1.6,
+      'stroke-dasharray': '7 5', opacity: 0.55
+    }, svg);
+    el('line', { x1: 14, y1: CY, x2: firstNode().x - firstNode().hw - 10, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, svg);
+    const dm = el('text', { id: 'mapDemand', x: 8, y: CY - 64, 'font-size': 12.5, fill: '#2a78d6', 'font-weight': 800 }, svg);
+    dm.textContent = '';
     const t0 = el('text', { x: 8, y: CY - 44, 'font-size': 13, fill: '#52514e', 'font-weight': 700 }, svg);
     t0.textContent = 'jobs arrive';
     const bk = el('text', { id: 'backlog-count', x: 8, y: CY + 36, 'font-size': 12, fill: '#a5202f', 'font-weight': 700 }, svg);
@@ -907,10 +1060,27 @@
       const a = NODES[seq[i]], b = NODES[seq[i + 1]];
       const ax = a.x + (seq[i].startsWith('act') ? ACT_W / 2 : TRI_W / 2) + 4;
       const bx = b.x - (seq[i + 1].startsWith('act') ? ACT_W / 2 : TRI_W / 2) - 8;
-      el('line', { x1: ax, y1: CY, x2: bx, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, svg);
+      const attrs = { x1: ax, y1: CY, x2: bx, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' };
+      // the link OUT of an activity can carry the blocked marks (red shaft + slash);
+      // the arrowhead stays gray, as in the exercises
+      if (seq[i].startsWith('act')) {
+        attrs.id = 'link-' + seq[i];
+        el('line', attrs, svg);
+        const mx = (ax + bx) / 2;
+        el('line', { id: 'slash-' + seq[i], x1: mx - 5, y1: CY + 8, x2: mx + 5, y2: CY - 8, stroke: '#a5202f', 'stroke-width': 2.6, display: 'none' }, svg);
+      } else {
+        el('line', attrs, svg);
+      }
     }
 
-    const tris = [['buf0', 'Buffer 1'], ['buf1', 'Buffer 2'], ['buf2', 'Buffer 3'], ['fg', 'Finished goods']];
+    // throughput-rate line at the exit (mirrors the exercises): R = min(demand, capacity), pointing out of the process
+    const fgx = NODES.fg.x, ay = CY - TRI_H / 2 - 8;
+    const rl = el('text', { id: 'mapRout', x: fgx, y: CY - TRI_H / 2 - 20, 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 800, fill: '#2a78d6' }, svg);
+    rl.textContent = '';
+    el('line', { id: 'mapRoutLn', x1: fgx - 24, y1: ay, x2: fgx + 18, y2: ay, stroke: '#2a78d6', 'stroke-width': 2 }, svg);
+    el('polygon', { id: 'mapRoutAr', points: (fgx + 26) + ',' + ay + ' ' + (fgx + 16) + ',' + (ay - 4.5) + ' ' + (fgx + 16) + ',' + (ay + 4.5), fill: '#2a78d6' }, svg);
+
+    const tris = [['buf0', 'Buffer 1'], ['buf1', 'Buffer 2'], ['buf2', 'Buffer 3'], ['fg', 'Finished goods']].filter(([key]) => NODES[key]);
     tris.forEach(([key, label]) => {
       const n = NODES[key];
       const g = el('g', { id: key + '-g' }, svg);
@@ -923,7 +1093,7 @@
       lbl.textContent = label;
       const cnt = el('text', { id: key + '-count', x: n.x, y: CY + TRI_H / 2 + 38, 'text-anchor': 'middle', 'font-size': 13, fill: '#52514e', 'font-weight': 600 }, g);
       cnt.textContent = key === 'fg' ? '0 done' : '0 waiting';
-      const plus = el('text', { id: key + '-plus', x: n.x, y: CY - TRI_H / 2 - 78, 'text-anchor': 'middle', 'font-size': 12.5, fill: '#a5202f', 'font-weight': 800 }, g);
+      const plus = el('text', { id: key + '-plus', x: n.x, y: CY - TRI_H / 2 - 42, 'text-anchor': 'middle', 'font-size': 12.5, fill: '#a5202f', 'font-weight': 800 }, g);
       plus.textContent = '';
       if (key !== 'fg') {
         const cap = el('text', { id: key + '-cap', x: n.x + TRI_W / 2 + 4, y: CY - TRI_H / 2 + 12, 'font-size': 12, fill: '#b5850b', 'font-weight': 800 }, g);
@@ -934,21 +1104,22 @@
     });
 
     for (let i = 0; i < 3; i++) {
+      if (!P.on[i]) continue;   // excluded activities are removed from the stage entirely
       const n = NODES['act' + i];
       const g = el('g', { id: 'act' + i + '-g' }, svg);
       el('rect', { id: 'act' + i + '-rect', x: n.x - ACT_W / 2, y: CY - ACT_H / 2, width: ACT_W, height: ACT_H, rx: 10, fill: '#ffffff', stroke: '#5c6b7a', 'stroke-width': 2.4 }, g);
       const lbl = el('text', { id: 'act' + i + '-name', x: n.x, y: CY - ACT_H / 2 - 10, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 800, fill: '#33475b' }, g);
       lbl.textContent = STATION_NAMES[i];
-      el('rect', { x: n.x - ACT_W / 2 + 10, y: CY + ACT_H / 2 - 15, width: ACT_W - 20, height: 7, rx: 3.5, fill: '#eceee9' }, g);
-      el('rect', { id: 'act' + i + '-prog', x: n.x - ACT_W / 2 + 10, y: CY + ACT_H / 2 - 15, width: 0, height: 7, rx: 3.5, fill: '#2e7d32' }, g);
+      const bnc = el('text', { id: 'act' + i + '-bn', x: n.x, y: CY - ACT_H / 2 - 30, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, 'letter-spacing': '.08em', fill: '#a5202f' }, g);
+      bnc.textContent = '';
       const util = el('text', { id: 'act' + i + '-util', x: n.x, y: CY + ACT_H / 2 + 20, 'text-anchor': 'middle', 'font-size': 12.5, fill: '#52514e', 'font-weight': 600 }, g);
-      util.textContent = 'util 0%';
+      util.textContent = 'u = 0%';
       const cv = el('text', { id: 'act' + i + '-cv', x: n.x, y: CY + ACT_H / 2 + 38, 'text-anchor': 'middle', 'font-size': 12, fill: '#898781' }, g);
       cv.textContent = '';
-      const stt = el('text', { id: 'act' + i + '-stt', class: 'det', x: n.x, y: CY + ACT_H / 2 + 55, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#898781' }, g);
+      const capd = el('text', { id: 'act' + i + '-capd', class: 'det', x: n.x, y: CY + ACT_H / 2 + 55, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#2e7d32' }, g);
+      capd.textContent = '';
+      const stt = el('text', { id: 'act' + i + '-stt', class: 'det', x: n.x, y: CY + ACT_H / 2 + 72, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#898781' }, g);
       stt.textContent = '';
-      const chip = el('text', { id: 'act' + i + '-chip', class: 'det', x: n.x, y: CY - ACT_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, 'letter-spacing': '.08em', fill: '#898781' }, g);
-      chip.textContent = '';
     }
   }
 
@@ -986,11 +1157,13 @@
   }
   function bufferSlot(nx, idx) {
     const tipY = CY + TRI_H / 2 - 6;
-    const rows = [1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5];
+    // exercise convention: the pile fills the triangle from the apex up in rows of
+    // 1,2,3,4,4,4 (13 visible); anything more shows as a red "+N more" above the triangle
+    const rows = [1, 2, 3, 4, 4, 4];
     let r = 0, rem = idx;
     while (rem >= rows[r]) { rem -= rows[r]; r++; if (r >= rows.length) return null; }
     const cap = rows[r];
-    return { x: nx + (rem - (cap - 1) / 2) * 17, y: tipY - r * 16 };
+    return { x: nx + (rem - (cap - 1) / 2) * 15, y: tipY - r * 14 };
   }
   const GREEN = '#2e7d32', RED = '#a5202f', AMBER = '#b5850b';
   const anims = [];
@@ -1005,19 +1178,18 @@
       if ((now - anims[i].start) / anims[i].dur >= 1) anims.splice(i, 1);
       else moving.add(anims[i].jobId);
     }
-    const VISIBLE = 32;
+    const VISIBLE = 13;
     ['buf0', 'buf1', 'buf2'].forEach((key, bi) => {
+      if (!NODES[key]) return;   // buffer removed with its activity
       const q = S.buffers[bi], nx = NODES[key].x;
-      let hidden = 0;
-      for (let j = 0; j < q.length; j++) {
+      for (let j = 0; j < Math.min(q.length, VISIBLE); j++) {
         if (moving.has(q[j])) continue;
-        if (j >= VISIBLE) { hidden = q.length - VISIBLE; break; }
         const p = bufferSlot(nx, j);
-        if (!p) { hidden = q.length - j; break; }
-        drawPerson(p.x, p.y, 14, GREEN);
+        if (!p) break;
+        drawPerson(p.x, p.y, 12.5, GREEN);
       }
       const plus = document.getElementById(key + '-plus');
-      if (plus) plus.textContent = hidden > 0 ? '+' + hidden + ' more' : '';
+      if (plus) plus.textContent = q.length > VISIBLE ? '+' + (q.length - VISIBLE) + ' more' : '';
     });
     // backlog outside the line
     const BVIS = 9;
@@ -1030,36 +1202,56 @@
     const bk2 = document.getElementById('backlog-count2');
     if (bk) bk.textContent = S.backlog.length ? S.backlog.length + ' waiting' : '';
     if (bk2) bk2.textContent = S.backlog.length ? 'to enter' : '';
-    // servers (+ live state chips: idle / starved / blocked)
+    // exercise conventions (E2): a label-less progress dial at the top-right corner
+    // (one sweep = one job; the track is always visible), state words INSIDE the box —
+    // BLOCKED steady red, STARVED blinking blue, idle blinking muted, nothing while working —
+    // and a red shaft + slash on the outgoing arrow of a blocked activity
     for (let i = 0; i < 3; i++) {
+      const ln = document.getElementById('link-act' + i);
+      const sl = document.getElementById('slash-act' + i);
+      if (ln) ln.setAttribute('stroke', '#8d99a5');
+      if (sl) sl.setAttribute('display', 'none');
+      if (!P.on[i]) continue;
       const sv = S.servers[i];
-      const prog = document.getElementById('act' + i + '-prog');
-      const chip = document.getElementById('act' + i + '-chip');
-      if (!P.on[i]) {
-        if (chip) chip.textContent = '';
-        if (prog) prog.setAttribute('width', 0);
-        continue;
+      const n = NODES['act' + i];
+      if (!n) continue;
+      // progress dial
+      const rx = n.x + ACT_W / 2 - 15, ry = CY - ACT_H / 2 + 15, rr = 8.5;
+      ctx.save();
+      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = '#e1e0d9';
+      ctx.beginPath(); ctx.arc(rx, ry, rr, 0, Math.PI * 2); ctx.stroke();
+      if (sv) {
+        const frac = sv.blocked ? 1 : Math.min(1, (S.t - sv.start) / sv.dur);
+        ctx.strokeStyle = sv.slow ? RED : '#eb6834';
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(rx, ry, rr, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.stroke();
       }
-      if (chip) {
-        if (!sv) {
-          chip.textContent = i === 0 ? 'IDLE' : 'STARVED';
-          chip.setAttribute('fill', i === 0 ? '#898781' : '#2a78d6');
-        } else if (sv.blocked) {
-          chip.textContent = 'BLOCKED';
-          chip.setAttribute('fill', '#b5850b');
-        } else {
-          chip.textContent = '';
+      ctx.restore();
+      // state tag inside the box
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '800 11px ui-sans-serif, system-ui, sans-serif';
+      try { ctx.letterSpacing = '0.07em'; } catch (e) {}
+      if (!sv) {
+        if (S.t > 2) {
+          const blink = S.playing ? Math.floor(now / 220) % 2 === 0 : true;
+          ctx.globalAlpha = blink ? 0.95 : 0.25;
+          if (i === 0) { ctx.fillStyle = '#b7b5ac'; ctx.fillText('idle', n.x, CY + 5); }
+          else { ctx.fillStyle = '#2a78d6'; ctx.fillText('STARVED', n.x, CY + 5); }
         }
+      } else if (sv.blocked) {
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = '#a5202f';
+        ctx.fillText('BLOCKED', n.x, CY + 5);
+        if (ln) ln.setAttribute('stroke', '#a5202f');
+        if (sl) sl.setAttribute('display', 'block');
       }
-      if (!sv) { if (prog) prog.setAttribute('width', 0); continue; }
-      const frac = sv.blocked ? 1 : Math.min(1, (S.t - sv.start) / sv.dur);
-      if (prog) {
-        prog.setAttribute('width', (ACT_W - 20) * frac);
-        prog.setAttribute('fill', sv.blocked ? AMBER : (sv.slow ? RED : GREEN));
-      }
-      if (!moving.has(sv.jobId)) {
-        const n = NODES['act' + i];
-        drawPerson(n.x, CY + 12, 26, sv.blocked ? AMBER : (sv.slow ? RED : GREEN));
+      ctx.restore();
+      // the held job sinks, shrinks, and turns the blocked amber (#c47f16)
+      if (sv && !moving.has(sv.jobId)) {
+        if (sv.blocked) drawPerson(n.x, CY + 22, 20, '#c47f16');
+        else drawPerson(n.x, CY + 12, 26, sv.slow ? RED : GREEN);
       }
     }
     // finished pile
@@ -1067,7 +1259,7 @@
     for (let j = 0; j < Math.min(S.finished.length, 10); j++) {
       if (moving.has(S.finished[j])) continue;
       const p = bufferSlot(fgx, j);
-      if (p) drawPerson(p.x, p.y, 14, GREEN, 0.85);
+      if (p) drawPerson(p.x, p.y, 12.5, GREEN, 0.9);
     }
     // moving tokens
     anims.forEach(a => {
@@ -1089,7 +1281,8 @@
     return {
       elapsed, R, T,
       Tline: S.statCompleted ? S.sumLineFlow / S.statCompleted : NaN,
-      wip: S.wipArea / elapsed, sys: S.sysArea / elapsed,
+      Tbnd: S.statCompleted ? S.sumBndFlow / S.statCompleted : NaN,
+      wip: S.wipArea / elapsed, sys: S.sysArea / elapsed, wipBnd: S.bndArea / elapsed,
       util: S.busyI.map(b => b / elapsed),
       blk: S.blkI.map(b => b / elapsed),
       emp: S.empI.map(b => b / elapsed),
@@ -1102,7 +1295,7 @@
     const th = computeTheory();
     const o = obsSnapshot();
     const sysScope = $('cntOutside').checked;
-    const lim = limitsActive();
+    const lim = limitsActive() || buffersRemoved();
     $('clock').textContent = 't = ' + Math.floor(S.t) + ' min';
     $('mCompleted').textContent = S.completed;
     $('mArrived').textContent = S.arrived + ' arrived · ' + lineWip() + ' in line now' +
@@ -1111,32 +1304,26 @@
     // theory throughput is capped by the bottleneck: R = min(demand, capacity)
     const act = activeIdx();
     const effR = Math.min(th.R, 1 / Math.max(...act.map(i => P.m[i])));
-    $('mTH').textContent = S.t > 0 ? o.R.toFixed(3) + ' /min' : '—';
-    $('mTHth').textContent = effR.toFixed(3);
+    $('mTH').textContent = S.t > 0 ? (60 * o.R).toFixed(1) : '—';
+    $('mTHth').textContent = (60 * effR).toFixed(1);
     $('mCT').textContent = S.t > 0 && o.R > 0 ? fmt(1 / o.R, 1) + ' min' : '—';
     $('mCTth').textContent = fmt(1 / effR, 1) + ' min';
-    // scope: line-only (default) vs whole system incl. jobs waiting outside
-    const Tdisp = sysScope ? o.T : o.Tline;
-    const wipDisp = sysScope ? o.sys : o.wip;
-    $('mT').textContent = isNaN(Tdisp) ? '—' : fmt(Tdisp, 1);
-    $('mTlab').textContent = (sysScope || !lim) ? 'min, arrival → finish' : 'min, in the line (release → finish)';
-    $('mTth').textContent = fmt(th.totalT, 1);
-    const qtObs = o.wq.every(w => isNaN(w)) ? NaN : o.wq.reduce((a, w) => a + (isNaN(w) ? 0 : w), 0);
-    const qtTh = isFinite(th.totalT) ? th.totalT - act.reduce((a, i) => a + P.m[i], 0) : Infinity;
-    $('mQT').textContent = isNaN(qtObs) ? '—' : fmt(qtObs, 1) + ' min';
-    $('mQTth').textContent = fmt(qtTh, 1);
-    // when counting outside jobs, also show what the number is without them
-    const showTL = lim && sysScope;
-    $('mTLrow').style.display = showTL ? 'block' : 'none';
-    if (showTL) {
-      $('mTLlab').textContent = 'in the line only (excl. wait outside):';
-      $('mTL').textContent = isNaN(o.Tline) ? '—' : fmt(o.Tline, 1) + ' min';
-    }
-    $('mWIP').textContent = S.t > 0 ? fmt(wipDisp, 2) : '—';
-    $('mWIPlab').textContent = (sysScope && lim) ? 'time-avg jobs incl. waiting outside' : 'time-avg jobs in process';
-    $('mWIPth').textContent = fmt(th.wip, 2);
-    $('mWIPex').style.display = (sysScope && lim) ? 'block' : 'none';
-    if (sysScope && lim) $('mWIPexv').textContent = S.t > 0 ? fmt(o.wip, 2) : '—';
+    // headline scope: inside the process boundary (entry to Activity 1 → finish; activities +
+    // interior buffers). The arrival queue's numbers appear on the "incl. the arrival queue"
+    // sub-line — extended to jobs held outside by WIP caps when the checkbox is ticked.
+    $('mT').textContent = isNaN(o.Tbnd) ? '—' : fmt(o.Tbnd, 1);
+    $('mTth').textContent = fmt(th.tBnd, 1);
+    const pSumAct = act.reduce((a, i) => a + P.m[i], 0);
+    const bwObs = isNaN(o.Tbnd) ? NaN : Math.max(0, o.Tbnd - pSumAct);
+    $('mQT').textContent = isNaN(bwObs) ? '—' : fmt(bwObs, 1) + ' min';
+    $('mQTth').textContent = fmt(isFinite(th.tBnd) ? th.tBnd - pSumAct : Infinity, 1);
+    const subT = sysScope ? o.T : o.Tline;
+    const subLab = 'incl. the arrival queue' + (sysScope && lim ? ' & jobs outside' : '');
+    $('mTsub').innerHTML = subLab + ': <b>' + (isNaN(subT) ? '—' : fmt(subT, 1) + ' min') + '</b> · theory ≈ ' + fmt(th.totalT, 1);
+    $('mWIP').textContent = S.t > 0 ? fmt(o.wipBnd, 2) : '—';
+    $('mWIPth').textContent = fmt(th.iBnd, 2);
+    const subI = sysScope ? o.sys : o.wip;
+    $('mIsub').innerHTML = subLab + ': <b>' + (S.t > 0 ? fmt(subI, 2) : '—') + '</b> · theory ≈ ' + fmt(th.wip, 2);
 
     const rows = [];
     for (let i = 0; i < 3; i++) {
@@ -1169,7 +1356,7 @@
       '<td class="th">' + procCap.toFixed(1) + '/hr</td>' +
       '<td class="obs">' + (isNaN(sysUtilObs) || S.statCompleted === 0 ? '—' : (Math.min(1, sysUtilObs) * 100).toFixed(0) + '%') + '</td>' +
       '<td class="th">' + (Math.min(1, sysUtilTh) * 100).toFixed(0) + '%</td>' +
-      '<td style="text-align:right;color:var(--muted)">throughput time T:</td>' +
+      '<td style="text-align:right;color:var(--muted)">T incl. arrival queue:</td>' +
       '<td class="obs">' + (isNaN(o.T) ? '—' : fmt(o.T, 1)) + '</td>' +
       '<td class="th">' + fmt(th.totalT, 1) + '</td>' +
       '<td style="text-align:right;color:var(--muted)">avg WIP:</td>' +
@@ -1180,12 +1367,12 @@
     const demandHr = 60 * th.R;
     let capTxt;
     if (act.length === 1) {
-      capTxt = 'Process capacity = <b>' + procCap.toFixed(1) + ' jobs/hr</b> — ' + actName(act[0]) + ' is the only step, so it is the bottleneck by definition' +
-        '. Demand ' + NT().R + ' = ' + demandHr.toFixed(1) + ' jobs/hr ⇒ <b>system utilization = ' + NT().R + ' / capacity = ' + (sysUtilTh * 100).toFixed(0) + '%</b>';
+      capTxt = 'Process capacity = <b>' + procCap.toFixed(1) + ' jobs/hour</b> — ' + actName(act[0]) + ' is the only step, so it is the bottleneck by definition' +
+        '. Demand = ' + demandHr.toFixed(1) + ' jobs/hour ⇒ <b>system utilization = demand / capacity = ' + (sysUtilTh * 100).toFixed(0) + '%</b>';
     } else {
-      capTxt = 'Process capacity = min(' + capsHr.map(c => c.toFixed(1)).join(', ') + ') = <b>' + procCap.toFixed(1) + ' jobs/hr</b> — ' +
+      capTxt = 'Process capacity = min(' + capsHr.map(c => c.toFixed(1)).join(', ') + ') = <b>' + procCap.toFixed(1) + ' jobs/hour</b> — ' +
         (bnUnique ? 'set by <b>' + actName(bnIdx) + '</b>, the slowest step (bottleneck)' : 'all active steps are equally slow, so the whole line is the bottleneck') +
-        '. Demand ' + NT().R + ' = ' + demandHr.toFixed(1) + ' jobs/hr ⇒ <b>system utilization = ' + NT().R + ' / capacity = ' + (sysUtilTh * 100).toFixed(0) + '%</b>';
+        '. Demand = ' + demandHr.toFixed(1) + ' jobs/hour ⇒ <b>system utilization = demand / capacity = ' + (sysUtilTh * 100).toFixed(0) + '%</b>';
     }
     if (th.overloaded) capTxt += ' — demand exceeds capacity: the bottleneck runs flat-out and its queue grows without bound';
     else if (th.unstable) capTxt += ' — at 100% utilization with variability, the queue grows without bound';
@@ -1193,28 +1380,36 @@
     else if (!isNaN(sysUtilObs) && S.statCompleted > 0) capTxt += ' (observed so far: ' + (Math.min(1, sysUtilObs) * 100).toFixed(0) + '%)';
     capTxt += '. A process can never produce faster than its slowest step.';
     $('capLine').innerHTML = capTxt;
-    $('limNote').style.display = limitsActive() ? 'block' : 'none';
+    $('limNote').style.display = (limitsActive() || buffersRemoved()) ? 'block' : 'none';
 
-    // Little's Law live line (scope-consistent: the law holds for the line alone AND for the whole system)
-    if (!isNaN(Tdisp) && S.statCompleted > 0) {
-      const avgW = sysScope ? o.sys : o.wip;
-      const rt = o.R * Tdisp;
+    // Little's Law live line — headline scope: inside the process boundary
+    // (the law holds at ANY boundary, each with its own three numbers)
+    if (!isNaN(o.Tbnd) && S.statCompleted > 0) {
+      const avgW = o.wipBnd;
+      const rt = o.R * o.Tbnd;
       const gap = Math.abs(rt - avgW) / Math.max(1e-9, avgW);
       $('littleLive').innerHTML =
-        'avg ' + NT().I + ' = <b>' + fmt(avgW, 2) + '</b> &nbsp;vs.&nbsp; ' + NT().R + ' × ' + NT().T + ' = ' + o.R.toFixed(3) + ' × ' + fmt(Tdisp, 1) +
+        'avg ' + NT().I + ' = <b>' + fmt(avgW, 2) + '</b> &nbsp;vs.&nbsp; ' + NT().R + ' × ' + NT().T + ' = ' + o.R.toFixed(3) + ' jobs/min × ' + fmt(o.Tbnd, 1) + ' min' +
         ' = <b>' + fmt(rt, 2) + '</b> &nbsp;' +
         (gap < 0.05 ? '<span class="lok">✓ match (' + (gap * 100).toFixed(1) + '% gap)</span>'
                     : '<span class="lgap">gap ' + (gap * 100).toFixed(0) + '% — closes as the run lengthens</span>') +
-        '<br><span style="color:var(--muted)">' + NT().I + ' right now: ' + (sysScope ? sysWip() : lineWip()) + ' — the law holds for long-run averages, not each instant.' +
-        (lim ? (sysScope ? ' (Counting jobs waiting outside the line.)' : ' (Jobs waiting outside are excluded — the law holds for the line by itself.)') : '') + '</span>';
+        '<br><span style="color:var(--muted)">' + NT().I + ' right now: ' + bndWip() + ' — the law holds for long-run averages, not each instant. Scope: inside the process boundary (it holds at any boundary you draw).</span>';
     } else {
-      $('littleLive').innerHTML = 'Waiting for the first completed job… &nbsp;<span style="color:var(--muted)">The law compares long-run averages: time-averaged WIP against throughput × average throughput time.</span>';
+      $('littleLive').innerHTML = 'Waiting for the first completed job… &nbsp;<span style="color:var(--muted)">The law compares long-run averages inside the process boundary: time-averaged inventory against throughput × average time inside.</span>';
     }
 
-    // map annotations
-    $('arr-R1').textContent = NT().R + ' = ' + th.R.toFixed(3) + '/min';
-    $('arr-R2').textContent = '= ' + (60 * th.R).toFixed(1) + ' jobs/hr';
+    // map annotations — demand at the entry, throughput rate R = min(demand, capacity) at the exit.
+    // Same value → same blue; when the process cannot keep up (R < demand), R turns red,
+    // matching the red outline on the bottleneck that causes it.
+    $('mapDemand').textContent = 'demand: ' + fmtRate(demandHr) + ' jobs/hour';
+    $('mapDemand').setAttribute('fill', th.overloaded ? '#a5202f' : '#2a78d6');   // hot demand turns red, as in the exercises
+    $('mapRout').textContent = NT().R + ' = ' + fmtRate(60 * effR) + ' jobs/hour';
+    const rCol = demandHr - 60 * effR > 0.05 ? '#a5202f' : '#2a78d6';
+    $('mapRout').setAttribute('fill', rCol);
+    $('mapRoutLn').setAttribute('stroke', rCol);
+    $('mapRoutAr').setAttribute('fill', rCol);
     ['buf0', 'buf1', 'buf2'].forEach((k, i) => {
+      if (!$(k + '-count')) return;   // buffer removed with its activity
       $(k + '-count').textContent = S.buffers[i].length + ' waiting';
       const capEl = $(k + '-cap');
       if (capEl) capEl.textContent = isFinite(L.caps[i]) ? '≤' + L.caps[i] : '';
@@ -1228,18 +1423,11 @@
     $('fg-count').textContent = S.completed + ' done';
     $('conwip-label').textContent = isFinite(L.conwip) ? 'Line WIP limit: ' + L.conwip : '';
     for (let i = 0; i < 3; i++) {
-      // fade excluded stations and their input buffers on the map
-      $('act' + i + '-g').setAttribute('opacity', P.on[i] ? 1 : 0.18);
-      if (i > 0) $('buf' + i + '-g').setAttribute('opacity', P.on[i] ? 1 : 0.18);
-      if (!P.on[i]) {
-        $('act' + i + '-util').textContent = 'not in process';
-        $('act' + i + '-cv').textContent = '';
-        $('act' + i + '-stt').textContent = '';
-        continue;
-      }
+      if (!P.on[i]) continue;   // excluded activities are removed from the map, not dimmed
       const u = S.t > 0 ? Math.min(1, o.util[i]) : 0;
-      $('act' + i + '-util').textContent = 'util ' + (u * 100).toFixed(0) + '% (theory ' + (th.st[i].rho * 100).toFixed(0) + '%)';
+      $('act' + i + '-util').textContent = 'u = ' + (u * 100).toFixed(0) + '% (theory ' + (th.st[i].rho * 100).toFixed(0) + '%)';
       $('act' + i + '-cv').textContent = 'p = ' + P.m[i] + ' min · CV = ' + th.st[i].cp.toFixed(2);
+      $('act' + i + '-capd').textContent = 'capacity = 1/p = ' + fmtRate(60 / P.m[i]) + ' jobs/hour';
       const emp = S.t > 0 ? o.emp[i] * 100 : 0, blk = S.t > 0 ? o.blk[i] * 100 : 0;
       let sttTxt = (i === 0 ? 'idle ' : 'starved ') + emp.toFixed(0) + '%';
       if (blk >= 0.5) sttTxt += ' · blocked ' + blk.toFixed(0) + '%';
@@ -1250,14 +1438,21 @@
     const clearly = act.length > 1 && act.every(i => i === hi || th.st[hi].rho - th.st[i].rho > 0.02);
     for (let i = 0; i < 3; i++) {
       const r = $('act' + i + '-rect');
-      r.setAttribute('stroke', clearly && i === hi ? '#a5202f' : '#5c6b7a');
-      r.setAttribute('stroke-width', clearly && i === hi ? 3.4 : 2.4);
+      if (!r) continue;
+      const isBn = clearly && i === hi;
+      r.setAttribute('stroke', isBn ? '#a5202f' : '#5c6b7a');
+      r.setAttribute('stroke-width', isBn ? 3.4 : 2.4);
+      const nm = $('act' + i + '-name');
+      if (nm) nm.setAttribute('fill', isBn ? '#a5202f' : '#33475b');
+      const bnc = $('act' + i + '-bn');
+      if (bnc) bnc.textContent = isBn ? 'BOTTLENECK' : '';
     }
-    // with WIP limits, the LINE stays bounded — instability relocates to the backlog outside
-    const lineBounded = isFinite(L.conwip) || act.every(i => isFinite(L.caps[i]));
-    // empirical detector: a tight WIP cap can throttle throughput below demand even at ρ < 1
+    // with WIP limits or removed buffers, the LINE stays bounded — instability relocates to the backlog outside
+    const restricted = limitsActive() || buffersRemoved();
+    const lineBounded = isFinite(L.conwip) || act.every(i => isFinite(L.caps[i]) || !P.buf[i]);
+    // empirical detector: a tight WIP cap (or removed buffers) can throttle throughput below demand even at ρ < 1
     let backlogGrowing = false;
-    if (limitsActive() && !th.unstable && S.qHist.length > 10) {
+    if (restricted && !th.unstable && S.qHist.length > 10) {
       const t0w = S.t - 240;
       const first = S.qHist.find(p => p.t >= t0w) || S.qHist[0];
       const last = S.qHist[S.qHist.length - 1];
@@ -1267,19 +1462,19 @@
     const wb = $('warnBanner');
     if (th.overloaded) {
       wb.className = 'warn';
-      wb.textContent = lineBounded && limitsActive()
-        ? 'Unstable: demand exceeds capacity — the WIP cap keeps the line bounded, but the backlog outside grows without bound (throughput time → ∞)'
-        : 'Unstable: demand exceeds capacity at a station — its queue will grow without bound (theory Wq = ∞)';
+      wb.textContent = lineBounded && restricted
+        ? 'Unstable: demand exceeds capacity — the restricted line stays bounded, but the backlog outside grows without bound (throughput time → ∞)'
+        : 'Unstable: demand exceeds capacity at an activity — its queue will grow without bound (theory Wq = ∞)';
       wb.style.display = 'block';
     } else if (th.unstable) {
       wb.className = 'warn';
-      wb.textContent = lineBounded && limitsActive()
-        ? 'Unstable: 100% utilization with variability — the WIP cap bounds the line, but the backlog outside grows without bound'
+      wb.textContent = lineBounded && restricted
+        ? 'Unstable: 100% utilization with variability — the restricted line stays bounded, but the backlog outside grows without bound'
         : 'Unstable: 100% utilization with variability — the queue wanders off to infinity (theory Wq = ∞)';
       wb.style.display = 'block';
     } else if (backlogGrowing) {
       wb.className = 'warn';
-      wb.textContent = 'The WIP cap is throttling throughput below demand — jobs are piling up outside the line without bound';
+      wb.textContent = 'The WIP restriction (cap or removed buffer) is throttling throughput below demand — jobs are piling up outside the line without bound';
       wb.style.display = 'block';
     } else if (th.knife) {
       wb.className = 'warn knife';
@@ -1445,10 +1640,10 @@
       });
       x.stroke(); x.setLineDash([]);
     }
-    const sc = $('cntOutside').checked;
-    line(p => sc ? p.now : (p.nowL != null ? p.nowL : p.now), CS.gray, 1.4);
-    line(p => sc ? p.avg : (p.avgL != null ? p.avgL : p.avg), CS.s1, 2.2);
-    line(p => sc ? p.rt : (p.rtL != null ? p.rtL : p.rt), CS.red, 2.2, [6, 4]);
+    // the Little's Law panel tracks the headline scope: inside the process boundary
+    line(p => p.nowB != null ? p.nowB : p.now, CS.gray, 1.4);
+    line(p => p.avgB != null ? p.avgB : p.avg, CS.s1, 2.2);
+    line(p => p.rtB != null ? p.rtB : p.rt, CS.red, 2.2, [6, 4]);
     x.restore();
     if (lcZoom) {
       x.fillStyle = CS.mut; x.textAlign = 'right';
@@ -1615,10 +1810,9 @@
     const tt = t0 + (mx - M.l) / (w - M.l - M.r) * (t1 - t0);
     let best = S.lHist[0];
     for (const p of S.lHist) { if (p.t <= tt) best = p; else break; }
-    const sc = $('cntOutside').checked;
-    const now = sc ? best.now : (best.nowL != null ? best.nowL : best.now);
-    const avg = sc ? best.avg : (best.avgL != null ? best.avgL : best.avg);
-    const rt = sc ? best.rt : (best.rtL != null ? best.rtL : best.rt);
+    const now = best.nowB != null ? best.nowB : best.now;
+    const avg = best.avgB != null ? best.avgB : best.avg;
+    const rt = best.rtB != null ? best.rtB : best.rt;
     return '<span class="tt">t = ' + Math.round(best.t) + ' min</span><br>' +
       'WIP now: <b>' + now + '</b><br>avg WIP: <b>' + avg.toFixed(2) + '</b><br>' +
       'R × T: <b>' + (isNaN(rt) ? '—' : rt.toFixed(2)) + '</b>';
@@ -1645,7 +1839,7 @@
     cvBadge('cv-arr', P.aMean, P.aSd);
     for (let i = 0; i < 3; i++) cvBadge('cv-' + (i + 1), P.m[i], P.s[i]);
     const R = 1 / P.aMean;
-    $('arrRate').innerHTML = 'Arrival rate ' + NT().R + ' = 1/' + P.aMean + ' = <b>' + R.toFixed(3) +
+    $('arrRate').innerHTML = 'Demand rate = 1 job / ' + P.aMean + ' min = <b>' + R.toFixed(3) +
       ' jobs/min</b> &nbsp;=&nbsp; <b>' + (60 * R).toFixed(1) + ' jobs/hour</b>';
   }
 
@@ -1687,7 +1881,7 @@
   function markScenario() {
     const cur = keys.map(readParam);
     let match = 'custom';
-    if (P.on.every(Boolean)) {
+    if (P.on.every(Boolean) && P.buf.every(Boolean)) {
       for (const [k, sc] of Object.entries(SCEN)) {
         if (sc.v.every((v, i) => Math.abs(v - cur[i]) < 1e-9)) { match = k; break; }
       }
@@ -1699,7 +1893,10 @@
     const k = $('scenSelect').value;
     if (SCEN[k]) {
       P.on = [true, true, true];          // presets always use the full 3-activity line
+      P.buf = [true, true, true];         // ... with all buffers in place
       applyOnStates();
+      buildMap();
+      resizeCanvas();
       setParams(SCEN[k].v);
       markScenario();
       reset();
@@ -1717,12 +1914,39 @@
         $('n-' + t + k).disabled = !on;
         $('r-' + t + k).disabled = !on;
       });
+      $('buf-' + k).disabled = !on;
+    });
+    applyBufStates();
+  }
+
+  /* ---- include/exclude the buffer before each activity ---- */
+  function applyBufStates() {
+    // Buffer 1 is the arrival queue: always present, always outside the process boundary.
+    // Only the interior buffers (before Activities 2 and 3) can be added or removed.
+    P.buf[0] = true;
+    [2, 3].forEach(k => {
+      const chk = $('buf-' + k);
+      if (chk.checked !== P.buf[k - 1]) chk.checked = P.buf[k - 1];
+      // a buffer that is off the stage cannot carry a cap
+      $('lim-b' + k).disabled = !P.buf[k - 1] || !P.on[k - 1];
     });
   }
+  [2, 3].forEach(k => {
+    $('buf-' + k).addEventListener('change', () => {
+      P.buf[k - 1] = $('buf-' + k).checked;
+      applyBufStates();
+      buildMap();   // the buffer is removed from the stage, not dimmed
+      resizeCanvas();
+      markScenario();
+      reset();      // topology changed: restart the run so no job is stranded
+    });
+  });
   [2, 3].forEach(k => {
     $('on-' + k).addEventListener('change', () => {
       P.on[k - 1] = $('on-' + k).checked;
       applyOnStates();
+      buildMap();   // rebuild the stage: excluded activities are removed, remaining shapes re-space
+      resizeCanvas();
       refreshBadges();
       markScenario();
       reset();   // topology changed: restart the run so no job is stranded
@@ -1837,15 +2061,14 @@
     const label = scen === 'custom'
       ? 'CVa ' + (P.aSd / P.aMean).toFixed(2) + ' · CVp ' + P.s.map((s, i) => (s / P.m[i]).toFixed(2)).join('/')
       : $('scenSelect').selectedOptions[0].text.replace(/^\d+ · /, '');
-    const sc = $('cntOutside').checked;
-    S.pin = { label, R: o.R, T: sc ? o.T : o.Tline, wip: sc ? o.sys : o.wip, n: S.statCompleted };
+    S.pin = { label, R: o.R, T: o.Tbnd, wip: o.wipBnd, n: S.statCompleted };   // headline scope: inside the boundary
     renderPin();
   });
   function renderPin() {
     if (!S.pin) { $('pinInfo').innerHTML = ''; return; }
     const p = S.pin;
-    $('pinInfo').innerHTML = '📍 <b>Pinned — ' + p.label + ':</b> ' + NT().R + ' ' + p.R.toFixed(3) +
-      ' · T ' + p.T.toFixed(1) + ' min · WIP ' + p.wip.toFixed(2) + ' · n=' + p.n +
+    $('pinInfo').innerHTML = '📍 <b>Pinned — ' + p.label + ':</b> ' + NT().R + ' ' + (60 * p.R).toFixed(1) + ' jobs/hour' +
+      ' · ' + NT().T + ' ' + p.T.toFixed(1) + ' min · ' + NT().I + ' ' + p.wip.toFixed(2) + ' · n=' + p.n +
       ' &nbsp;<span class="clear" id="pinClear">clear</span>';
     $('pinClear').addEventListener('click', () => { S.pin = null; renderPin(); });
   }
@@ -1855,15 +2078,19 @@
     const st = {
       t: 0, nextId: 1, events: [], jobs: new Map(),
       backlog: [], buffers: [[], [], []], servers: [null, null, null],
-      arrived: 0, completed: 0, sumFlow: 0, sumLineFlow: 0, sysArea: 0, wipArea: 0, lastIntT: 0
+      arrived: 0, completed: 0, sumFlow: 0, sumLineFlow: 0, sumBnd: 0, sysArea: 0, wipArea: 0, bndArea: 0, lastIntT: 0
     };
     const lw = () => st.buffers[0].length + st.buffers[1].length + st.buffers[2].length + st.servers.filter(Boolean).length;
     const sw = () => lw() + st.backlog.length;
-    const adv = to => { const dt = to - st.lastIntT; if (dt > 0) { st.sysArea += sw() * dt; st.wipArea += lw() * dt; st.lastIntT = to; } };
+    const bw = () => st.buffers[1].length + st.buffers[2].length + st.servers.filter(Boolean).length;
+    const adv = to => { const dt = to - st.lastIntT; if (dt > 0) { st.sysArea += sw() * dt; st.wipArea += lw() * dt; st.bndArea += bw() * dt; st.lastIntT = to; } };
+    // same acceptance rule as the live engine: no buffer ⇒ hand over only when the activity is free
+    const acc = j => P.buf[j] ? st.buffers[j].length < L.caps[j] : (!st.servers[j] && !st.buffers[j].length);
     const push = e => { st.events.push(e); st.events.sort((a, b) => a.time - b.time); };
     const schedArr = from => push({ time: from + durationR(rand, P.aMean, P.aSd), type: 'arr' });
     const start = (i, t) => {
       const id = st.buffers[i].shift();
+      if (i === 0) { const jb = st.jobs.get(id); if (jb) jb.bndEnter = t; }
       const d = durationR(rand, P.m[i], P.s[i]);
       st.servers[i] = { jobId: id, dur: d, blocked: false };
       push({ time: t + d, type: 'done', station: i, jobId: id });
@@ -1876,12 +2103,12 @@
           const sv = st.servers[i];
           if (!sv || !sv.blocked) continue;
           const j = nextActive(i);
-          if (j >= 0 && st.buffers[j].length < L.caps[j]) {
+          if (j >= 0 && acc(j)) {
             st.buffers[j].push(sv.jobId); st.servers[i] = null; ch = true;
           }
         }
         for (let i = 0; i < 3; i++) if (P.on[i] && !st.servers[i] && st.buffers[i].length) { start(i, t); ch = true; }
-        while (st.backlog.length && lw() < L.conwip && st.buffers[0].length < L.caps[0]) {
+        while (st.backlog.length && lw() < L.conwip && acc(0)) {
           const jid = st.backlog.shift();
           const jb = st.jobs.get(jid);
           if (jb) jb.release = t;
@@ -1914,8 +2141,9 @@
           const jb = st.jobs.get(e.jobId);
           st.sumFlow += e.time - jb.arrival;
           st.sumLineFlow += e.time - (jb.release != null ? jb.release : jb.arrival);
+          st.sumBnd += e.time - (jb.bndEnter != null ? jb.bndEnter : jb.arrival);
           st.jobs.delete(e.jobId);
-        } else if (st.buffers[j].length < L.caps[j]) {
+        } else if (acc(j)) {
           st.buffers[j].push(e.jobId); st.servers[i] = null;
         } else sv.blocked = true;
         prop(e.time);
@@ -1925,9 +2153,11 @@
     return {
       T: st.completed ? st.sumFlow / st.completed : NaN,
       Tline: st.completed ? st.sumLineFlow / st.completed : NaN,
+      Tbnd: st.completed ? st.sumBnd / st.completed : NaN,
       R: st.t > 0 ? st.completed / st.t : NaN,
       wip: st.t > 0 ? st.sysArea / st.t : NaN,
-      wipLine: st.t > 0 ? st.wipArea / st.t : NaN
+      wipLine: st.t > 0 ? st.wipArea / st.t : NaN,
+      wipBnd: st.t > 0 ? st.bndArea / st.t : NaN
     };
   }
   $('repBtn').addEventListener('click', () => {
@@ -1948,14 +2178,753 @@
       const sd = Math.sqrt(vals.reduce((a, b) => a + (b - m) * (b - m), 0) / Math.max(1, vals.length - 1));
       return { m, hw: 2.093 * sd / Math.sqrt(vals.length) };  // t(0.975, df=19)
     }
-    const sysScope = $('cntOutside').checked;
-    const T = ci(x => sysScope ? x.T : x.Tline), R = ci(x => x.R), W = ci(x => sysScope ? x.wip : x.wipLine);
+    const T = ci(x => x.Tbnd), R = ci(x => x.R), W = ci(x => x.wipBnd);
     const endTxt = mode === 'jobs' ? n + ' jobs each' : (mode === 'arrivals' ? n + ' arrivals each' : 'to t = ' + n + ' each');
-    const scopeTxt = limitsActive() ? (sysScope ? ' · incl. jobs waiting outside' : ' · line only, excl. wait outside') : '';
+    const scopeTxt = ' · inside the process boundary';
     $('repOut').innerHTML = '<b>' + REPS + ' replications</b> (' + endTxt + ', 95% CI' + scopeTxt + '): ' +
-      'T = <b>' + T.m.toFixed(1) + ' ± ' + T.hw.toFixed(1) + '</b> min · ' +
-      'WIP = <b>' + W.m.toFixed(2) + ' ± ' + W.hw.toFixed(2) + '</b> · ' +
-      NT().R + ' = <b>' + R.m.toFixed(3) + ' ± ' + R.hw.toFixed(3) + '</b> jobs/min — one animated run is one draw from this distribution.';
+      NT().T + ' = <b>' + T.m.toFixed(1) + ' ± ' + T.hw.toFixed(1) + '</b> min · ' +
+      NT().I + ' = <b>' + W.m.toFixed(2) + ' ± ' + W.hw.toFixed(2) + '</b> · ' +
+      NT().R + ' = <b>' + (60 * R.m).toFixed(1) + ' ± ' + (60 * R.hw).toFixed(1) + '</b> jobs/hour — one animated run is one draw from this distribution.';
+  });
+
+  /* ============================== SVG export ============================== */
+  // Draws a static process diagram in the exercises' figure conventions:
+  // ▭ activities, ▽ buffers, → flows, demand at the entry, R = min(demand, capacity) at the exit.
+  const XG = { CY: 130, ACT_W: 128, ACT_H: 72, TRI_W: 84, TRI_H: 66 };
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function expActName(i) {
+    const n = STATION_NAMES[i];
+    return (!n || n === '—') ? 'Activity ' + (i + 1) : n;
+  }
+  let GIFDATA = null;   // trace + geometry stashed by the last animated preview, for the GIF renderer
+  function buildExportSvg() {
+    GIFDATA = null;
+    const N = NT();
+    const m = {
+      p: $('exp-mp').checked, cap: $('exp-mcap').checked, u: $('exp-mu').checked, cv: $('exp-mcv').checked,
+      dem: $('exp-dem').checked, rout: $('exp-rout').checked, fg: $('exp-fg').checked, blab: $('exp-blab').checked,
+      ring: $('exp-ring').checked, bnd: $('exp-bnd').checked,
+      bufn: $('exp-bufn').checked, tq: $('exp-tq').checked, iq: $('exp-iq').checked
+    };
+    const animated = $('exp-anim') && $('exp-anim').checked;
+    const idx = [0, 1, 2].filter(i => $('exp-a' + i) && $('exp-a' + i).checked);
+    if (!idx.length) return null;
+    const obs = $('exp-vobs').checked && S.t > 0;
+    const uObs = $('exp-uobs').checked && S.t > 0;
+    const o = (obs || uObs) ? obsSnapshot() : null;
+    const demandHr = obs ? (S.arrived / Math.max(1e-9, S.t)) * 60 : 60 / P.aMean;
+    const minCap = Math.min.apply(null, idx.map(i => 60 / P.m[i]));
+    const Rout = obs ? o.R * 60 : Math.min(demandHr, minCap);
+    // utilization: theory is the offered load at the activity GIVEN upstream throttling —
+    // what arrives is min(demand, every upstream capacity), so activities downstream of a
+    // bottleneck see the bottleneck's output, not raw demand. Above 100% the label carries
+    // the actual (an activity can never be more than 100% busy).
+    const uThMap = {};
+    {
+      let Rf = 60 / P.aMean;
+      idx.forEach(i => {
+        const cap = 60 / P.m[i];
+        uThMap[i] = Rf / cap;
+        Rf = Math.min(Rf, cap);
+      });
+    }
+    const uTheory = i => uThMap[i];
+    const uFrac = i => uObs ? Math.min(1, o.util[i]) : Math.min(1, uTheory(i));
+    const uLabel = i => {
+      if (uObs) return 'u = ' + Math.round(Math.min(1, o.util[i]) * 100) + '%';
+      const u = uTheory(i);
+      return 'u = ' + Math.round(u * 100) + '%' + (u > 1.004 ? ' (actual: 100%)' : '');
+    };
+    // per-buffer queue measures: planned = Kingman/VUT with the linking equation for the
+    // EXPORTED topology; observed = the stage run's per-buffer averages
+    const qTh = {};
+    {
+      let ca2 = Math.pow(P.aSd / Math.max(0.01, P.aMean), 2);
+      let Rf = demandHr / 60;              // arrivals at each activity are throttled upstream
+      idx.forEach(i => {
+        const p2 = P.m[i], cs2 = Math.pow(P.s[i] / p2, 2);
+        const rho = Rf * p2, v = (ca2 + cs2) / 2;
+        let wq;
+        if (rho >= 0.999) wq = v < 1e-12 ? 0 : Infinity;
+        else wq = v * (rho / (1 - rho)) * p2;
+        qTh[i] = { wq, lq: isFinite(wq) ? Rf * wq : Infinity };
+        const rEff = Math.min(rho, 1);
+        ca2 = rEff * rEff * cs2 + (1 - rEff * rEff) * ca2;
+        Rf = Math.min(Rf, 1 / p2);
+      });
+    }
+    const qOf = i => obs ? { wq: o.wq[i], lq: o.lq[i] } : qTh[i];
+    const qFmt = (v, d) => v == null || isNaN(v) ? '—' : (!isFinite(v) ? '∞' : v.toFixed(d));
+    // stacked rows under each buffer: label, waiting count, Tq, Iq
+    const bufRows = [];
+    if (m.blab) bufRows.push('label');
+    if (m.bufn) bufRows.push('count');
+    if (m.tq) bufRows.push('tq');
+    if (m.iq) bufRows.push('iq');
+    const bufRowY = name => CY + XG.TRI_H / 2 + 18 + bufRows.indexOf(name) * 16;
+
+    const { CY, ACT_W, ACT_H, TRI_W, TRI_H } = XG;
+    // bottleneck marking, as on the stage: the unique highest-utilization activity (when >1 activity)
+    const uRaw = i => uObs ? Math.min(1, o.util[i]) : uTheory(i);
+    let bnExp = -1;
+    if (idx.length > 1) {
+      let hiI = idx[0];
+      idx.forEach(i => { if (uRaw(i) > uRaw(hiI)) hiI = i; });
+      if (idx.every(i => i === hiI || uRaw(i) < uRaw(hiI) - 0.02)) bnExp = hiI;
+    }
+    // node chain mirrors the stage: buffers follow the stage's per-activity buffer setting
+    const nodes = [];
+    idx.forEach(i => {
+      if (P.buf[i]) nodes.push({ type: 'buf', i });
+      nodes.push({ type: 'act', i });
+    });
+    if (m.fg) nodes.push({ type: 'done' });
+    const hw = nd => nd.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+    const GAP = 62, ENTRY = 74;
+    // two activities back-to-back (no buffer between) need extra room for the capacity label
+    const gapAfter = (a, b2) => (a.type === 'act' && b2.type === 'act' && m.cap) ? 92 : GAP;
+    let x = 20 + ENTRY + hw(nodes[0]);
+    nodes.forEach((nd, j) => {
+      if (j > 0) x += hw(nodes[j - 1]) + gapAfter(nodes[j - 1], nd) + hw(nd);
+      nd.x = x;
+    });
+    const last = nodes[nodes.length - 1];
+    const exitLen = (!m.fg && m.rout) ? 84 : 0;
+    const W = Math.ceil(last.x + hw(last) + exitLen + 28);
+    const rows = ['p', 'cap', 'u', 'cv'].filter(k => m[k]);
+    const belowAct = ACT_H / 2 + 20 + Math.max(0, rows.length - 1) * 18;
+    const belowBuf = TRI_H / 2 + (nodes.some(nd => nd.type !== 'act') && bufRows.length ? 10 + bufRows.length * 16 : 6);
+    const H = Math.ceil(CY + Math.max(belowAct, belowBuf) + 16);
+
+    const T = [];
+    T.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" font-family="system-ui, -apple-system, sans-serif">');
+    T.push('<defs><marker id="xarr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8d99a5"/></marker></defs>');
+    const flow = (x1, x2) => T.push('<line x1="' + x1 + '" y1="' + CY + '" x2="' + x2 + '" y2="' + CY + '" stroke="#8d99a5" stroke-width="2.2" marker-end="url(#xarr)"/>');
+    const txt = (tx, ty, size, weight, fill, s, anchor) =>
+      T.push('<text x="' + tx + '" y="' + ty + '" font-size="' + size + '" font-weight="' + weight + '" fill="' + fill + '"' + (anchor ? ' text-anchor="' + anchor + '"' : '') + '>' + esc(s) + '</text>');
+
+    // entry arrow + demand rate (blue, as in the exercises)
+    flow(20, nodes[0].x - hw(nodes[0]) - 8);
+    if (m.dem) txt(20, CY - 74, 12.5, 800, (demandHr > minCap + 0.05 ? '#a5202f' : '#2a78d6'), 'demand: ' + fmtRate(demandHr) + ' jobs/hour');
+    // process boundary: from Activity 1 to the last activity, interior buffers inside;
+    // the buffer before Activity 1 (if drawn) and finished goods always fall outside
+    if (m.bnd) {
+      const acts2 = nodes.filter(nd => nd.type === 'act');
+      const bx1 = acts2[0].x - ACT_W / 2 - 16, bx2 = acts2[acts2.length - 1].x + ACT_W / 2 + 16;
+      const by1 = CY - ACT_H / 2 - 24, by2 = CY + TRI_H / 2 + 7;
+      T.push('<rect x="' + bx1 + '" y="' + by1 + '" width="' + (bx2 - bx1) + '" height="' + (by2 - by1) + '" rx="13" fill="none" stroke="#8d99a5" stroke-width="1.6" stroke-dasharray="7 5" opacity="0.55"/>');
+    }
+    // connectors — remember each activity's outgoing link so blocking can mark it (red shaft + slash)
+    const linkPos = {};
+    for (let j = 0; j < nodes.length - 1; j++) {
+      const lx1 = nodes[j].x + hw(nodes[j]) + 4, lx2 = nodes[j + 1].x - hw(nodes[j + 1]) - 8;
+      if (nodes[j].type === 'act') linkPos[nodes[j].i] = { x1: lx1, x2: lx2 };
+      flow(lx1, lx2);
+    }
+    // shapes
+    const statArcs = [];
+    nodes.forEach(nd => {
+      if (nd.type === 'act') {
+        const i = nd.i;
+        const bn = i === bnExp;
+        T.push('<rect x="' + (nd.x - ACT_W / 2) + '" y="' + (CY - ACT_H / 2) + '" width="' + ACT_W + '" height="' + ACT_H + '" rx="10" fill="#fff" stroke="' + (bn ? '#a5202f' : '#5c6b7a') + '" stroke-width="' + (bn ? 3.4 : 2.4) + '"/>');
+        txt(nd.x, CY - ACT_H / 2 - 10, 14, 800, bn ? '#a5202f' : '#33475b', expActName(i), 'middle');
+        if (bn) T.push('<text x="' + nd.x + '" y="' + (CY - ACT_H / 2 - 27) + '" text-anchor="middle" font-size="10.5" font-weight="800" letter-spacing=".08em" fill="#a5202f">BOTTLENECK</text>');
+        let y = CY + ACT_H / 2 + 20;
+        if (m.p)   { txt(nd.x, y, 12.5, 800, '#33475b', 'p = ' + P.m[i] + ' min', 'middle'); y += 18; }
+        if (m.cap) { txt(nd.x, y, 12, 700, '#2e7d32', 'capacity = 1/p = ' + fmtRate(60 / P.m[i]) + ' jobs/hour', 'middle'); y += 18; }
+        if (m.u)   { txt(nd.x, y, 12, 800, '#d99a06', uLabel(i), 'middle'); y += 18; }
+        if (m.cv)  { txt(nd.x, y, 12, 700, '#898781', 'CV = ' + (P.s[i] / P.m[i]).toFixed(2), 'middle'); }
+        if (m.ring) {
+          const rcx = nd.x + ACT_W / 2 - 15, rcy = CY - ACT_H / 2 + 15;   // top-right, as in Exercise 2
+          T.push('<circle cx="' + rcx + '" cy="' + rcy + '" r="8.5" fill="none" stroke="#e1e0d9" stroke-width="3.2"/>');
+          // static figure (and the paused state of the animated one): the arc shows utilization
+          const f = uFrac(i);
+          const arc = f > 0.005 ? '<circle cx="' + rcx + '" cy="' + rcy + '" r="8.5" fill="none" stroke="#d99a06" stroke-width="3.2" pathLength="100" stroke-dasharray="' + (f * 100).toFixed(1) + ' 100" transform="rotate(-90 ' + rcx + ' ' + rcy + ')"/>' : '';
+          if (arc) statArcs.push(arc);
+          if (!animated && arc) T.push(arc);
+        }
+      } else {
+        const done = nd.type === 'done';
+        T.push('<polygon points="' + (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2) +
+          '" fill="' + (done ? 'rgba(46,125,50,.08)' : 'rgba(51,71,91,.06)') + '" stroke="#5c6b7a" stroke-width="2.4" stroke-linejoin="round"/>');
+        if (m.blab) txt(nd.x, done ? CY + TRI_H / 2 + 18 : bufRowY('label'), 13, 700, '#33475b', done ? 'Finished goods' : 'Buffer ' + (nd.i + 1), 'middle');
+        if (!done) {
+          // static figure: waiting count is the stage's current snapshot; the animated figure animates it from the trace
+          if (m.bufn && !animated) txt(nd.x, bufRowY('count'), 11.5, 600, '#52514e', S.buffers[nd.i].length + ' waiting', 'middle');
+          if (m.tq) txt(nd.x, bufRowY('tq'), 11.5, 600, '#898781', 'Tq = ' + qFmt(qOf(nd.i).wq, 1) + ' min', 'middle');
+          if (m.iq) txt(nd.x, bufRowY('iq'), 11.5, 600, '#898781', 'Iq = ' + qFmt(qOf(nd.i).lq, 2), 'middle');
+        }
+      }
+    });
+    // throughput-rate line at the exit
+    if (m.rout) {
+      // same value as demand → same blue; capacity-limited (R < demand) → red, like the bottleneck outline
+      const rc2 = (demandHr - Rout > 0.05) ? '#a5202f' : '#2a78d6';
+      const rx = m.fg ? last.x : last.x + hw(last) + 42;
+      const label = N.R + ' = ' + fmtRate(Rout) + ' jobs/hour';
+      if (m.fg) {
+        const ay = CY - TRI_H / 2 - 8;
+        txt(rx, CY - TRI_H / 2 - 20, 12.5, 800, rc2, label, 'middle');
+        T.push('<line x1="' + (rx - 24) + '" y1="' + ay + '" x2="' + (rx + 18) + '" y2="' + ay + '" stroke="' + rc2 + '" stroke-width="2"/>');
+        T.push('<polygon points="' + (rx + 26) + ',' + ay + ' ' + (rx + 16) + ',' + (ay - 4.5) + ' ' + (rx + 16) + ',' + (ay + 4.5) + '" fill="' + rc2 + '"/>');
+      } else {
+        flow(last.x + hw(last) + 4, last.x + hw(last) + 4 + 78);
+        txt(rx + 4, CY - 14, 12.5, 800, rc2, label, 'middle');
+      }
+    } else if (!m.fg) {
+      flow(last.x + hw(last) + 4, last.x + hw(last) + 4 + 40);
+    }
+
+    // ---- animated figure: replays a REAL run of the same engine that drives the stage ----
+    // A discrete-event trace is recorded (same acceptance/blocking rules, same service-time
+    // distributions, same seed setting) and baked into the SVG at the stage's current speed,
+    // so queues build, jobs shuffle forward, rings ramp with actual service times, and
+    // activities show processing / blocked / idle / starved exactly as they would on the stage.
+    if (animated) {
+      const speed = S.speed || 6;                        // stage cadence: sim-minutes per screen-second
+      const warm = 300;                                  // settle first, so the clip opens in a representative state
+      const win = Math.max(6 * P.aMean, Math.min(22 * speed, 80 * P.aMean, 2000));
+      const T0 = warm, T1 = warm + win;
+      const geom = { tipY: CY + TRI_H / 2 - 5, actX: {}, bufX: {}, fgX: null };
+      nodes.forEach(nd => {
+        if (nd.type === 'act') geom.actX[nd.i] = nd.x;
+        else if (nd.type === 'buf') geom.bufX[nd.i] = nd.x;
+        else geom.fgX = nd.x;
+      });
+      geom.entryBx = nodes[0].x - hw(nodes[0]) - 24;
+      geom.exitX = last.x + hw(last) + 30;
+
+      // --- the trace engine (mirrors the live engine's semantics one-to-one) ---
+      const rand = $('seedChk').checked ? mulberry32((parseInt($('seedVal').value) || 42) * 7919 + 11) : Math.random;
+      const on2 = [false, false, false]; idx.forEach(i => on2[i] = true);
+      const nxt = i => { for (let j = i + 1; j < 3; j++) if (on2[j]) return j; return -1; };
+      const st = { t: 0, nextId: 1, events: [], backlog: [], buffers: [[], [], []], servers: [null, null, null], done: 0 };
+      const acc = j => P.buf[j] ? st.buffers[j].length < L.caps[j] : (!st.servers[j] && !st.buffers[j].length);
+      const lw = () => st.buffers[0].length + st.buffers[1].length + st.buffers[2].length + st.servers.filter(Boolean).length;
+      const push2 = e => { st.events.push(e); st.events.sort((a, b) => a.time - b.time); };
+      const J = new Map();                               // id -> { path: [[t,x,y]], fill: [[t,color]], gone }
+      const segs = {}; idx.forEach(i => segs[i] = []);   // activity state segments for the ring
+      const cur = {}; idx.forEach(i => cur[i] = { t0: 0, s: 'idle' });
+      const clamp2 = t => Math.max(T0, Math.min(T1, t));
+      function closeSeg(i, t, ns, svcStart, dur, slow) {
+        const c = cur[i];
+        if (t > T0 && c.t0 < T1) {
+          const a = clamp2(c.t0), b2 = clamp2(t);
+          if (b2 > a + 1e-9) {
+            const s2 = { t0: a, t1: b2, s: c.s, slow: c.slow };
+            if (c.s === 'proc') { s2.v0 = Math.min(100, (a - c.svcStart) / c.dur * 100); s2.v1 = Math.min(100, (b2 - c.svcStart) / c.dur * 100); }
+            segs[i].push(s2);
+          }
+        }
+        cur[i] = { t0: t, s: ns, svcStart, dur, slow };
+      }
+      const jobOf = id => { let j = J.get(id); if (!j) { j = { path: [], fill: [] }; J.set(id, j); } return j; };
+      const lastPos = new Map();
+      const cnts = {}; idx.forEach(i => { if (P.buf[i]) cnts[i] = []; });
+      function mark(id, t, x, y) {
+        if (t < T0 || t > T1) return;
+        const key = Math.round(x) + ',' + Math.round(y);
+        if (lastPos.get(id) === key) return;
+        lastPos.set(id, key);
+        jobOf(id).path.push([t, Math.round(x), Math.round(y)]);
+      }
+      const markFill = (id, t, c) => { if (t >= T0 && t <= T1) jobOf(id).fill.push([t, c]); };
+      const slot2 = (nx, k) => {
+        const rows = [1, 2, 3, 4, 5];
+        let r2 = 0, rem = Math.min(k, 14);
+        while (rem >= rows[r2]) { rem -= rows[r2]; r2++; }
+        return { x: nx + (rem - (rows[r2] - 1) / 2) * 15 + (k > 14 ? (k % 3) - 1 : 0), y: geom.tipY - r2 * 13 };
+      };
+      function sweep(t) {                                // record where every waiting/held job stands
+        if (t < T0) return;
+        st.backlog.forEach((id, k) => {
+          const kk = Math.min(k, 8);
+          mark(id, t, geom.entryBx - kk * 15 + (k > 8 ? (id % 3) : 0), CY + 8);
+        });
+        for (let i = 0; i < 3; i++) {
+          if (!on2[i]) continue;
+          if (geom.bufX[i] != null) st.buffers[i].forEach((id, k) => { const p2 = slot2(geom.bufX[i], k); mark(id, t, p2.x, p2.y); });
+          else if (st.buffers[i].length) { const id = st.buffers[i][0]; mark(id, t, geom.actX[i], CY + 12); }
+          const sv = st.servers[i];
+          if (sv) mark(sv.jobId, t, geom.actX[i], CY + (sv.blocked ? 22 : 12));   // a held job sinks
+        }
+        for (const i of idx) {                          // buffer-count timeline for the animated counter
+          const arr = cnts[i];
+          if (!arr) continue;
+          const len = st.buffers[i].length;
+          if (!arr.length || arr[arr.length - 1][1] !== len) arr.push([Math.min(t, T1), len]);
+        }
+      }
+      function startSvc(i, t) {
+        const id = st.buffers[i].shift();
+        const d = durationR(rand, P.m[i], P.s[i]);
+        st.servers[i] = { jobId: id, start: t, dur: d, slow: d > 1.5 * P.m[i], blocked: false };
+        push2({ time: t + d, type: 'done', st: i, id });
+        closeSeg(i, t, 'proc', t, d, st.servers[i].slow);
+        if (st.servers[i].slow) markFill(id, t, '#a5202f');
+      }
+      function prop2(t) {
+        let ch = true, g2 = 0;
+        while (ch && g2++ < 60) {
+          ch = false;
+          for (let i = 0; i < 3; i++) {
+            const sv = st.servers[i];
+            if (!sv || !sv.blocked) continue;
+            const j = nxt(i);
+            if (j >= 0 && acc(j)) {
+              st.buffers[j].push(sv.jobId);
+              markFill(sv.jobId, t, '#2e7d32');
+              st.servers[i] = null; closeSeg(i, t, 'idle'); ch = true;
+            }
+          }
+          for (let i = 0; i < 3; i++) if (on2[i] && !st.servers[i] && st.buffers[i].length) { startSvc(i, t); ch = true; }
+          while (st.backlog.length && lw() < L.conwip && acc(0)) { st.buffers[0].push(st.backlog.shift()); ch = true; }
+        }
+      }
+      push2({ time: durationR(rand, P.aMean, P.aSd), type: 'arr' });
+      let guard = 0, warmed = false;
+      while (st.events.length && guard++ < 300000) {
+        const e = st.events[0];
+        if (e.time > T1) break;
+        if (!warmed && e.time >= T0) { st.t = T0; sweep(T0); warmed = true; }
+        st.events.shift(); st.t = e.time;
+        if (e.type === 'arr') {
+          const id = st.nextId++;
+          mark(id, st.t, 20, CY + 8);
+          st.backlog.push(id);
+          push2({ time: st.t + durationR(rand, P.aMean, P.aSd), type: 'arr' });
+          prop2(st.t);
+        } else {
+          const i = e.st, sv = st.servers[i];
+          if (sv && sv.jobId === e.id && !sv.blocked) {
+            const j = nxt(i);
+            if (j < 0) {
+              st.servers[i] = null; closeSeg(i, st.t, 'idle');
+              st.done++;
+              markFill(e.id, st.t, '#2e7d32');
+              if (geom.fgX != null) {
+                const p2 = slot2(geom.fgX, Math.min(st.done - 1, 9));
+                mark(e.id, st.t, p2.x, p2.y);
+                if (st.done > 10) jobOf(e.id).gone = st.t + 0.8 * speed / 6;
+              } else {
+                mark(e.id, st.t, geom.exitX, CY + 8);
+                jobOf(e.id).gone = st.t + 0.5 * speed;
+              }
+            } else if (acc(j)) {
+              st.buffers[j].push(e.id); st.servers[i] = null; closeSeg(i, st.t, 'idle');
+            } else {
+              sv.blocked = true; closeSeg(i, st.t, 'blk');
+              markFill(e.id, st.t, '#c47f16');
+            }
+            prop2(st.t);
+          }
+        }
+        sweep(st.t);
+      }
+      if (!warmed) { st.t = T0; sweep(T0); warmed = true; }
+      idx.forEach(i => closeSeg(i, T1, 'idle'));
+
+      // --- serialize the trace ---
+      if (J.size > 0) {
+        const Lscr = win / speed + 0.7;                  // + soft fade at the loop seam
+        const sOf = t2 => (t2 - T0) / speed;
+        const fadeK = (Lscr - 0.55) / Lscr;
+        const A = [];
+        const opAnim = wins => {
+          if (!wins.length) return null;
+          const ks2 = [0], vs2 = [wins[0][0] <= 0.0005 ? 1 : 0];
+          wins.forEach(([a, b2]) => {
+            if (a > 0.0005) { ks2.push(Math.max(a, ks2[ks2.length - 1] + 0.0002)); vs2.push(1); }
+            ks2.push(Math.max(Math.min(b2, 0.9999), ks2[ks2.length - 1] + 0.0002)); vs2.push(0);
+          });
+          return 'calcMode="discrete" values="' + vs2.join(';') + '" keyTimes="' + ks2.map(v => v.toFixed(5)).join(';') + '"';
+        };
+        J.forEach(j => {
+          if (!j.path.length) return;
+          const ks = [], vs = [];
+          let lastK = -1;
+          const pushKV = (k, v) => { k = Math.min(0.99995, Math.max(k, lastK + 0.0002)); ks.push(k); vs.push(v); lastK = k; };
+          const p0 = j.path[0];
+          let px = p0[1], py = p0[2];
+          pushKV(0, px + ' ' + py);
+          if (sOf(p0[0]) > 0.02) pushKV(sOf(p0[0]) / Lscr, px + ' ' + py);
+          for (let k = 1; k < j.path.length; k++) {
+            const [t2, x2, y2] = j.path[k];
+            const s2 = sOf(t2);
+            pushKV(s2 / Lscr, px + ' ' + py);            // hold the old spot until the event fires
+            pushKV((s2 + 0.26) / Lscr, x2 + ' ' + y2);   // then a 260 ms hop, as on the stage
+            px = x2; py = y2;
+          }
+          pushKV(1, px + ' ' + py);
+          ks[ks.length - 1] = 1;
+          // opacity: appear at the first waypoint, hide if retired, fade at the loop seam
+          const bornK = sOf(p0[0]) / Lscr;
+          const oks = [], ovs = [];
+          if (bornK <= 0.001) { oks.push(0, fadeK, 1); ovs.push(1, 1, 0); }
+          else { oks.push(0, Math.max(0.0002, bornK - 0.0002), Math.min(0.999, bornK + 0.004), fadeK, 1); ovs.push(0, 0, 1, 1, 0); }
+          if (j.gone != null && sOf(j.gone) / Lscr < fadeK) {
+            const gk = Math.min(fadeK - 0.002, sOf(j.gone) / Lscr);
+            oks.length = 0; ovs.length = 0;
+            if (bornK <= 0.001) { oks.push(0, gk, Math.min(0.999, gk + 0.01), 1); ovs.push(1, 1, 0, 0); }
+            else { oks.push(0, Math.max(0.0002, bornK - 0.0002), Math.min(gk - 0.002, bornK + 0.004), gk, Math.min(0.999, gk + 0.01), 1); ovs.push(0, 0, 1, 1, 0, 0); }
+          }
+          // fill: green, red while a long service is under way, amber while blocked
+          let fillAnim = '';
+          if (j.fill.length) {
+            const fks = [0], fvs = ['#2e7d32'];
+            j.fill.forEach(([t2, c2]) => { const k2 = Math.min(0.999, Math.max(sOf(t2) / Lscr, fks[fks.length - 1] + 0.0002)); fks.push(k2); fvs.push(c2); });
+            fillAnim = '<animate attributeName="fill" calcMode="discrete" values="' + fvs.join(';') + '" keyTimes="' + fks.map(v => v.toFixed(5)).join(';') + '" dur="' + Lscr.toFixed(2) + 's" repeatCount="indefinite"/>';
+          }
+          A.push('<g opacity="0" fill="#2e7d32">' +
+            '<circle cx="0" cy="-14.5" r="3.9"/><rect x="-5.7" y="-9.6" width="11.4" height="9.6" rx="3.6"/>' + fillAnim +
+            '<animateTransform attributeName="transform" type="translate" values="' + vs.join(';') + '" keyTimes="' + ks.map(v => v.toFixed(5)).join(';') + '" dur="' + Lscr.toFixed(2) + 's" repeatCount="indefinite"/>' +
+            '<animate attributeName="opacity" values="' + ovs.join(';') + '" keyTimes="' + oks.map(v => v.toFixed(5)).join(';') + '" dur="' + Lscr.toFixed(2) + 's" repeatCount="indefinite"/>' +
+            '</g>');
+        });
+        // progress dials (E2 style: top-right, orange, no labels), in-box state tags,
+        // and the blocked marks on the outgoing arrow — all from the recorded activity states
+        const durS = 'dur="' + Lscr.toFixed(2) + 's" repeatCount="indefinite"';
+        idx.forEach(i => {
+          const rcx = geom.actX[i] + ACT_W / 2 - 15, rcy = CY - ACT_H / 2 + 15;
+          const aks = [], avs = [], cks = [0], cvs = ['#eb6834'];
+          const lab = { blk: [], idle: [] };
+          let lk = -1;
+          const pushA = (k, v) => { k = Math.min(0.99995, Math.max(k, lk + 0.0002)); aks.push(k); avs.push(v.toFixed(1) + ' 100'); lk = k; };
+          segs[i].forEach(sg => {
+            const k0 = sOf(sg.t0) / Lscr, k1 = sOf(sg.t1) / Lscr;
+            if (sg.s === 'proc') { pushA(k0, sg.v0); pushA(k1, sg.v1); }
+            else if (sg.s === 'blk') { pushA(k0, 100); pushA(k1, 100); }
+            else { pushA(k0, 0); pushA(k1, 0); }
+            if (sg.s !== 'proc') lab[sg.s === 'blk' ? 'blk' : 'idle'].push([k0, k1]);
+            cks.push(Math.max(k0, cks[cks.length - 1] + 0.0002));
+            cvs.push(sg.slow && sg.s === 'proc' ? '#a5202f' : '#eb6834');
+          });
+          if (m.ring && aks.length >= 2) {
+            aks[0] = 0; aks[aks.length - 1] = 1;
+            A.push('<circle cx="' + rcx + '" cy="' + rcy + '" r="8.5" fill="none" stroke="#eb6834" stroke-width="3.2" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 ' + rcx + ' ' + rcy + ')">' +
+              '<animate attributeName="stroke-dasharray" values="' + avs.join(';') + '" keyTimes="' + aks.map(v => v.toFixed(5)).join(';') + '" ' + durS + '/>' +
+              '<animate attributeName="stroke" calcMode="discrete" values="' + cvs.join(';') + '" keyTimes="' + cks.map(v => v.toFixed(5)).join(';') + '" ' + durS + '/></circle>');
+          }
+          // state tags INSIDE the box: BLOCKED (steady red), STARVED / idle (empty states)
+          const tag = (wins, txt2, col, op2) => {
+            const oa = opAnim(wins);
+            if (!oa) return;
+            A.push('<text x="' + geom.actX[i] + '" y="' + (CY + 5) + '" text-anchor="middle" font-size="11" font-weight="800" letter-spacing=".07em" fill="' + col + '" opacity="0">' + txt2 +
+              '<animate attributeName="opacity" ' + oa.replace(/values="([^"]*)"/, (m0, v2) => 'values="' + v2.split(';').map(x2 => x2 === '1' ? op2 : '0').join(';') + '"') + ' ' + durS + '/></text>');
+          };
+          tag(lab.blk, 'BLOCKED', '#a5202f', '0.95');
+          tag(lab.idle, i === idx[0] ? 'idle' : 'STARVED', i === idx[0] ? '#b7b5ac' : '#2a78d6', '0.85');
+          // blocked marks on the outgoing arrow: red shaft + slash (arrowhead stays gray)
+          const lp = linkPos[i];
+          if (lp && lab.blk.length) {
+            const oa = opAnim(lab.blk);
+            const mx = (lp.x1 + lp.x2) / 2;
+            A.push('<line x1="' + lp.x1 + '" y1="' + CY + '" x2="' + lp.x2 + '" y2="' + CY + '" stroke="#a5202f" stroke-width="2.2" opacity="0"><animate attributeName="opacity" ' + oa + ' ' + durS + '/></line>');
+            A.push('<line x1="' + (mx - 5) + '" y1="' + (CY + 8) + '" x2="' + (mx + 5) + '" y2="' + (CY - 8) + '" stroke="#a5202f" stroke-width="2.6" opacity="0"><animate attributeName="opacity" ' + oa + ' ' + durS + '/></line>');
+          }
+        });
+        // animated waiting counts: one text per distinct value, visible in its time windows
+        if (m.bufn) idx.forEach(i => {
+          const arr = cnts[i];
+          if (!arr || geom.bufX[i] == null) return;
+          if (!arr.length) arr.push([T0, 0]);
+          const wins = {};
+          for (let k = 0; k < arr.length; k++) {
+            const a = Math.max(0, sOf(arr[k][0]) / Lscr);
+            const b2 = k + 1 < arr.length ? Math.min(1, sOf(arr[k + 1][0]) / Lscr) : 1;
+            if (b2 <= a + 1e-5) continue;
+            (wins[arr[k][1]] = wins[arr[k][1]] || []).push([a, b2]);
+          }
+          const y2 = bufRowY('count');
+          Object.keys(wins).forEach(v => {
+            const oa = opAnim(wins[v]);
+            if (!oa) return;
+            A.push('<text x="' + geom.bufX[i] + '" y="' + y2 + '" text-anchor="middle" font-size="11.5" font-weight="600" fill="#52514e" opacity="0">' + v + ' waiting<animate attributeName="opacity" ' + oa + ' dur="' + Lscr.toFixed(2) + 's" repeatCount="indefinite"/></text>');
+          });
+        });
+        // stash everything the GIF renderer needs — its frames are drawn from the same trace
+        GIFDATA = {
+          base: T.join('') + '</svg>',
+          W, H, T0, T1, win, speed, idx: idx.slice(), first: idx[0],
+          geom, J, segs, cnts, linkPos,
+          mRing: m.ring, mBufn: m.bufn,
+          cntY: m.bufn ? bufRowY('count') : null,
+          CY, ACT_W, ACT_H
+        };
+        // layers + a script-free play/pause (pure SMIL — no executable content in the file).
+        // The buttons are emitted BEFORE the layers: SMIL event-base references must point backward.
+        const PAUSE_ON = '<set attributeName="visibility" to="hidden" begin="ppPause.click" fill="freeze"/><set attributeName="visibility" to="visible" begin="ppPlay.click" fill="freeze"/>';
+        const PAUSE_OFF = '<set attributeName="visibility" to="visible" begin="ppPause.click" fill="freeze"/><set attributeName="visibility" to="hidden" begin="ppPlay.click" fill="freeze"/>';
+        const bx = W - 54, by = 8;
+        const btnFrame = '<rect x="' + bx + '" y="' + by + '" width="42" height="26" rx="8" fill="#fff" stroke="rgba(11,11,11,0.22)"/>';
+        T.push('<g id="ppPause" cursor="pointer">' + btnFrame +
+          '<rect x="' + (bx + 14) + '" y="' + (by + 7) + '" width="4.5" height="12" rx="1.5" fill="#33475b"/><rect x="' + (bx + 23) + '" y="' + (by + 7) + '" width="4.5" height="12" rx="1.5" fill="#33475b"/>' +
+          PAUSE_ON + '</g>');
+        T.push('<g id="ppPlay" cursor="pointer" visibility="hidden">' + btnFrame +
+          '<path d="M ' + (bx + 16) + ' ' + (by + 6) + ' L ' + (bx + 29) + ' ' + (by + 13) + ' L ' + (bx + 16) + ' ' + (by + 20) + ' Z" fill="#33475b"/>' +
+          PAUSE_OFF + '</g>');
+        T.push('<g id="animLayer">' + A.join('') + PAUSE_ON + '</g>');
+        T.push('<g id="statLayer" visibility="hidden">' + statArcs.join('') + PAUSE_OFF + '</g>');
+      } else if (m.ring) {
+        statArcs.forEach(a2 => T.push(a2));
+      }
+    }
+    T.push('</svg>');
+    return T.join('');
+  }
+
+  function expRender() {
+    const s = buildExportSvg();
+    $('expPrev').innerHTML = s || '<div style="padding:18px;font-size:12.5px;color:var(--muted)">Select at least one activity.</div>';
+    $('expDownload').disabled = !s;
+    $('expGif').disabled = !s || !GIFDATA || gifBusy;
+    const obs = $('exp-vobs').checked && S.t > 0;
+    $('expNote').textContent = 'Notation: ' + (NOTA.style === 'jacobs' ? 'Jacobs (λ · FT · INV)' : 'Schmidt (R · T · I)') +
+      (obs ? ' · observed values at t = ' + Math.floor(S.t) + ' min' : ' · planned values from the parameters') +
+      ($('exp-anim').checked ? ' · plays in a browser; static in slide imports' : '');
+  }
+  function openExport() {
+    const host = $('expActs');
+    let h = '<div class="st">Activities</div>';
+    for (let i = 0; i < 3; i++) {
+      h += '<label><input type="checkbox" id="exp-a' + i + '"' + (P.on[i] ? ' checked' : '') + '> ' + esc(expActName(i)) +
+           (P.buf[i] ? ' <span style="color:var(--muted);font-size:11px">· ▽ Buffer ' + (i + 1) + '</span>' : '') + '</label>';
+    }
+    h += '<div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.45">Buffers follow the stage — add or remove them in the parameters panel.</div>';
+    host.innerHTML = h;
+    const canObs = S.t > 0;
+    $('exp-vobs').disabled = !canObs;
+    if (!canObs) $('exp-vth').checked = true;
+    $('exp-uobs').disabled = !canObs;
+    if (!canObs) $('exp-uth').checked = true;
+    $('expModal').classList.add('open');
+    expRender();
+  }
+  /* ---- GIF export: the same trace, rendered to canvas frames and encoded client-side ---- */
+  function gifPerson(c2, x, y, col) {
+    c2.fillStyle = col;
+    c2.beginPath(); c2.arc(x, y - 14.5, 3.9, 0, Math.PI * 2); c2.fill();
+    c2.beginPath();
+    if (c2.roundRect) c2.roundRect(x - 5.7, y - 9.6, 11.4, 9.6, 3.6); else c2.rect(x - 5.7, y - 9.6, 11.4, 9.6);
+    c2.fill();
+  }
+  function gifFrame(c2, D, ts) {
+    D.J.forEach(j => {
+      const P2 = j.path;
+      if (!P2.length || ts < P2[0][0]) return;
+      if (j.gone != null && ts > j.gone) return;
+      let x = P2[0][1], y = P2[0][2], k = 1;
+      while (k < P2.length && P2[k][0] <= ts) k++;
+      if (k >= 2) {
+        const tk = P2[k - 1][0], xk = P2[k - 1][1], yk = P2[k - 1][2];
+        const xp = P2[k - 2][1], yp = P2[k - 2][2];
+        const f = Math.min(1, (ts - tk) / (0.26 * D.speed));
+        const e2 = f < 0.5 ? 2 * f * f : -1 + (4 - 2 * f) * f;
+        x = xp + (xk - xp) * e2; y = yp + (yk - yp) * e2;
+      }
+      let col = '#2e7d32';
+      for (const fc of j.fill) { if (fc[0] <= ts) col = fc[1]; else break; }
+      gifPerson(c2, x, y, col);
+    });
+    c2.textBaseline = 'middle';
+    D.idx.forEach(i => {
+      const sg = D.segs[i].find(s2 => ts >= s2.t0 && ts <= s2.t1);
+      // progress dial (E2: top-right, orange, no label; track always visible)
+      if (D.mRing) {
+        const rcx = D.geom.actX[i] + D.ACT_W / 2 - 15, rcy = D.CY - D.ACT_H / 2 + 15;
+        c2.lineWidth = 3.2;
+        c2.strokeStyle = '#e1e0d9';
+        c2.beginPath(); c2.arc(rcx, rcy, 8.5, 0, Math.PI * 2); c2.stroke();
+        if (sg && sg.s !== 'idle') {
+          const frac = sg.s === 'blk' ? 1 : Math.min(1, (sg.v0 + (sg.v1 - sg.v0) * (ts - sg.t0) / Math.max(1e-9, sg.t1 - sg.t0)) / 100);
+          c2.strokeStyle = sg.s === 'proc' && sg.slow ? '#a5202f' : '#eb6834';
+          c2.lineCap = 'round';
+          c2.beginPath(); c2.arc(rcx, rcy, 8.5, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); c2.stroke();
+        }
+      }
+      // in-box state tags + blocked marks on the outgoing arrow
+      if (!sg) return;
+      c2.save();
+      c2.textAlign = 'center';
+      c2.font = '800 11px system-ui, sans-serif';
+      try { c2.letterSpacing = '0.07em'; } catch (e) {}
+      if (sg.s === 'blk') {
+        c2.globalAlpha = 0.95;
+        c2.fillStyle = '#a5202f';
+        c2.fillText('BLOCKED', D.geom.actX[i], D.CY + 5);
+        const lp = D.linkPos && D.linkPos[i];
+        if (lp) {
+          c2.globalAlpha = 1;
+          c2.strokeStyle = '#a5202f'; c2.lineWidth = 2.2;
+          c2.beginPath(); c2.moveTo(lp.x1, D.CY); c2.lineTo(lp.x2, D.CY); c2.stroke();
+          const mx = (lp.x1 + lp.x2) / 2;
+          c2.lineWidth = 2.6;
+          c2.beginPath(); c2.moveTo(mx - 5, D.CY + 8); c2.lineTo(mx + 5, D.CY - 8); c2.stroke();
+        }
+      } else if (sg.s === 'idle') {
+        const blink = Math.floor(((ts - D.T0) / D.speed) / 0.22) % 2 === 0;
+        c2.globalAlpha = blink ? 0.95 : 0.25;
+        if (i === D.first) { c2.fillStyle = '#b7b5ac'; c2.fillText('idle', D.geom.actX[i], D.CY + 5); }
+        else { c2.fillStyle = '#2a78d6'; c2.fillText('STARVED', D.geom.actX[i], D.CY + 5); }
+      }
+      c2.restore();
+    });
+    if (D.mBufn && D.cntY != null) {
+      c2.textAlign = 'center'; c2.font = '600 11.5px system-ui, sans-serif'; c2.fillStyle = '#52514e';
+      D.idx.forEach(i => {
+        const arr = D.cnts[i];
+        if (!arr || D.geom.bufX[i] == null) return;
+        let v = 0;
+        for (const en of arr) { if (en[0] <= ts) v = en[1]; else break; }
+        c2.fillText(v + ' waiting', D.geom.bufX[i], D.cntY);
+      });
+      c2.textAlign = 'left';
+    }
+  }
+  function lzwGif(indexed, out) {
+    const CLEAR = 256, EOI = 257;
+    let codeSize = 9, next = 258;
+    const dict = new Int16Array(4096 * 256).fill(-1);
+    let cur = 0, curBits = 0;
+    const bytes = [];
+    const emit = code => {
+      cur |= code << curBits; curBits += codeSize;
+      while (curBits >= 8) { bytes.push(cur & 255); cur >>>= 8; curBits -= 8; }
+    };
+    emit(CLEAR);
+    let prefix = indexed[0];
+    for (let i = 1; i < indexed.length; i++) {
+      const c = indexed[i];
+      const key = prefix * 256 + c;
+      if (dict[key] >= 0) { prefix = dict[key]; continue; }
+      emit(prefix);
+      if (next < 4096) {
+        dict[key] = next++;
+        if (next > (1 << codeSize) && codeSize < 12) codeSize++;
+      } else {
+        emit(CLEAR);
+        dict.fill(-1);
+        next = 258; codeSize = 9;
+      }
+      prefix = c;
+    }
+    emit(prefix); emit(EOI);
+    if (curBits > 0) bytes.push(cur & 255);
+    out.push(8);
+    for (let i = 0; i < bytes.length; i += 255) {
+      const n2 = Math.min(255, bytes.length - i);
+      out.push(n2);
+      for (let k = 0; k < n2; k++) out.push(bytes[i + k]);
+    }
+    out.push(0);
+  }
+  async function renderGif(D, onProg) {
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([D.base], { type: 'image/svg+xml' }));
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const W2 = D.W, H2 = D.H;
+    const cv = document.createElement('canvas'); cv.width = W2; cv.height = H2;
+    const c2 = cv.getContext('2d', { willReadFrequently: true });
+    const fps = 10;
+    const nF = Math.min(280, Math.max(10, Math.round((D.win / D.speed) * fps)));
+    const drawAt = f => {
+      const ts = Math.min(D.T0 + (f / fps) * D.speed, D.T1 - 1e-6);
+      c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, W2, H2);
+      c2.drawImage(img, 0, 0);
+      gifFrame(c2, D, ts);
+      return c2.getImageData(0, 0, W2, H2).data;
+    };
+    // pass 1: build a palette from sampled frames (top exact colors by popularity)
+    const pop = new Map();
+    for (let f = 0; f < nF; f += 7) {
+      const d = drawAt(f);
+      for (let p2 = 0; p2 < d.length && pop.size < 200000; p2 += 4) {
+        const key = (d[p2] << 16) | (d[p2 + 1] << 8) | d[p2 + 2];
+        pop.set(key, (pop.get(key) || 0) + 1);
+      }
+      await new Promise(r => setTimeout(r));
+    }
+    const pal = [...pop.entries()].sort((a, b) => b[1] - a[1]).slice(0, 255).map(e => e[0]);
+    const exact = new Map(pal.map((c3, i2) => [c3, i2]));
+    const near = new Map();
+    const nearest = key => {
+      let hit = near.get(key);
+      if (hit !== undefined) return hit;
+      const r = key >> 16, g2 = (key >> 8) & 255, b2 = key & 255;
+      let best = 0, bd = 1e9;
+      for (let i2 = 0; i2 < pal.length; i2++) {
+        const c3 = pal[i2], dr = r - (c3 >> 16), dg = g2 - ((c3 >> 8) & 255), db = b2 - (c3 & 255);
+        const dist = dr * dr + dg * dg + db * db;
+        if (dist < bd) { bd = dist; best = i2; }
+      }
+      if (near.size < 150000) near.set(key, best);
+      return best;
+    };
+    const out = [];
+    const pushStr = s2 => { for (let i2 = 0; i2 < s2.length; i2++) out.push(s2.charCodeAt(i2) & 255); };
+    pushStr('GIF89a');
+    out.push(W2 & 255, W2 >> 8, H2 & 255, H2 >> 8, 0xF7, 0, 0);
+    for (let i2 = 0; i2 < 256; i2++) {
+      const c3 = i2 < pal.length ? pal[i2] : 0;
+      out.push((c3 >> 16) & 255, (c3 >> 8) & 255, c3 & 255);
+    }
+    pushStr('\x21\xFF\x0BNETSCAPE2.0\x03\x01\x00\x00\x00');   // loop forever
+    const idxBuf = new Uint8Array(W2 * H2);
+    for (let f = 0; f < nF; f++) {
+      const d = drawAt(f);
+      for (let p2 = 0, q = 0; p2 < d.length; p2 += 4, q++) {
+        const key = (d[p2] << 16) | (d[p2 + 1] << 8) | d[p2 + 2];
+        const e2 = exact.get(key);
+        idxBuf[q] = e2 !== undefined ? e2 : nearest(key);
+      }
+      out.push(0x21, 0xF9, 4, 0x04, 10, 0, 0, 0);             // 100 ms per frame, disposal: leave
+      out.push(0x2C, 0, 0, 0, 0, W2 & 255, W2 >> 8, H2 & 255, H2 >> 8, 0);
+      lzwGif(idxBuf, out);
+      if (onProg) onProg((f + 1) / nF);
+      if (f % 4 === 3) await new Promise(r => setTimeout(r));
+    }
+    out.push(0x3B);
+    URL.revokeObjectURL(url);
+    return new Blob([new Uint8Array(out)], { type: 'image/gif' });
+  }
+  let gifBusy = false;
+  async function exportGif() {
+    if (!GIFDATA || gifBusy) return;
+    gifBusy = true;
+    const btn = $('expGif');
+    const old = btn.textContent;
+    btn.disabled = true;
+    try {
+      const blob = await renderGif(GIFDATA, p2 => { btn.textContent = 'rendering ' + Math.round(p2 * 100) + '%'; });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'process-animation.gif';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      gifBusy = false;
+      btn.textContent = old;
+      btn.disabled = !GIFDATA;
+    }
+  }
+  $('expGif').addEventListener('click', exportGif);
+
+  $('exportBtn').addEventListener('click', openExport);
+  $('expModal').addEventListener('change', expRender);
+  $('expClose').addEventListener('click', () => $('expModal').classList.remove('open'));
+  $('expModal').addEventListener('click', e => { if (e.target === $('expModal')) $('expModal').classList.remove('open'); });
+  $('expDownload').addEventListener('click', () => {
+    const s = buildExportSvg();
+    if (!s) return;
+    const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + s], { type: 'image/svg+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = $('exp-anim').checked ? 'process-animation.svg' : 'process-diagram.svg';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
 
   /* ============================== main loop ============================== */
@@ -2086,12 +3055,12 @@
       { t: 'quiznum', q: 'What is the desk’s CAPACITY, in applications per hour?', unit: 'apps/hr', ans: 10, tol: 0.4, pts: 5, ex: 'Capacity = 1/p = 1 per 6 min = 10/hr. Note that the desk’s capacity has nothing to do with how many actually show up.' },
       { t: 'read', h: '<p><b>№3 — Throughput ⟦R⟧:</b> the rate that actually flows through. Only 6 applications arrive per hour, so ⟦R⟧ = <b>6/hr</b> — even though the desk could do 10. Throughput = min(demand, capacity). The desk is busy only 6/10 = 60% of the time (its utilization).</p><p><b>№4 — Cycle time:</b> the gap between consecutive completions = 1/⟦R⟧. A funded loan comes out every <b>10 minutes</b> — <i>not</i> every 6! The desk works for 6, then idles 4, waiting for the next arrival.</p>' },
       { t: 'quiznum', q: 'Check the tiles: a funded application comes out every ___ minutes (the cycle time).', unit: 'min', ans: 10, tol: 0.8, pts: 5, ex: 'Cycle time = 1/⟦R⟧ = 10 min. The #1 rookie mistake in OM is answering “6” — that is p, the work content, not the rhythm of output. Two different questions.' },
-      { t: 'read', h: '<p><b>№5 — Throughput time ⟦T⟧:</b> one job’s total journey from arriving to leaving = waiting + being worked on. Here nobody waits, so ⟦T⟧ = 0 + 6 = <b>6 minutes</b>.</p><p>Throughput time answers the <i>customer’s</i> question (“how long will mine take?”). Cycle time answers the <i>manager’s</i> question (“how often does one come out?”). Keep them straight forever.</p>' },
-      { t: 'quiznum', q: 'What is the average throughput time ⟦T⟧, in minutes? (Read the tile.)', unit: 'min', ans: 6, tol: 0.4, pts: 5, ex: '⟦T⟧ = wait + work = 0 + 6. When variability enters later, the “wait” part explodes — that is where OM gets interesting.' },
+      { t: 'read', h: '<p><b>№5 — ⟦TtermC⟧ ⟦T⟧:</b> one job’s total journey from arriving to leaving = waiting + being worked on. Here nobody waits, so ⟦T⟧ = 0 + 6 = <b>6 minutes</b>.</p><p>⟦TtermC⟧ answers the <i>customer’s</i> question (“how long will mine take?”). Cycle time answers the <i>manager’s</i> question (“how often does one come out?”). Keep them straight forever.</p>' },
+      { t: 'quiznum', q: 'What is the average ⟦Tterm⟧ ⟦T⟧, in minutes? (Read the tile.)', unit: 'min', ans: 6, tol: 0.4, pts: 5, ex: '⟦T⟧ = wait + work = 0 + 6. When variability enters later, the “wait” part explodes — that is where OM gets interesting.' },
       { t: 'read', h: '<p><b>№6 — Inventory ⟦I⟧:</b> the average number of jobs <i>inside</i> the process at once. In OM, “inventory” counts whatever flows — applications, patients, customers — not just widgets on shelves.</p><p>Look at the Avg inventory I tile: about <b>0.6</b>. A fraction — The desk holds 1 application 60% of the time and 0 applications 40% of the time — average 0.6. And notice something curious: ⟦R⟧ × ⟦T⟧ = 0.1/min × 6 min = 0.6. The equality is a general law, covered in the Little’s Law module.</p>' },
       { t: 'quiznum', q: 'Read the Avg inventory I tile: what is the average inventory ⟦I⟧ inside the process?', unit: 'jobs', ans: 0.6, tol: 0.13, pts: 5, ex: '⟦I⟧ ≈ 0.6 — which here equals the desk’s utilization. It is a fraction because inventory is a time-average, not a headcount at one instant.' },
       { t: 'quiz', q: 'Transfer test — no simulator: an MRI machine takes 20 min per scan, and patients are scheduled every 30 min. Capacity and throughput?', opts: [{ o: 'Capacity 3 scans/hr; throughput ⟦R⟧ = 2/hr (limited by arrivals)', ok: 1 }, { o: 'Capacity 2/hr; throughput 3/hr', ok: 0 }, { o: 'Both are 3/hr — the machine sets everything', ok: 0 }], pts: 5, ex: 'Capacity = 1/p = 3/hr, but only 2/hr are scheduled, so ⟦R⟧ = 2/hr and the scanner idles a third of the time. Same math as the loan desk and the café — that is precisely the point.' },
-      { t: 'take', h: 'Every process is ▭ activities, ▽ buffers, → flows. Six numbers tell its story: <b>p</b> (work per job) · <b>capacity = 1/p</b> · <b>throughput ⟦R⟧ = min(demand, capacity)</b> · <b>cycle time = 1/⟦R⟧</b> · <b>throughput time ⟦T⟧ = wait + work</b> · <b>inventory ⟦I⟧</b>. You now have X-ray vision — try NOT to see these shapes at the airport, the pharmacy, and your own inbox.' }
+      { t: 'take', h: 'Every process is ▭ activities, ▽ buffers, → flows. Six numbers tell its story: <b>p</b> (work per job) · <b>capacity = 1/p</b> · <b>throughput ⟦R⟧ = min(demand, capacity)</b> · <b>cycle time = 1/⟦R⟧</b> · <b>⟦Tterm⟧ ⟦T⟧ = wait + work</b> · <b>inventory ⟦I⟧</b>. You now have X-ray vision — try NOT to see these shapes at the airport, the pharmacy, and your own inbox.' }
     ]},
     { ico: '🚧', title: 'Systems & bottlenecks', pts: 30, steps: [
       { t: 'read', h: '<p>Real processes are <b>chains</b>. The bank’s full pipeline: <b>Intake</b> (p = 3 min) → <b>Underwriting</b> (p = 5 min) → <b>Closing</b> (p = 2 min).</p><p>Each step has its own capacity: 20/hr, 12/hr, and 30/hr. But a customer doesn’t experience steps — they experience the <i>system</i>. So what is the capacity of the whole pipeline?</p>' },
@@ -2099,7 +3068,7 @@
       { t: 'task', h: '<span class="tt">Flood the pipeline</span> Applications arrive every 4 minutes (15/hr) — more than the pipeline can fund. Press <b>▶ Play</b>, run to t = 400, and watch: WHERE does the pile grow? And what is Closing doing while it grows?', setup() { setStationNames(['Intake', 'Underwriting', 'Closing']); lsParams([4, 0, 3, 0, 5, 0, 2, 0]); lsEnd('time', 400); lsSpeed(30); lsCheckbox('detailsChk', true); $('resetBtn').click(); focusCards(['queue']); }, verify() { return runIsDone() ? { ok: true, msg: S.buffers[1].length + ' applications stuck before Underwriting — while Closing sat STARVED much of the day.' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 400 · queue before Underwriting: ' + S.buffers[1].length }; } },
       { t: 'quiznum', q: 'What is the SYSTEM capacity — funded loans per hour at full tilt?', unit: 'loans/hr', ans: 12, tol: 0.5, pts: 5, ex: 'min(20, 12, 30) = 12/hr. A chain moves at the pace of its slowest link — Underwriting, the <b>bottleneck</b>. Capacity above the bottleneck’s rate produces no additional throughput.' },
       { t: 'quiznum', q: 'At full tilt, a funded loan exits every ___ minutes (the system cycle time):', unit: 'min', ans: 5, tol: 0.4, pts: 5, ex: 'System cycle time = the bottleneck’s p = 5 min. When the system is overloaded, the time between finished jobs equals the bottleneck’s processing time.' },
-      { t: 'quiz', q: 'With demand at 15/hr, which utilization profile did you observe on the map?', opts: [{ o: 'Intake 75%, Underwriting 100%, Closing 40% — the bottleneck maxes out first', ok: 1 }, { o: 'All three near 100% — they share the load evenly', ok: 0 }, { o: 'Intake 100% — the first station always works hardest', ok: 0 }], pts: 5, ex: 'Utilization = ⟦R⟧ × p at each step. The bottleneck pins at 100% while its neighbors wait on it. Closing is idle because the bottleneck releases less than Closing can process — the state is called STARVED by Underwriting. Diagnose the system before evaluating a station.' },
+      { t: 'quiz', q: 'With demand at 15/hr, which utilization profile did you observe on the map?', opts: [{ o: 'Intake 75%, Underwriting 100%, Closing 40% — the bottleneck maxes out first', ok: 1 }, { o: 'All three near 100% — they share the load evenly', ok: 0 }, { o: 'Intake 100% — the first activity always works hardest', ok: 0 }], pts: 5, ex: 'Utilization = ⟦R⟧ × p at each step. The bottleneck pins at 100% while its neighbors wait on it. Closing is idle because the bottleneck releases less than Closing can process — the state is called STARVED by Underwriting. Diagnose the system before evaluating an activity.' },
       { t: 'read', h: '<p>These states have names. <b>Starving:</b> a step idle because nothing arrives from upstream (Closing, waiting on Underwriting). <b>Blocking:</b> a step that cannot release a finished job because downstream has no room (you’ll meet it properly with WIP caps in Lesson 7). The bottleneck starves everyone after it and dams up everyone before it.</p>' },
       { t: 'task', h: '<span class="tt">Fix the bottleneck — then recheck.</span> The bank buys a second underwriter’s worth of speed. Drag Underwriting down to <b>2.5 min or less</b>, then Play to t = 400. Keep an eye on the red bottleneck outline on the map — where does it go?', ctl: [{ id: 'n-m2', lab: 'Underwriting time (min)', min: 2, max: 6, step: 0.5 }], setup() { lsEnd('time', 400); lsSpeed(30); }, verify() { if (P.m[1] > 2.5) return { ok: false, msg: 'Underwriting = ' + P.m[1] + ' min — get it to 2.5 or less.' }; if (!runIsDone()) return { ok: false, msg: 'Underwriting = ' + P.m[1] + ' min ✓ — now press Play and run to t = 400.' }; return { ok: true, msg: 'Fixed — and look: the red outline moved to INTAKE. The red outline moved to Intake: the new smallest capacity is the new bottleneck.' }; } },
       { t: 'quiznum', q: 'With Underwriting at 2.5 min, what is the NEW system capacity, in loans per hour?', unit: 'loans/hr', ans: 20, tol: 1, pts: 5, ex: 'min(20, 24, 30) = 20/hr — set by Intake now. And notice: no queue anywhere (demand is only 15/hr), yet Intake IS the bottleneck. Bottlenecks are about capacity, not visible lines. After each fix, recompute all capacities.' },
@@ -2107,29 +3076,29 @@
       { t: 'take', h: 'A chain’s capacity = its slowest link: <b>the bottleneck</b> (the step with the highest utilization). System cycle time = the bottleneck’s p. Fix the bottleneck and it <i>moves</i> — after each fix, recompute all capacities. And a step can be the bottleneck with no queue in sight: it’s about capacity, not lines.' }
     ]},
     { ico: '⚖️', title: 'Little’s Law', pts: 30, steps: [
-      { t: 'read', h: '<p>One equation, three measures: <b>⟦law⟧</b> — inventory = throughput × throughput time. It holds for any stable process, regardless of industry or flow unit.</p><p>Draw a boundary around ANY stable system — a café, a factory, an ER, an accounts-receivable ledger, your inbox. Count what’s inside (⟦I⟧), measure the flow (⟦R⟧), time the journey (⟦T⟧): the three are locked together. No assumptions about randomness, luck, or discipline. Given any two of the three, the law provides the third.</p>' },
+      { t: 'read', h: '<p>One equation, three measures: <b>⟦law⟧</b> — inventory = throughput × ⟦Tterm⟧. It holds for any stable process, regardless of industry or flow unit.</p><p>Draw a boundary around ANY stable system — a café, a factory, an ER, an accounts-receivable ledger, your inbox. Count what’s inside (⟦I⟧), measure the flow (⟦R⟧), time the journey (⟦T⟧): the three are locked together. No assumptions about randomness, luck, or discipline. Given any two of the three, the law provides the third.</p>' },
       { t: 'task', h: '<span class="tt">Watch the two lines converge</span> The café runs with realistic variability. Press <b>▶ Play</b> to t = 1500 and watch the Little’s Law panel: the gray line (inside right now) bounces wildly — the law says nothing about instants. But the averages must converge.', setup() { lsParams([10, 5, 8, 4, 8, 4, 8, 4]); lsEnd('time', 1500); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { return runIsDone() ? { ok: true, msg: 'See the blue (avg ⟦I⟧) and red (⟦R⟧ × ⟦T⟧) lines tracking each other: the law relates the two averages.' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 1500' }; } },
-      { t: 'quiznum', q: 'Read ⟦R⟧ and ⟦T⟧ from the tiles and multiply them. What must the average inventory be?', unit: 'jobs', dyn: () => { const o = obsSnapshot(); return o.R * o.T; }, rtol: 0.2, pts: 5, ex: 'Whatever your run produced: ⟦I⟧ = ⟦R⟧ × ⟦T⟧ — and the measured Avg inventory I tile agrees. No cameras, no counting. Two numbers handed you the third.' },
+      { t: 'quiznum', q: 'Read ⟦R⟧ and ⟦T⟧ from the tiles and multiply them — mind the units: the tile reports ⟦R⟧ in jobs/hour and ⟦T⟧ in minutes, so convert ⟦R⟧ to jobs per minute (divide by 60) first. What must the average inventory be?', unit: 'jobs', dyn: () => { const o = obsSnapshot(); return o.R * o.Tbnd; }, rtol: 0.2, pts: 5, ex: 'Whatever your run produced: ⟦I⟧ = ⟦R⟧ × ⟦T⟧, with consistent units — and the measured Avg inventory tile agrees. No cameras, no counting. Two numbers handed you the third.' },
       { t: 'quiz', q: 'At one instant you count 9 customers inside, but ⟦R⟧ × ⟦T⟧ = 6. Is the law broken?', opts: [{ o: 'No — it binds long-run AVERAGES; any single instant can wander', ok: 1 }, { o: 'Yes — it must hold at every moment', ok: 0 }], pts: 5, ex: 'The gray line “breaks the law” all day long; the averages never do. Little’s Law is about flows, not snapshots.' },
       { t: 'read', h: '<p><b>The rearrangement.</b> In real life you can usually measure two of the three cheaply — the law hands you the third for free.</p><p>Classic: Burger Hut serves 2,000 customers over a 15-hour day, and on average 50 are inside. How long does a customer spend inside? ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 50 / (2000/15 per hr) = 50 / 133.3/hr = 0.375 hr ≈ <b>22.5 minutes</b>. No stopwatch, no tracking app — two numbers any manager already has.</p>' },
       { t: 'quiznum', q: 'Your turn: a dining hall serves 1,200 students over a 10-hour day; on average 80 are inside. Average time inside, in minutes?', unit: 'min', ans: 40, tol: 3, pts: 5, ex: '⟦R⟧ = 120/hr, ⟦I⟧ = 80 → ⟦T⟧ = 80/120 hr = 40 min. You obtained the value without direct measurement with one division.' },
       { t: 'read', h: '<p><b>The finance payoff.</b> You will use this law in finance whether you notice it or not. Define the system as the <b>accounts-receivable ledger</b>: invoices flow in when you sell (⟦R⟧ = yearly sales, from the income statement), sit inside as receivables (⟦I⟧ = the AR balance, from the balance sheet), and flow out when customers pay. Then ⟦T⟧ = ⟦I⟧/⟦R⟧ is <b>days sales outstanding</b> — how long the firm’s cash stays stuck in IOUs.</p><p>Do the same for inventory (COGS as the flow) and for payables, and you get the <b>cash conversion cycle</b> = days in inventory + days receivable − days payable: three Little’s Law calculations that analysts run on every 10-K.</p>' },
       { t: 'quiznum', q: 'A firm sells $20M per year; its AR balance averages $2.5M. How many DAYS does it wait to collect? (365-day year)', unit: 'days', ans: 45.6, tol: 3, pts: 10, ex: '⟦T⟧ = 2.5/20 year = 0.125 yr ≈ 46 days of sales sitting as IOUs (the DSO). Same law as the café — the “jobs” are dollars. This is why operations people read balance sheets like process maps.' },
-      { t: 'task', h: '<span class="tt">Predict the future with one multiplication</span> Game-day overload with a WIP cap: ⟦I⟧ inside the café will be pinned at <b>6</b>, and the bottleneck fixes ⟦R⟧ at 7.5/hr (one cup per 8 min). Before running, the law already says the inside journey MUST be 6 × 8 = 48 min. Set the cap to <b>6</b> and Play to t = 1200 to verify the prediction.', ctl: [{ id: 'lim-conwip', lab: 'Line WIP cap', min: 3, max: 10, step: 1 }], setup() { lsParams([4, 0, 8, 0, 8, 0, 8, 0]); lsEnd('time', 1200); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { if (L.conwip !== 6) return { ok: false, msg: 'Set the cap to exactly 6 (currently ' + (isFinite(L.conwip) ? L.conwip : '∞') + ').' }; if (!runIsDone()) return { ok: false, msg: 'Cap = 6 ✓ — Play to t = 1200. Inside right now: ' + lineWip() }; return { ok: true, msg: 'Check the flow-time tile: ≈ 48 min, as the law requires before you ever pressed Play.' }; } },
-      { t: 'quiznum', q: 'And indeed — the average in-line throughput time settled at about ___ minutes:', unit: 'min', ans: 48, tol: 5, pts: 5, ex: '⟦T⟧ = ⟦I⟧/⟦R⟧ = 6 / (1/8 per min) = 48. You predicted a random simulation with one multiplication — the same trick managers use to promise lead times they can keep.' },
+      { t: 'task', h: '<span class="tt">Predict the future with one multiplication</span> Game-day overload with a WIP cap: ⟦I⟧ inside the café will be pinned at <b>6</b>, and the bottleneck fixes ⟦R⟧ at 7.5/hr (one cup per 8 min). Before running, the law already says the inside journey MUST be 6 × 8 = 48 min. Set the cap to <b>6</b> and Play to t = 1200 to verify the prediction.', ctl: [{ id: 'lim-conwip', lab: 'Line WIP cap', min: 3, max: 10, step: 1 }], setup() { lsParams([4, 0, 8, 0, 8, 0, 8, 0]); lsEnd('time', 1200); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { if (L.conwip !== 6) return { ok: false, msg: 'Set the cap to exactly 6 (currently ' + (isFinite(L.conwip) ? L.conwip : '∞') + ').' }; if (!runIsDone()) return { ok: false, msg: 'Cap = 6 ✓ — Play to t = 1200. Inside right now: ' + lineWip() }; return { ok: true, msg: 'Check the “incl. the arrival queue” line on the ⟦T⟧ tile: ≈ 48 min, as the law requires before you ever pressed Play.' }; } },
+      { t: 'quiznum', q: 'And indeed — the “incl. the arrival queue” ⟦Tterm⟧ settled at about ___ minutes:', unit: 'min', ans: 48, tol: 5, pts: 5, ex: '⟦T⟧ = ⟦I⟧/⟦R⟧ = 6 / (1/8 per min) = 48. You predicted a random simulation with one multiplication — the same trick managers use to promise lead times they can keep.' },
       { t: 'take', h: '<b>⟦law⟧</b> — true for any stable system, any industry, any luck. Know two of the three and the law provides the third. It sizes waiting rooms, predicts lead times, and turns a balance sheet into a process map (days sales outstanding = ⟦I⟧/⟦R⟧ × 365). It holds for any stable process, regardless of industry or flow unit.' }
     ]},
     { ico: '🎲', title: 'Variability', pts: 25, steps: [
       { t: 'read', h: '<p>So far, timings were exact. Real cafés aren’t: someone orders a 6-syllable latte, someone pays in coins. Today: <b>the same averages as a perfect deterministic morning</b> — arrivals every 10 min, each step 8 min — but now everything is random (CV = 1).</p>' },
-      { t: 'predict', q: 'Same averages as the perfect morning (T was 24 min). What is throughput time now?', opts: ['Still ~24 min — averages are what matter', 'A bit worse, ~30 min', 'Much worse — maybe 2× or more', 'It will grow forever'] },
+      { t: 'predict', q: 'Same averages as the perfect morning (⟦T⟧ was 24 min). What is the ⟦Tterm⟧ now?', opts: ['Still ~24 min — averages are what matter', 'A bit worse, ~30 min', 'Much worse — maybe 2× or more', 'It will grow forever'] },
       { t: 'task', h: '<span class="tt">Baseline first</span> A perfect deterministic morning: arrivals every 10 min, every step exactly 8. Play to t = 400 — we’ll pin its results for comparison.', setup() { lsParams([10, 0, 8, 0, 8, 0, 8, 0]); lsLimits(null); lsEnd('time', 400); lsSpeed(40); $('resetBtn').click(); focusCards(['flow']); }, verify() { return runIsDone() ? { ok: true, msg: 'Perfect world recorded: T = 24, no waiting.' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 400' }; } },
-      { t: 'task', h: '<span class="tt">Now the real world</span> Same averages, full randomness. Play to t = 2500 and compare against the pinned run. Watch queues appear <i>out of nowhere</i>.', setup() { $('pinBtn').click(); lsParams([10, 10, 8, 8, 8, 8, 8, 8]); lsEnd('time', 2500); lsSpeed(40); $('resetBtn').click(); }, verify() { const o = obsSnapshot(); return runIsDone() ? { ok: true, msg: 'Throughput time ≈ ' + (isNaN(o.T) ? '—' : o.T.toFixed(0)) + ' min vs 24 in the pinned run — same averages!' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 2500 · avg T so far: ' + (isNaN(obsSnapshot().T) ? '—' : obsSnapshot().T.toFixed(0)) }; } },
-      { t: 'quiz', q: 'Utilization is still 80% at every station — identical to the perfect morning. So where did the ~4–5× longer throughput time come from?', opts: [{ o: 'From variability alone: random bunching creates queues even though the workload is unchanged', ok: 1 }, { o: 'The café secretly has less capacity now', ok: 0 }, { o: 'More customers arrived than before', ok: 0 }], pts: 10, ex: 'Kingman’s formula: waiting = variability × utilization-pressure × time. Turn any factor to zero and waiting vanishes; the perfect morning had the variability factor at exactly zero.' },
+      { t: 'task', h: '<span class="tt">Now the real world</span> Same averages, full randomness. Play to t = 2500 and compare against the pinned run. Watch queues appear <i>out of nowhere</i>.', setup() { $('pinBtn').click(); lsParams([10, 10, 8, 8, 8, 8, 8, 8]); lsEnd('time', 2500); lsSpeed(40); $('resetBtn').click(); }, verify() { const o = obsSnapshot(); return runIsDone() ? { ok: true, msg: 'Throughput time ≈ ' + (isNaN(o.Tbnd) ? '—' : o.Tbnd.toFixed(0)) + ' min vs 24 in the pinned run — same averages!' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 2500 · avg T so far: ' + (isNaN(obsSnapshot().Tbnd) ? '—' : obsSnapshot().Tbnd.toFixed(0)) }; } },
+      { t: 'quiz', q: 'Utilization is still 80% at every activity — identical to the perfect morning. So where did the ~4–5× longer ⟦Tterm⟧ come from?', opts: [{ o: 'From variability alone: random bunching creates queues even though the workload is unchanged', ok: 1 }, { o: 'The café secretly has less capacity now', ok: 0 }, { o: 'More customers arrived than before', ok: 0 }], pts: 10, ex: 'Kingman’s formula: waiting = variability × utilization-pressure × time. Turn any factor to zero and waiting vanishes; the perfect morning had the variability factor at exactly zero.' },
       { t: 'quiz', q: 'Which is the best REAL café translation of “reduce CV”?', opts: [{ o: 'Standardize: simpler menu, consistent prep steps, steadier arrival stream (reservations, staggered breaks)', ok: 1 }, { o: 'Hire a faster barista', ok: 0 }, { o: 'Add a bigger waiting area', ok: 0 }], pts: 10, ex: 'Speed attacks the mean; standardization attacks the variance. A bigger waiting area just stores the problem comfortably.' },
       { t: 'take', h: 'Two cafés with <b>identical averages</b> can have wildly different waits. Variability — not workload — creates the line. <b>Two processes with identical averages can have very different waiting times.</b>' }
     ]},
     { ico: '📈', title: 'The utilization trap', pts: 20, steps: [
-      { t: 'read', h: '<p>The owner looks at your books: “Your stations are idle 20% of the time. Cut capacity — busy is efficient!” Before you obey, look at the <b>waiting time vs. utilization</b> curve: it shows what customers pay, in waiting, for every extra point of busy-ness.</p>' },
+      { t: 'read', h: '<p>The owner looks at your books: “Your activities are idle 20% of the time. Cut capacity — busy is efficient!” Before you obey, look at the <b>waiting time vs. utilization</b> curve: it shows what customers pay, in waiting, for every extra point of busy-ness.</p>' },
       { t: 'task', h: '<span class="tt">The utilization–waiting curve</span> The café runs at CV = 1. Use the slider to push demand up (smaller gap between customers) until utilization reaches <b>≈ 90%+</b> (inter-arrival ≤ 9 min). Watch the dot climb the curve. Hover the curve to read values.', ctl: [{ id: 'n-aMean', lab: 'Minutes between customers', min: 8.5, max: 20, step: 0.5 }], setup() { lsParams([12, 12, 8, 8, 8, 8, 8, 8]); lsLimits(null); lsEnd('manual'); lsSpeed(40); $('hcSel').value = 'auto'; $('hcSel').dispatchEvent(new Event('change')); $('resetBtn').click(); focusCards(['hockey']); }, verify() { return P.aMean <= 9 ? { ok: true, msg: 'Utilization ' + (100 * 8 / P.aMean).toFixed(0) + '% — look how steep the curve is under the dot now.' } : { ok: false, msg: 'Utilization ' + (100 * 8 / P.aMean).toFixed(0) + '% — keep pushing demand up (slider down).' }; } },
       { t: 'quiznum', q: 'Hover the curve: read Tq at 80% utilization and at 95%. Roughly how many times longer is the 95% wait?', unit: '× longer', ans: 4.75, tol: 1.75, pts: 10, ex: 'ρ/(1−ρ): at 80% → 4; at 95% → 19. About 5× the wait for 15 points of utilization. Waiting time grows nonlinearly with utilization.' },
       { t: 'quiz', q: 'So what do you tell the owner about the 20% idle time?', opts: [{ o: 'With variability, that slack is insurance — remove it and waiting explodes nonlinearly', ok: 1 }, { o: 'The owner is right: idle capacity is pure waste in any system', ok: 0 }, { o: 'Idle time only matters if workers are salaried', ok: 0 }], pts: 10, ex: 'In a variable world, the LAST bits of utilization are the most expensive thing you can buy. Airlines, ERs, and good cafés all deliberately keep slack.' },
@@ -2146,14 +3115,14 @@
     { ico: '🎟️', title: 'WIP caps: the pull system', pts: 25, steps: [
       { t: 'read', h: '<p>Still game day, but the fire marshal caps your café at <b>8 customers inside</b>. You install mobile-order pickup: a new customer is admitted only when one leaves (this is <b>CONWIP</b> — constant WIP, the logic behind kanban). Everyone else waits outside on their phones.</p>' },
       { t: 'task', h: '<span class="tt">Install the cap</span> Set the Line WIP cap to <b>8</b> with the slider, then Play to t = 1200. Watch: the inside stays calm and constant, the crowd outside grows.', ctl: [{ id: 'lim-conwip', lab: 'Line WIP cap (customers inside)', min: 3, max: 15, step: 1 }], setup() { lsParams([4, 0, 8, 0, 8, 0, 8, 0]); lsEnd('time', 1200); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { if (L.conwip !== 8) return { ok: false, msg: 'Set the cap to exactly 8 (currently ' + (isFinite(L.conwip) ? L.conwip : '∞') + ').' }; if (!runIsDone()) return { ok: false, msg: 'Cap = 8 ✓ — Play to t = 1200. Inside: ' + lineWip() + ' · outside: ' + S.backlog.length }; return { ok: true, msg: 'Inside: steady at ' + lineWip() + '. Outside: ' + S.backlog.length + ' and growing. The cap moved the problem where you can see it.' }; } },
-      { t: 'quiznum', q: 'Inside the café: 8 customers, and one leaves every 8 minutes (bottleneck pace). By Little’s Law, how many minutes does the INSIDE journey take?', unit: 'min', ans: 64, tol: 6, pts: 10, ex: 'T_inside = I / R = 8 × 8 = 64 min — stable and predictable, no matter how huge the crowd outside gets. That predictability is what the cap buys.' },
-      { t: 'task', h: '<span class="tt">Two truths</span> Now tick “Count jobs waiting outside” in the WIP limits box and watch WIP and throughput time flip to the customer’s view.', setup() { }, verify() { return $('cntOutside').checked ? { ok: true, msg: 'See it? Same café, same instant — inside view says “under control”, customer view says “disaster”. Both are true.' } : { ok: false, msg: 'Tick the “Count jobs waiting outside” checkbox (below in this panel).' }; }, ctl2: true },
+      { t: 'quiznum', q: 'Inside the café: 8 customers (the café includes its counter line — the “incl. the arrival queue” readout), and one leaves every 8 minutes (bottleneck pace). By Little’s Law, how many minutes does the inside-the-café journey take?', unit: 'min', ans: 64, tol: 6, pts: 10, ex: 'T_inside = I / R = 8 × 8 = 64 min — stable and predictable, no matter how huge the crowd outside gets. That predictability is what the cap buys.' },
+      { t: 'task', h: '<span class="tt">Two truths</span> Now tick the checkbox in the WIP limits box and watch the “incl. the arrival queue” readouts extend to the crowd waiting outside — the customer’s view.', setup() { }, verify() { return $('cntOutside').checked ? { ok: true, msg: 'See it? Same café, same instant — the inside readouts say “under control”, the customer view says “disaster”. Both are true.' } : { ok: false, msg: 'Tick the checkbox in the WIP limits panel (“Extend the readouts…”).' }; }, ctl2: true },
       { t: 'quiz', q: 'Did the WIP cap fix game day?', opts: [{ o: 'No — customers wait just as long overall. But it made the inside stable, visible, and honest about the real problem: capacity', ok: 1 }, { o: 'Yes — throughput time inside dropped, so customers are served faster', ok: 0 }, { o: 'Yes — the queue stopped growing', ok: 0 }], pts: 10, ex: 'A WIP cap is a promise about the inside of your process, not about the customer’s total wait. Its real gifts: bounded chaos, fast internal feedback, and a problem you can finally see (and staff against).' },
       { t: 'take', h: 'WIP caps don’t cure overload — they <b>relocate</b> the queue to where it’s visible and keep the inside predictable (T = cap / R). That’s the heart of pull systems and lean.' }
     ]},
     { ico: '🏆', title: 'Capstone: design The Daily Grind', pts: 45, steps: [
-      { t: 'read', h: '<p>Final design task. Redesign the café for the fall rush: a customer every <b>6 minutes</b> on average (CV = 1 — real arrivals), station CVs at 0.5 (well-standardized, not robotic).</p><p><b>Targets:</b> serve at least <b>9.5 customers/hr</b>, average throughput time <b>≤ 60 min</b>, average customers inside <b>≤ 10</b>.</p><p><b>Constraint:</b> total honest work is 15+ minutes per cup — your three station means must sum to <b>at least 15</b> (each ≥ 4).</p><p>Think before sliding: where should the bottleneck be? How much slack does CV = 1 demand?</p>' },
-      { t: 'task', h: '<span class="tt">Design and prove it</span> Set the three station times, then Play — the run ends after 200 customers and your design is judged on the measured results. Redesign and re-run as often as you like.', ctl: [
+      { t: 'read', h: '<p>Final design task. Redesign the café for the fall rush: a customer every <b>6 minutes</b> on average (CV = 1 — real arrivals), activity CVs at 0.5 (well-standardized, not robotic).</p><p><b>Targets:</b> serve at least <b>9.5 customers/hr</b>, average ⟦Tterm⟧ including the entry line <b>≤ 60 min</b>, average customers in the café <b>≤ 10</b> (both judged on the “incl. the arrival queue” readouts).</p><p><b>Constraint:</b> total honest work is 15+ minutes per cup — your three activity means must sum to <b>at least 15</b> (each ≥ 4).</p><p>Think before sliding: where should the bottleneck be? How much slack does CV = 1 demand?</p>' },
+      { t: 'task', h: '<span class="tt">Design and prove it</span> Set the three activity times, then Play — the run ends after 200 customers and your design is judged on the measured results. Redesign and re-run as often as you like.', ctl: [
           { id: 'n-m1', lab: 'Order time (min)', min: 4, max: 12, step: 0.5, halfSd: true },
           { id: 'n-m2', lab: 'Brew time (min)', min: 4, max: 12, step: 0.5, halfSd: true },
           { id: 'n-m3', lab: 'Serve time (min)', min: 4, max: 12, step: 0.5, halfSd: true }
@@ -2172,7 +3141,7 @@
           if (rOk && tOk && wOk) return { ok: true, msg: 'ALL TARGETS MET — ' + parts.join(' · ') + '. You designed a process!' };
           return { ok: false, msg: parts.join(' · ') + ' — adjust and re-run.' };
         }, pts: 40 },
-      { t: 'quiz', q: 'Reflect: which single idea did the winning design lean on most?', opts: [{ o: 'Keeping every station’s utilization comfortably below 100% — because CV = 1 punishes tight capacity (Lesson 5)', ok: 1 }, { o: 'Making one station extremely fast', ok: 0 }, { o: 'Little’s Law forces any design to work', ok: 0 }], pts: 5, ex: 'A balanced-ish line with real slack beats a lopsided one: the slowest station sets capacity (L2), variability taxes its utilization (L4–5), and Little’s Law converts your T into WIP (L3). One design, five lessons.' },
+      { t: 'quiz', q: 'Reflect: which single idea did the winning design lean on most?', opts: [{ o: 'Keeping every activity’s utilization comfortably below 100% — because CV = 1 punishes tight capacity (Lesson 5)', ok: 1 }, { o: 'Making one activity extremely fast', ok: 0 }, { o: 'Little’s Law forces any design to work', ok: 0 }], pts: 5, ex: 'A balanced-ish line with real slack beats a lopsided one: the slowest station sets capacity (L2), variability taxes its utilization (L4–5), and Little’s Law converts your T into WIP (L3). One design, five lessons.' },
       { t: 'take', h: 'Process design in one breath: <b>find the bottleneck, buy slack where variability lives, cap WIP, and let Little’s Law check your work.</b> ' }
     ]}
   ];
@@ -2235,6 +3204,7 @@
   function startLesson(i) {
     Course.lesson = i; Course.step = 0;
     lsCheckbox('on-2', true); lsCheckbox('on-3', true);
+    lsCheckbox('buf-2', true); lsCheckbox('buf-3', true);
     lsCheckbox('cntOutside', false); lsCheckbox('detailsChk', false);
     lsLimits(null);
     setStationNames(CAFE_NAMES);
@@ -2410,9 +3380,12 @@
     document.querySelectorAll('.ntR').forEach(e => e.textContent = N.R);
     document.querySelectorAll('.ntT').forEach(e => e.textContent = N.T);
     document.querySelectorAll('.ntI').forEach(e => e.textContent = N.I);
+    document.querySelectorAll('.ntTterm').forEach(e => e.textContent = N.Tterm);
+    document.querySelectorAll('.ntTtermC').forEach(e => e.textContent = N.TtermC);
     const ls2 = $('lawSpan'); if (ls2) ls2.textContent = N.law;
     const lr = document.querySelector('.lawRT'); if (lr) lr.textContent = N.R + ' × ' + N.T;
     refreshBadges(); updateAll();
+    if ($('expModal').classList.contains('open')) expRender();   // export preview mirrors the stage's notation
     if (document.body.classList.contains('learn') && Course.lesson != null) {
       const stp = LESSONS[Course.lesson].steps[Course.step];
       if (stp && (stp.t === 'read' || stp.t === 'take')) renderStep();
@@ -2428,6 +3401,19 @@
     state: S, params: P, limits: L,
     theory: computeTheory, obs: obsSnapshot,
     lineWip, sysWip,
+    // fast-forward the event queue to simulated time tmax without frame-by-frame rendering (QC use)
+    ff(tmax) {
+      let guard = 0;
+      while (S.events.length && S.events[0].time <= tmax && guard++ < 500000) {
+        const e = S.events.shift();
+        S.t = e.time;
+        processEvent(e);
+      }
+      S.t = Math.max(S.t, tmax);
+      advanceIntegrals(S.t);
+      updateAll();
+    },
+    resetStats,
     learn: { Course, makeCode, readCode }
   };
 })();
