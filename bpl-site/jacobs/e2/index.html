@@ -225,7 +225,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.6</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.8</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -430,12 +430,12 @@
         if (E.cfg.bufNames) el('text', { id: 'bufName' + nd.j, x: nd.x, y: CY - TRI_H / 2 - 8, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
         const c = el('text', { id: 'buf' + nd.j + '-cnt', x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
         c.textContent = '';
-        const pl = el('text', { id: 'buf' + nd.j + '-plus', x: nd.x, y: CY - TRI_H / 2 - 42, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#a5202f' }, SVG);
+        const pl = el('text', { id: 'buf' + nd.j + '-plus', x: nd.x, y: CY + TRI_H / 2 + 48, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#a5202f' }, SVG);
         pl.textContent = '';
       } else {
         el('polygon', { points: (nd.x - TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + (nd.x + TRI_W / 2) + ',' + (CY - TRI_H / 2) + ' ' + nd.x + ',' + (CY + TRI_H / 2), fill: 'rgba(46,125,50,.08)', stroke: '#5c6b7a', 'stroke-width': 2.2, 'stroke-linejoin': 'round' }, SVG);
         el('text', { x: nd.x, y: CY + TRI_H / 2 + 16, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: '#33475b' }, SVG).textContent = nd.name;
-        const dc = el('text', { id: 'doneCnt', x: nd.x, y: CY + TRI_H / 2 + 32, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
+        const dc = el('text', { id: 'doneCnt', x: nd.x, y: CY + TRI_H / 2 + 48, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#52514e' }, SVG);
         dc.textContent = '';
         if (opts.showR !== false) {
           const caps = E.cfg.stations.map(st2 => (st2.m || 1) * 60 / st2.p);
@@ -519,7 +519,7 @@
         drawPerson(nx + (rem - (rows[rr] - 1) / 2) * 15, tip - rr * 14, 12.5, GREEN);
       });
       const pl = document.getElementById('buf' + j + '-plus');
-      if (pl) pl.textContent = arr.length > VIS ? '+' + (arr.length - VIS) + ' more' : '';
+      if (pl) pl.textContent = arr.length > VIS ? '+' + (arr.length - VIS > 99 ? '99+' : arr.length - VIS) + ' more' : '';
       const c = document.getElementById('buf' + j + '-cnt');
       if (c) c.textContent = arr.length ? arr.length + ' waiting' : '';
     });
@@ -574,7 +574,7 @@
       ctx.restore();
     });
     const dc = document.getElementById('doneCnt');
-    if (dc) dc.textContent = doneCount ? doneCount + ' ' + (E.cfg.doneWord || 'funded') : '';
+    if (dc) dc.textContent = doneCount ? (doneCount > 99 ? '99+' : doneCount) + ' ' + (E.cfg.doneWord || 'funded') : '';
     return { waiting, serving, done: donePile.length };
   }
 
@@ -785,7 +785,19 @@
     { t: 'quiz', dim: true, dimNote: 'New case — the simulation still shows the loan pipeline.', q: '<span class="qtag off">NEW CASE</span><br>An IPO team runs due diligence (4 days per deal) → drafting (6 days) → filing (1 day), three separate teams working in series. A client asks: “Can you take on one new deal every 10 business days?”', opts: [{ o: 'Yes — the slowest team (drafting) releases a deal every 6 days, and one per 6 days is faster than one per 10', ok: 1 }, { o: 'No — a deal takes 4 + 6 + 1 = 11 days start to finish, and 11 > 10', ok: 0 }, { o: 'Yes, easily — filing takes only 1 day', ok: 0 }], pts: 10, ex: 'This question contains two separate questions. <b>RATE (capacity):</b> how often can a deal start? The bottleneck is drafting at 6 days/deal → system capacity = one deal per 6 days. Demand = one per 10 days. 1/6 > 1/10 → yes, comfortably. <b>DURATION (⟦Tterm⟧):</b> ⟦T⟧ = 4 + 6 + 1 = 11 days per deal. The error to avoid is comparing 11 (how long ONE deal is inside) with 10 (the spacing between deals) — a duration and a spacing, two different kinds of quantity. Deals overlap: while deal #1 sits in drafting, deal #2 is already in due diligence — three teams, three deals, all moving at once. Say yes, then tell the client each deal takes ~11 days door to door. Confusing the rate with the duration is how firms overpromise — or turn away work they could easily take.' },
     { t: 'task', pg: 'caseA', h: '<span class="tt">Business case: the urgent-care clinic</span><span class="qtag off">NEW CASE</span> An urgent-care clinic treats walk-in patients: <b>Registration</b> (processing time p = 2 minutes) → <b>Physician</b> (p = 10 minutes) → <b>Discharge</b> (p = 3 minutes). Patients arrive every 6 minutes (demand: 10 patients/hour). The waiting room fills further every hour, and the clinic can fund one improvement.<br>Turn one option on, press <b>▶ Play</b>, and read the result. Turning an option off restores the original clinic.', toggles: [{ label: 'Hire a physician' }, { label: 'Hire receptionists' }, { label: 'Expand the waiting room (Buffer 2)' }], applyToggles(ts) { E.cfg.stations[0].p = 2; E.cfg.stations[1].p = 10; let flash = null; if (ts.on0) { E.cfg.stations[1].p = 5; flash = 'mapCap1'; } if (ts.on1) { E.cfg.stations[0].p = 1; flash = 'mapCap0'; } if (ts.on2) { flash = 'bufName1'; } computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, showP: true, hotDemand: true }); updateWidgets(); if (flash) { const f = document.getElementById(flash); if (f) f.setAttribute('class', 'flashIn'); } }, unlock: 'Find the option that stops the waiting room from growing; the exercise unlocks after that run reaches t = 60.', endT: 60, verify(ts) { const anyOn = ts.on0 || ts.on1 || ts.on2; if (!anyOn) return { ok: false, msg: E.playing ? 'Running… the waiting room grows at 10 − 6 = 4 patients/hour. Turn one option on.' : 'Turn one option on.' }; if (E.t < 30) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the waiting room.' : 'Press ▶ Play to test this option.' }; if (ts.on0) { if (E.t < 59.9) return { ok: false, msg: 'Running… t = ' + Math.floor(E.t) + ' / 60 — the waiting room has stopped growing.' }; return { ok: true, msg: 'A second physician doubles that capacity: system capacity = min(30, 12, 20) = 12 patients/hour, so throughput = min(10, 12) = 10 patients/hour = demand — the waiting room stops growing. The other options never touched the constraint.' }; } if (ts.on1) return { ok: false, warn: true, msg: 'Registration was not the constraint. System capacity is still min(60, 6, 20) = 6 patients/hour, and the room keeps filling at 4 patients/hour. Turn this off and try another option.' }; return { ok: false, warn: true, msg: 'A larger waiting room holds more waiting patients; the rate of care is unchanged. Throughput = min(10, 6) = 6 patients/hour, and the room keeps filling. Turn this off and try another option.' }; } },
     { t: 'match', pg: 'floodRecap', pts: 10 },
-    { t: 'task', pg: 'sandbox', h: '<span class="tt">Design your own process</span>Nothing in this step is graded.<br>Set the arrival gap and the three processing times, press <b>▶ Play</b>, and test your predictions in the simulation: where does the bottleneck sit? Does a queue grow, and at what rate?<br><br><b>Challenge:</b> produce a queue in front of <i>Closing</i> — it has never had one. <button class="mini" id="sbHintBtn" style="margin-left:6px">Hint</button><span id="sbHintTxt" style="display:none"><br>Make Closing the slowest step, and give the process more demand than Closing can handle.</span>', unlock: 'Continue unlocks after a 60-minute run.', ctlSB: true, verify() { return E.t >= 60 ? { ok: true, msg: 'Run as many designs as you like and continue whenever you are ready. Current bottleneck: ' + E.cfg.stations[bnIdx()].name + '.' } : { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — give each design at least 60 minutes.' : 'Set your dials and press ▶ Play.' }; } },
+    { t: 'task', pg: 'sandbox', h: '<span class="tt">Design your own process</span>Nothing in this step is graded.<br>Set the inter-arrival rate and the three processing times, press <b>▶ Play</b>, and test your predictions in the simulation: where does the bottleneck sit? Does a queue grow, and at what rate?<br><br><b>Challenge:</b> produce a queue in front of <i>Closing</i> — it has never had one. <button class="mini" id="sbHintBtn" style="margin-left:6px">Hint</button><span id="sbHintTxt" style="display:none"><br>Make Closing the slowest step, and give the process more demand than Closing can handle.</span>', unlock: 'Continue unlocks when a 60-minute run produces the queue; after a second full attempt it unlocks either way.', ctlSB: true, verify(ts) {
+      if (E.t < (ts.hiT || 0) - 1) { ts.hiT = 0; ts.counted = false; }   // dials changed or run restarted — a fresh attempt
+      ts.hiT = Math.max(ts.hiT || 0, E.t);
+      const cap2 = 60 / E.cfg.stations[2].p, upMin = Math.min(60 / E.cfg.stations[0].p, 60 / E.cfg.stations[1].p);
+      const inflow = Math.min(60 / E.cfg.a, upMin);
+      const met = cap2 < upMin - 1e-9 && inflow > cap2 + 1e-9;
+      const qNow = SCHED.filter(r => r.s[2] && r.s[2].eb <= E.t && E.t < r.s[2].st).length;
+      if (E.t < 60) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — give each design at least 60 minutes.' : 'Set your dials and press ▶ Play.' };
+      if (met) return { ok: true, msg: 'Challenge met — ' + qNow + ' waiting in front of Closing, and the queue keeps growing: Closing is now the slowest activity, and work reaches it faster than its ' + cap2.toFixed(1) + ' jobs/hour capacity.' };
+      if (!ts.counted) { ts.counted = true; ts.fails = (ts.fails || 0) + 1; }
+      if (ts.fails >= 2) return { ok: true, msg: 'Continue is unlocked. For the record, the queue needs two things at once: Closing must be the slowest of the three activities — the largest processing time — and jobs must reach it faster than it can process them. One design that works: Closing at 8 minutes, one arrival every 4 minutes. Try it if you like, then continue.' };
+      return { ok: false, warn: true, msg: 'This run produced no queue in front of Closing. Two things must both hold: Closing needs the largest processing time of the three, and jobs must arrive faster than Closing can process them. Adjust the dials and run again.' };
+    } },
     { t: 'take', h: 'A chain’s capacity equals its slowest resource’s capacity: the <b>bottleneck</b> (highest utilization). When the system is overloaded, the time between finished jobs equals the bottleneck’s p; resources downstream are <b>starved</b>, work accumulates upstream — an <b>inventory build-up</b> growing at (rate in − rate out) — and an activity with no room to release its finished job is <b>blocked</b>; a buffer relocates waiting but does not add capacity. Fix the bottleneck and it <b>moves</b> to the new smallest capacity — and the build-up moves with it. A bottleneck is defined by capacity, not by visible queues.' }
   ];
   const SECTIONS = [
@@ -989,7 +1001,7 @@
       (st.toggles || []).forEach((tg, i) => { h += '<label class="switchrow"><span class="switch"><input type="checkbox" id="tg' + i + '"><span class="slider"></span></span><span class="swlab">' + tg.label + '</span></label>'; });
       if (st.act || st.unlock) h += '<div class="actstrip">' + (st.act ? '<b>YOUR TASK:</b> ' + subN(st.act) + (st.unlock ? ' &nbsp;·&nbsp; ' : '') : '') + (st.unlock ? '<b>TO CONTINUE:</b> ' + subN(st.unlock) : '') + '</div>';
       if (st.ctlSB) {
-        const sb = [['sbA', 'arrival gap (min between applications)', E.cfg.a, 1, 10],
+        const sb = [['sbA', 'Inter-arrival rate — average time between two jobs arriving (minutes)', E.cfg.a, 1, 10],
                     ['sbP0', 'Intake p (min)', E.cfg.stations[0].p, 1, 8],
                     ['sbP1', 'Underwriting p (min)', E.cfg.stations[1].p, 1, 8],
                     ['sbP2', 'Closing p (min)', E.cfg.stations[2].p, 1, 8]];
@@ -1170,7 +1182,7 @@
       C.poll = setInterval(() => {
         const eln = $('tstat'); if (!eln) { stopPoll(); return; }
         let r; try { r = st.verify(tdata); } catch (e) { r = { ok: false, msg: '…' }; }
-        eln.textContent = r.msg; eln.className = 'lp-status' + (r.ok ? ' pass' : (r.warn ? ' warn' : ''));
+        eln.innerHTML = subN(r.msg); eln.className = 'lp-status' + (r.ok ? ' pass' : (r.warn ? ' warn' : ''));
         if (r.ok) { $('contBtn').disabled = false; (st.acts || []).forEach((a2, i2) => { const ab = $('act' + i2); if (ab) ab.classList.remove('pulse'); }); }
       }, 500);
     }
