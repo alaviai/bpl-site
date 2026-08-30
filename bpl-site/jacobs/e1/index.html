@@ -141,9 +141,6 @@
   @keyframes flashIn { 0%, 100% { opacity: 1; } 50% { opacity: .12; } }
   .flashIn { animation: flashIn .65s ease 5; }
 
-
- }
-
   .ntR, .ntT, .ntI { text-transform: none; font-style: italic; }
   .verifybox { margin-top: 14px; font-size: 12px; color: var(--muted); }
   .verifybox input { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-family: var(--sans); font-size: 12px; margin-top: 4px; width: 100%; }
@@ -206,7 +203,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.6</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.8</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -1192,6 +1189,7 @@
   renderStep();
   requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
 
+  applyNotation();
   window.__P101 = { C, E, STEPS, metrics, jobArr, jobDone, renderStep, tourReset: () => { nbLearned.length = 0; renderNotebook(); curPage = null; } };
 })();
 </script>

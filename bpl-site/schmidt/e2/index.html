@@ -143,9 +143,8 @@
   .flashIn { animation: flashIn .65s ease 5; }
 
 
-  /* confetti */ }
 
-  .ntR, .ntT, .ntI { text-transform: none; }
+  .ntR, .ntT, .ntI { text-transform: none; font-style: italic; }
   .verifybox { margin-top: 14px; font-size: 12px; color: var(--muted); }
   .verifybox input { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-family: var(--sans); font-size: 12px; margin-top: 4px; width: 100%; }
   @media (max-width: 1150px) { .app { grid-template-columns: 1fr; } .nb { position: static; } .tiles { grid-template-columns: repeat(2,1fr); } }
@@ -225,7 +224,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 3.8</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 4.1</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -331,13 +330,16 @@
     const st = E.cfg.stations, a = E.cfg.a, N = 600, WARM = 6;
     SCHED = [];
     const dep = st.map(() => -1e9);           // when each station's previous job DEPARTED
+    const hist = st.map(() => []);            // departure history (for m parallel servers)
     const nb = E.cfg.noBufAfter;              // station index with no buffer after it (blocking possible there)
     for (let k = -WARM; k < N; k++) {
       const arr = a * (k + 1);
       let t = arr;
       const rec = { arr, s: [] };
       for (let j = 0; j < st.length; j++) {
-        const start = Math.max(t, dep[j]);
+        const mj = st[j].m || 1;
+        const free = mj > 1 ? (hist[j].length >= mj ? hist[j][hist[j].length - mj] : -1e9) : dep[j];
+        const start = Math.max(t, free);
         const fi = start + st[j].p;
         rec.s.push({ eb: t, st: start, fi, dep: fi });
         t = fi;
@@ -350,14 +352,14 @@
         let tt = s1.fi;
         for (let j = nb + 2; j < st.length; j++) { const sj = rec.s[j]; sj.st = Math.max(tt, dep[j]); sj.fi = sj.st + st[j].p; sj.dep = sj.fi; tt = sj.fi; }
       }
-      for (let j = 0; j < st.length; j++) dep[j] = rec.s[j].dep;
+      for (let j = 0; j < st.length; j++) { dep[j] = rec.s[j].dep; hist[j].push(rec.s[j].dep); }
       rec.done = rec.s[st.length - 1].fi;
       SCHED.push(rec);
     }
   }
   function bnIdx() {
     let b = 0;
-    E.cfg.stations.forEach((s, i) => { if (s.p > E.cfg.stations[b].p) b = i; });
+    E.cfg.stations.forEach((s, i) => { if (s.p / (s.m || 1) > E.cfg.stations[b].p / (E.cfg.stations[b].m || 1)) b = i; });
     return b;
   }
 
@@ -373,15 +375,29 @@
     const seq = [];
     st.forEach((s, j) => {
       if (!(E.cfg.noBufAfter !== undefined && j === E.cfg.noBufAfter + 1)) seq.push({ type: 'buf', j, name: (E.cfg.bufNames && E.cfg.bufNames[j]) || 'Buffer ' + (j + 1) });
-      seq.push({ type: 'act', j, name: s.name, p: s.p, ic: s.ic });
+      seq.push({ type: 'act', j, name: s.name, p: s.p, m: s.m || 1, ic: s.ic });
     });
     seq.push({ type: 'done', name: E.cfg.doneName });
-    const step = (900 - 150) / seq.length;
-    let x = 95;
-    seq.forEach(nd => { nd.x = Math.min(x, 850); NODES.push(nd); x += step; });
+    const hasM = seq.some(nd => nd.type === 'act' && nd.m > 1);
+    if (!hasM) {
+      const step = (900 - 150) / seq.length;
+      let x = 95;
+      seq.forEach(nd => { nd.x = Math.min(x, 850); NODES.push(nd); x += step; });
+    } else {
+      // exact packing: no footprint overlaps; the fork/merge gaps around the parallel station get the spare room
+      const fw = nd => nd.type === 'act' ? (nd.m > 1 ? ACT_W - 22 : ACT_W) : TRI_W;
+      const sum = seq.reduce((a2, nd) => a2 + fw(nd), 0);
+      const gapW = [];
+      for (let gi = 0; gi < seq.length - 1; gi++) gapW.push((seq[gi].type === 'act' && seq[gi].m > 1) || (seq[gi + 1].type === 'act' && seq[gi + 1].m > 1) ? 2.5 : 1);
+      const gsum = gapW.reduce((a2, b2) => a2 + b2, 0);
+      const unit = Math.max(6, (830 - sum) / gsum);
+      let x = 50;
+      seq.forEach((nd, i3) => { const w = fw(nd); nd.x = x + w / 2; NODES.push(nd); x += w + (i3 < seq.length - 1 ? unit * gapW[i3] : 0); });
+    }
   }
   function drawMap(opts) {
     mapOpts = opts = opts || {};
+    drawMap.m2 = null;
     layout();
     SVG.innerHTML = '';
     const defs = el('defs', {}, SVG);
@@ -403,6 +419,7 @@
     }
     for (let i = 0; i < NODES.length - 1; i++) {
       const a = NODES[i], b = NODES[i + 1];
+      if ((a.type === 'act' && a.m > 1) || (b.type === 'act' && b.m > 1)) continue;   // fork/merge drawn with the parallel boxes
       const aw = a.type === 'act' ? ACT_W / 2 : TRI_W / 2;
       const bw = b.type === 'act' ? ACT_W / 2 : TRI_W / 2;
       let lx1 = a.x + aw + 4, lx2 = b.x - bw - 8;
@@ -415,13 +432,33 @@
     NODES.forEach(nd => {
       if (nd.type === 'act') {
         const isBn = opts.showBn && nd.j === bn;
+        if (nd.m > 1) {   // parallel processors: fork → two boxes → merge (one job per underwriter)
+          const bh = 40, gap = 18, AW2 = ACT_W - 22;
+          const yTop = CY - gap / 2 - bh, yBot = CY + gap / 2;
+          el('rect', { x: nd.x - AW2 / 2, y: yTop, width: AW2, height: bh, rx: 9, fill: '#fff', stroke: isBn ? '#a5202f' : '#5c6b7a', 'stroke-width': isBn ? 3 : 2.2 }, SVG);
+          el('rect', { x: nd.x - AW2 / 2, y: yBot, width: AW2, height: bh, rx: 9, fill: '#fff', stroke: isBn ? '#a5202f' : '#5c6b7a', 'stroke-width': isBn ? 3 : 2.2 }, SVG);
+          const n1 = el('text', { x: nd.x - AW2 / 2 + 8, y: yTop + bh / 2 + 4, 'text-anchor': 'start', 'font-size': 10.5, 'font-weight': 700, fill: '#8d99a5' }, SVG); n1.textContent = 'underwriter 1';
+          const n2 = el('text', { x: nd.x - AW2 / 2 + 8, y: yBot + bh / 2 + 4, 'text-anchor': 'start', 'font-size': 10.5, 'font-weight': 700, fill: '#8d99a5' }, SVG); n2.textContent = 'underwriter 2';
+          const ndi = NODES.indexOf(nd);
+          const prev = NODES[ndi - 1], nxt = NODES[ndi + 1];
+          if (prev) { const pw = prev.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+            el('line', { x1: prev.x + pw + 4, y1: CY, x2: nd.x - AW2 / 2 - 6, y2: yTop + bh / 2, stroke: '#8d99a5', 'stroke-width': 2, 'marker-end': 'url(#arr)' }, SVG);
+            el('line', { x1: prev.x + pw + 4, y1: CY, x2: nd.x - AW2 / 2 - 6, y2: yBot + bh / 2, stroke: '#8d99a5', 'stroke-width': 2, 'marker-end': 'url(#arr)' }, SVG); }
+          if (nxt) { const nw = nxt.type === 'act' ? ACT_W / 2 : TRI_W / 2;
+            el('line', { x1: nd.x + AW2 / 2 + 4, y1: yTop + bh / 2, x2: nxt.x - nw - 8, y2: CY, stroke: '#8d99a5', 'stroke-width': 2, 'marker-end': 'url(#arr)' }, SVG);
+            el('line', { x1: nd.x + AW2 / 2 + 4, y1: yBot + bh / 2, x2: nxt.x - nw - 8, y2: CY, stroke: '#8d99a5', 'stroke-width': 2, 'marker-end': 'url(#arr)' }, SVG); }
+          const mb = el('text', { x: nd.x, y: yTop - 26, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, fill: '#33475b', class: 'flashIn' }, SVG);
+          mb.textContent = 'm = ' + nd.m + ' (one job per underwriter)';
+          drawMap.m2 = { j: nd.j, yTop: yTop + bh / 2, yBot: yBot + bh / 2, AW2 };
+        } else {
         el('rect', { x: nd.x - ACT_W / 2, y: CY - ACT_H / 2, width: ACT_W, height: ACT_H, rx: 10, fill: '#fff', stroke: isBn ? '#a5202f' : '#5c6b7a', 'stroke-width': isBn ? 3.4 : 2.4 }, SVG);
-        el('text', { x: nd.x, y: CY - ACT_H / 2 - 10, 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 800, fill: isBn ? '#a5202f' : '#33475b' }, SVG).textContent = nd.name;
+        }
+        el('text', { x: nd.x, y: nd.m > 1 ? CY - 62 : CY - ACT_H / 2 - 10, 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 800, fill: isBn ? '#a5202f' : '#33475b' }, SVG).textContent = nd.name;
         if (opts.icons && nd.ic) el('text', { x: nd.x, y: CY - ACT_H / 2 - 26, 'text-anchor': 'middle', 'font-size': 24 }, SVG).textContent = nd.ic;
-        if (isBn) el('text', { x: nd.x, y: CY - ACT_H / 2 - 27, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, fill: '#a5202f', 'letter-spacing': '.08em' }, SVG).textContent = 'BOTTLENECK';
-        el('text', { x: nd.x, y: CY + ACT_H / 2 + 17, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#33475b' }, SVG).textContent = 'p = ' + nd.p + ' min';
-        if (opts.showCap) el('text', { id: 'mapCap' + nd.j, x: nd.x, y: CY + ACT_H / 2 + 33, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#2e7d32' }, SVG).textContent = 'capacity = ' + (60 / nd.p).toFixed(0) + ' jobs/hour';
-        if (opts.showU) { const ub = el('text', { id: 'mapU' + nd.j, x: nd.x, y: CY + ACT_H / 2 + 49, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 800, fill: '#d99a06' }, SVG); ub.textContent = 'u = —'; }
+        if (isBn) el('text', { x: nd.x, y: nd.m > 1 ? CY - 90 : CY - ACT_H / 2 - 27, 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 800, fill: '#a5202f', 'letter-spacing': '.08em' }, SVG).textContent = 'BOTTLENECK';
+        el('text', { x: nd.x, y: nd.m > 1 ? CY + 67 : CY + ACT_H / 2 + 17, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 800, fill: '#33475b' }, SVG).textContent = 'p = ' + nd.p + ' min' + (nd.m > 1 ? ' each' : '');
+        if (opts.showCap) el('text', { id: 'mapCap' + nd.j, x: nd.x, y: nd.m > 1 ? CY + 83 : CY + ACT_H / 2 + 33, class: nd.m > 1 ? 'flashIn' : '', 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#2e7d32' }, SVG).textContent = 'capacity = ' + (60 / nd.p * (nd.m || 1)).toFixed(0) + ' jobs/hour';
+        if (opts.showU) { const ub = el('text', { id: 'mapU' + nd.j, x: nd.x, y: nd.m > 1 ? CY + 99 : CY + ACT_H / 2 + 49, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 800, fill: '#d99a06' }, SVG); ub.textContent = 'u = —'; }
         // state tag lives INSIDE the box (shown only when the activity is empty)
         const stt = el('text', { id: 'st' + nd.j + '-state', x: nd.x, y: CY + 5, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 800, 'letter-spacing': '.07em', fill: '#2a78d6' }, SVG);
         stt.textContent = '';
@@ -483,7 +520,7 @@
       const bs0 = document.getElementById('blkSlash'); if (bs0) bs0.setAttribute('display', 'none'); }
     const t = E.t, nS = E.cfg.stations.length;
     const waiting = E.cfg.stations.map(() => []);
-    const serving = E.cfg.stations.map(() => null);
+    const serving = E.cfg.stations.map(() => []);
     const donePile = []; let doneCount = 0;
     for (let k = 0; k < SCHED.length; k++) {
       const r = SCHED[k];
@@ -499,7 +536,7 @@
       for (let j = 0; j < nS; j++) {
         const s = r.s[j];
         if (t < s.st) { waiting[j].push(k); placed = true; break; }
-        if (t < (s.dep !== undefined ? s.dep : s.fi)) { serving[j] = k; serving.blk = serving.blk || {}; serving.blk[j] = t >= s.fi; placed = true; break; }
+        if (t < (s.dep !== undefined ? s.dep : s.fi)) { serving[j].push(k); serving.blk = serving.blk || {}; if (t >= s.fi) serving.blk[j] = true; placed = true; break; }
       }
       if (!placed) {   // traveling to done (start OUTSIDE the box so it never overlaps a state tag)
         const f = (t - r.done) / 1.4;
@@ -512,7 +549,16 @@
       if (!bufNode(j)) return;   // no buffer drawn between blocked stations
       const nx = bufNode(j).x, tip = CY + TRI_H / 2 - 6;
       const VIS = 13;
-      arr.slice(0, VIS).forEach((k, i) => {
+      let pile = arr;
+      if (drawMap.m2 && j === drawMap.m2.j + 1) {
+        pile = [];
+        arr.forEach(k2 => {
+          const f = (t - SCHED[k2].s[drawMap.m2.j].dep) / 1.1;
+          if (f >= 0 && f < 1) { const sy = (k2 % 2 === 0 ? drawMap.m2.yTop : drawMap.m2.yBot) + 2, sx = actNode(drawMap.m2.j).x + drawMap.m2.AW2 / 2; drawPerson(sx + (nx - sx) * f, sy + (CY + 4 - sy) * f, 18, GREEN); }
+          else pile.push(k2);
+        });
+      }
+      pile.slice(0, VIS).forEach((k, i) => {
         const rows = [1, 2, 3, 4, 4, 4];
         let rr = 0, rem = i;
         while (rem >= rows[rr]) { rem -= rows[rr]; rr++; }
@@ -524,11 +570,17 @@
       if (c) c.textContent = arr.length ? arr.length + ' waiting' : '';
     });
     // stations + state tags
-    serving.forEach((k, j) => {
+    serving.forEach((ks, j) => {
       const stEl = document.getElementById('st' + j + '-state');
-      if (k != null) {
+      if (ks.length) {
         const blocked = serving.blk && serving.blk[j];
-        drawPerson(actNode(j).x, blocked ? CY + 22 : CY + 12, blocked ? 20 : 24, blocked ? '#c47f16' : GREEN);
+        if (drawMap.m2 && drawMap.m2.j === j) ks.slice(0, 2).forEach(kk => {
+          const ty = (kk % 2 === 0 ? drawMap.m2.yTop : drawMap.m2.yBot) + 2;
+          const f = (t - SCHED[kk].s[j].st) / 1.1;
+          if (f < 1 && bufNode(j)) { const bx = bufNode(j).x + 14, tx = actNode(j).x; drawPerson(bx + (tx - bx) * Math.max(0, f), CY + 8 + (ty - CY - 8) * Math.max(0, f), 18, GREEN); }
+          else drawPerson(actNode(j).x, ty, 20, GREEN);
+        });
+        else drawPerson(actNode(j).x, blocked ? CY + 22 : CY + 12, blocked ? 20 : 24, blocked ? '#c47f16' : GREEN);
         if (j === E.cfg.noBufAfter) {
           const bl = document.getElementById('blkLink'), bs = document.getElementById('blkSlash');
           if (bl) bl.setAttribute('stroke', blocked ? '#a5202f' : '#8d99a5');
@@ -560,7 +612,9 @@
       drawPerson(dn.x + (col - 1) * 15, CY + TRI_H / 2 - 8 - row * 14, 12, GREEN, .9);
     });
     // progress dials: one sweep = one job; watch how fast each activity's clock turns
-    serving.forEach((k, j) => {
+    serving.forEach((ks, j) => {
+      if (drawMap.m2 && drawMap.m2.j === j) return;
+      const k = ks.length ? ks[0] : null;
       const nd = actNode(j), dx = nd.x + ACT_W / 2 - 15, dy = CY - ACT_H / 2 + 15, rr = 8.5;
       ctx.save();
       ctx.beginPath(); ctx.arc(dx, dy, rr, 0, Math.PI * 2);
@@ -597,7 +651,7 @@
     return {
       done, Rout: done / t * 60,
       gap: lastDone != null && prevDone != null ? lastDone - prevDone : null,
-      utils: busy.map(b => Math.min(1, b / t)), bn
+      utils: busy.map((b, j2) => Math.min(1, b / (t * (E.cfg.stations[j2].m || 1)))), bn
     };
   }
 
@@ -649,11 +703,11 @@
   }
   function theory() {
     const demand = 60 / E.cfg.a;
-    const caps = E.cfg.stations.map(st => 60 / st.p);
+    const caps = E.cfg.stations.map(st => (st.m || 1) * 60 / st.p);
     const syscap = Math.min.apply(null, caps);
     const Rth = Math.min(demand, syscap);
     let cum = demand;
-    const uth = E.cfg.stations.map((st, j) => { cum = Math.min(cum, caps[j]); return Math.min(1, cum * st.p / 60); });
+    const uth = E.cfg.stations.map((st, j) => { cum = Math.min(cum, caps[j]); return Math.min(1, cum * st.p / (60 * (st.m || 1))); });
     return { demand, caps, syscap, Rth, CTth: 60 / Rth, uth };
   }
   function renderSysm(m) {
@@ -774,14 +828,14 @@
     { t: 'read', pg: 'floodBn', h: '<p><b>Core idea:</b> the bottleneck is the resource with the highest utilization. It sets the system’s capacity and its rhythm.</p><span class="formula">Bottleneck = the resource with the highest (implied) utilization · system capacity = the bottleneck’s capacity · when overloaded, CT(system) = the bottleneck’s p</span><p>The map now outlines <b style="color:var(--red)">Underwriting</b> in red. Check the gold tile: <b>100% · 75% · 40%</b> — the profile you computed activity by activity.</p><details class="teach"><summary>Why this works</summary><p>Look at the choreography around the bottleneck: <b>upstream</b>, work piles up — Buffer 2 keeps growing. <b>Downstream</b>, Closing keeps flashing STARVED — idle because the bottleneck feeds it only one job every 5 minutes, less than Closing can process. The queue and the idleness have the same cause: the bottleneck’s limited capacity.</p></details>', learn: 'bn' },
     { t: 'quiznum', pg: 'floodBn', q: 'Now the hard arithmetic: 15 jobs/hour arrive, 12 jobs/hour get funded. The queue in front of Underwriting grows by ___ applications every hour (<mark class="hl">the inventory build-up rate</mark>):', unit: 'jobs/hour', ans: 3, tol: 0.5, pts: 5, hint: 'Inventory build-up rate = rate in − rate out.', hint2: 'Inventory build-up rate = rate in − rate out = 15 jobs/hour − 12 jobs/hour. The difference has nowhere to go but the buffer.', ex: '<span class="formula">Inventory build-up = the queue grows at (rate in − rate out), for as long as demand exceeds capacity</span>15 jobs/hour − 12 jobs/hour = 3 jobs/hour for as long as demand stays at 15 jobs/hour — check the red tile: after your two-hour run the pile grew by about 2 × 3 = 6. And notice: this 3 jobs/hour is exactly the impossible part of the implied utilization — the 25% above 100%, times 12 jobs/hour. Your textbook calls this <b>inventory build-up</b> — same idea, two names. Overloaded queues do not settle; the build-up continues until capacity or demand changes.' },
     { t: 'predict', q: '<b>Before continuing, predict the result.</b> The board approves one upgrade. Which station should receive this approved extra capacity to raise output?', opts: [{ v: 'Underwriting', d: 'the bottleneck; every minute saved there is a minute for the whole system' }, { v: 'Closing', d: 'the exit; faster exit, faster output' }, { v: 'Intake', d: 'it handles every application first' }, 'Split the money across all three'], correct: 0, fb: { ok: 'Only added capacity at the bottleneck raises system capacity. The run shows what happens after Underwriting is upgraded.', bad: 'Only the bottleneck limits output: capacity added anywhere else adds idle time, not throughput. The run shows what happens after Underwriting is upgraded.' } },
-    { t: 'task', pg: 'whack', h: '<span class="tt">Fix the bottleneck — then recheck</span>Two things happen at once. Marketing extends the promotion: applications now arrive every <b>2.5 minutes (24 jobs/hour)</b> — watch Buffer 2 grow. And the board funds <b>a second underwriter</b>: two underwriters share the queue, so a loan clears Underwriting every <b>5 ÷ 2 = 2.5 minutes</b>.<br>Drag the staffing slider down to <b>2.5</b>, press <b>▶ Play</b> (the run restarts when you move it) and run to t = 120. Watch the red BOTTLENECK outline AND the piles — where does the queue live now?', unlock: 'Drag the slider to 2.5 minutes and press the ▶ Play button; the exercise unlocks when the run reaches t = 120.', ctlP2: { min: 2, max: 6, step: 0.5, lab: 'Underwriting min/loan (5 ÷ number of underwriters)' }, endT: 120, verify() { if (E.cfg.stations[1].p > 2.5) return { ok: false, msg: 'Underwriting = ' + E.cfg.stations[1].p + ' min — drag it to 2.5 or less.' }; if (E.t < 119.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the outline and the buffers.' : 'Underwriting = ' + E.cfg.stations[1].p + ' min ✓ — press ▶ Play and run until t = 120 minutes.' }; const q0 = render.lastWaiting ? render.lastWaiting[0].length : 0; const q1 = render.lastWaiting ? render.lastWaiting[1].length : 0; return { ok: true, msg: 'The red outline moved to Intake — and so did the queue: ' + q0 + ' now wait in Buffer 1 while Buffer 2 holds ' + q1 + '. You fixed the bottleneck, and the queue moved to the new bottleneck.' }; } },
-    { t: 'read', pg: 'whack', h: '<p><b>Core idea:</b> fixing the bottleneck moves it. After any capacity change, recompute every resource’s capacity — the new bottleneck is the new smallest.</p><span class="formula">New bottleneck = the new smallest capacity · wherever demand exceeds capacity, the queue grows at (rate in − rate out)</span><p>With Underwriting at 2.5 min, the capacities are 60/3 = 20, 60/2.5 = 24, 60/2 = 30 jobs/hour → system capacity = min(20, 24, 30) = <b>20 jobs/hour</b> (Intake). Demand is 24 jobs/hour, so Buffer 1 grows at 24 − 20 = <b>4 jobs/hour</b>, while Buffer 2 sits empty.</p><details class="teach"><summary>Why this works</summary><p>Two conclusions. First: improvement is repeated — fixing a bottleneck promotes the next-slowest step, and the inventory build-up follows it there. Second: even if demand dropped below 20 jobs/hour tomorrow and every line vanished, Intake would still be the bottleneck — a bottleneck is about capacity, not about visible lines. A queue is a consequence of the constraint, not the constraint itself.</p></details>' },
-    { t: 'quiznum', pg: 'whack', q: 'Confirm the new reality: with Underwriting at 2.5 min, <mark class="hl">the new system capacity</mark> is now ___ jobs/hour:', unit: 'jobs/hour', ans: 20, tol: 1, pts: 5, hint: 'System capacity = min of the resource capacities, at the new processing times.', hint2: 'The new capacities: 60/3 = 20, 60/2.5 = 24, and 60/2 = 30 jobs/hour. System capacity = the smallest.', ex: 'min(20, 24, 30) = 20 jobs/hour — Intake’s number. Demand is 24 jobs/hour, so ⟦R⟧(system) = min(24, 20) = 20 jobs/hour and Buffer 1 keeps growing at 4 jobs/hour. The same growth law now applies at Buffer 1.' },
-    { t: 'quiz', pg: 'blockA', q: '<span class="qtag off">NEW CASE</span><br>An electronics line assembles and tests one product: <b>Assembly</b> (processing time p = 4 minutes) → <b>Testing</b> (p = 8 minutes), one order arriving every 6 minutes (demand: 10 orders/hour, against Testing’s capacity of 7.5 orders/hour). <mark class="hl">The buffer between the two activities has been removed: when Assembly finishes a unit, there is no place to hold it before Testing.</mark> The finished unit stays inside Assembly until Testing can take it.<span class="formula">Blocking = an activity must stop because there is no place to deposit the job it just finished · Starving = an activity is idle because nothing arrives from upstream</span>Press <b>▶ Play</b>, watch Assembly through a few cycles, then answer: <b>while Assembly is blocked, it holds its finished unit and cannot start the next one.</b>', opts: [{ o: 'True', ok: 1 }, { o: 'False', ok: 0 }], pts: 5, ex: 'True. Blocked time is holding time: the work is finished, the unit has nowhere to go, and the next unit cannot enter — the BLOCKED tag, the red arrow, and the slash on the path mark exactly this state.', learn: 'block' },
+    { t: 'task', pg: 'whack', h: '<span class="tt">Fix the bottleneck — then recheck</span>The surge continues: applications still arrive every <b>4 minutes (15 jobs/hour)</b>, and Buffer 2 has been growing for hours. Now the board funds <b>a second underwriter</b>: two underwriters work <b>in parallel</b> and share Buffer 2 — each still needs p = 5 minutes per loan, jobs enter the two boxes one by one, and together they clear 2 × 60 ÷ 5 = <b>24 jobs/hour</b>.<br>Turn <b>Hire the second underwriter</b> on, press <b>▶ Play</b> (the run restarts when you switch) and run to t = 120. Watch the capacity under Underwriting, the red BOTTLENECK outline, and the piles — does anything still queue?', unlock: 'Turn the second underwriter on and press the ▶ Play button; the exercise unlocks when the run reaches t = 120.', toggles: [{ label: 'Hire the second underwriter' }], applyToggles(ts) { if (ts.on0) E.cfg.stations[1].m = 2; else delete E.cfg.stations[1].m; computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); updateWidgets(); }, endT: 120, verify(ts) { if (!ts.on0 || (E.cfg.stations[1].m || 1) < 2) return { ok: false, msg: 'One underwriter still works alone — turn Hire the second underwriter on.' }; if (E.t < 119.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the capacities, the outline, and the buffers.' : 'Second underwriter hired ✓ — press ▶ Play and run until t = 120 minutes.' }; return { ok: true, msg: 'The overload is gone: Underwriting now offers 24 jobs/hour, system capacity is min(20, 24, 30) = 20 jobs/hour, and the whole demand of 15 flows through — throughput 15 jobs/hour, no growing pile anywhere. Underwriting runs at 15/24 = 62.5%. The red outline moved to Intake — the highest utilization, 15/20 = 75% — even though no line stands in front of it: a bottleneck is about capacity, not visible queues.' }; } },
+    { t: 'read', pg: 'whack', h: '<p><b>Core idea:</b> fixing the bottleneck moves it. After any capacity change, recompute every resource’s capacity — the new bottleneck is the new smallest.</p><span class="formula">New bottleneck = the new smallest capacity · wherever demand exceeds capacity, the queue grows at (rate in − rate out)</span><p>With two underwriters in parallel (m = 2, each at p = 5 minutes), the capacities are 60/3 = 20, 2 × 60/5 = 24, 60/2 = 30 jobs/hour → system capacity = min(20, 24, 30) = <b>20 jobs/hour</b> (Intake). Demand is 15 jobs/hour — below every capacity — so ⟦R⟧ = 15 jobs/hour, no buffer grows, and the utilizations are 15/20 = 75% at Intake, 15/24 = 62.5% at Underwriting, 15/30 = 50% at Closing. Intake, with the highest utilization, is the new bottleneck.</p><details class="teach"><summary>Why this works</summary><p>Two conclusions. First: improvement is repeated — fixing a bottleneck promotes the next-slowest step, and the inventory build-up follows it there. Second: even if demand dropped below 20 jobs/hour tomorrow and every line vanished, Intake would still be the bottleneck — a bottleneck is about capacity, not about visible lines. A queue is a consequence of the constraint, not the constraint itself.</p></details>' },
+    { t: 'quiznum', pg: 'whack', q: 'Confirm the new reality: with two underwriters in parallel, <mark class="hl">the new system capacity</mark> is now ___ jobs/hour:', unit: 'jobs/hour', ans: 20, tol: 1, pts: 5, hint: 'System capacity = min of the resource capacities, at the new processing times.', hint2: 'The new capacities: 60/3 = 20, 2 × 60/5 = 24, and 60/2 = 30 jobs/hour. System capacity = the smallest.', ex: 'min(20, 24, 30) = 20 jobs/hour — Intake’s number. Demand is 15 jobs/hour, below every capacity, so ⟦R⟧(system) = min(15, 20) = 15 jobs/hour and no buffer grows. Intake is still the bottleneck — the highest utilization, 15/20 = 75% — even with no queue in sight.' },
+    { t: 'quiz', pg: 'blockA', q: '<span class="qtag off">NEW CASE</span><br>An electronics line assembles and tests one product: <b>Assembly</b> (processing time p = 4 minutes) → <b>Testing</b> (p = 8 minutes), one order arriving every 6 minutes (demand: 10 orders/hour, against Testing’s capacity of 7.5 orders/hour). <mark class="hl">The buffer between the two activities has been removed: when Assembly finishes a unit, there is no place to hold it before Testing.</mark> The finished unit stays inside Assembly until Testing can take it.<span class="formula">Blocking = an activity must stop because there is no place to deposit the job it just finished · Starving = an activity is idle because nothing arrives from upstream</span>The simulation is already running — <b>watch Assembly</b> through a few cycles (use ▶ Play / ❚❚ Pause as you like), then answer: <b>while Assembly is blocked, it holds its finished unit and cannot start the next one.</b>', opts: [{ o: 'True', ok: 1 }, { o: 'False', ok: 0 }], pts: 5, ex: 'True. Blocked time is holding time: the work is finished, the unit has nowhere to go, and the next unit cannot enter — the BLOCKED tag, the red arrow, and the slash on the path mark exactly this state.', learn: 'block' },
     { t: 'quiznum', pg: 'blockA', q: '<b>Assembly’s blocked time.</b> Testing releases one unit every 8 minutes; Assembly finishes its work in 4 minutes. Each cycle, Assembly holds the assembled unit for an extra ___ minutes:', unit: 'min', ans: 4, tol: 0.3, pts: 5, hint: 'Blocked time per cycle = the downstream activity’s processing time − Assembly’s processing time.', hint2: 'Blocked time per cycle = 8 minutes − 4 minutes.', ex: 'Blocked time per cycle = 8 minutes − 4 minutes = <b>4 minutes</b>. Blocked time is not processing: the work is finished, and the unit has nowhere to go.' },
     { t: 'quiznum', pg: 'blockA', q: '<b>System ⟦Tterm⟧ without the buffer.</b> Follow one unit from the moment it enters Assembly until it leaves Testing: 4 minutes of processing, the blocked wait, then 8 minutes at Testing. Measured from entering Assembly, its system ⟦Tterm⟧ is ___ minutes:', unit: 'min', ans: 16, tol: 0.5, pts: 5, hint: 'System ⟦Tterm⟧ (from entering Assembly) = processing at Assembly + blocked time + processing at Testing.', hint2: 'System ⟦Tterm⟧ = 4 minutes + 4 minutes + 8 minutes.', ex: 'System ⟦Tterm⟧, measured from entering Assembly = 4 minutes + 4 minutes + 8 minutes = <b>16 minutes</b>.' },
     { t: 'task', pg: 'blockA', h: '<span class="tt">Install the buffer</span>The line can add a rack between Assembly and Testing: a finished unit then moves out of Assembly immediately and waits on the rack.<br>Turn <b>Install the buffer</b> on, press <b>▶ Play</b>, and watch what changes — and what does not. Turning it off removes the rack again.', toggles: [{ label: 'Install the buffer' }], applyToggles(ts) { if (ts.on0) { delete E.cfg.noBufAfter; E.cfg.bufNames = ['Orders', 'Rack']; } else { E.cfg.noBufAfter = 0; E.cfg.bufNames = ['Orders']; } computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, showP: true, showStates: true }); updateWidgets(); if (ts.on0) { const f = document.getElementById('bufName1'); if (f) f.setAttribute('class', 'flashIn'); } }, unlock: 'Turn Install the buffer on, press the ▶ Play button, and let the run reach t = 40.', endT: 40, verify(ts) { if (!ts.on0) return { ok: false, msg: E.t > 2 ? 'Assembly still blocks every cycle. Turn Install the buffer on.' : 'Turn Install the buffer on.' }; if (E.t < 39.9) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' / 40 — watch Assembly.' : 'Press ▶ Play.' }; return { ok: true, msg: 'BLOCKED is gone: Assembly releases each unit after its 4 minutes of work and the finished units now wait on the rack, which grows at 10 − 7.5 = 2.5 orders/hour. Throughput did not change: Testing still releases one unit every 8 minutes.' }; } },
-    { t: 'quiz', pg: 'blockB', q: 'Compare one unit’s total time from arrival to Shipped, with and without the buffer. With the buffer it is:', opts: [{ o: { v: 'Identical', d: 'Testing releases one unit every 8 minutes in both designs; the buffer moved the waiting, it did not remove any' }, ok: 1 }, { o: { v: 'Shorter', d: 'the blocked wait disappears' }, ok: 0 }, { o: { v: 'Longer', d: 'the rack adds one more stop' }, ok: 0 }], pts: 5, ex: 'Identical. Departure times are set by the bottleneck: Testing releases one unit every 8 minutes in both designs, so every unit ships at the same moment either way. The buffer changed where units wait — on the rack instead of blocked inside Assembly — and it freed Assembly to keep working. It did not add capacity, so it did not change any unit’s ⟦Tterm⟧. When processing times vary rather than repeat exactly, that freedom is what keeps a line moving: buffers absorb variation. The variability simulator develops this.' },
+    { t: 'quiz', pg: 'blockB', q: 'Compare one unit’s total time <b>from arrival to Shipped</b>, with and without the buffer. With the buffer it is:', opts: [{ o: { v: 'Identical', d: 'Testing releases one unit every 8 minutes in both designs; the buffer moved the waiting, it did not remove any' }, ok: 1 }, { o: { v: 'Shorter', d: 'the blocked wait disappears' }, ok: 0 }, { o: { v: 'Longer', d: 'the rack adds one more stop' }, ok: 0 }], pts: 5, ex: 'Identical — <b>from arrival</b> to Shipped. Testing sets every departure: one unit every 8 minutes in both designs, and the arrivals are the same, so each unit ships at the same moment either way. What changed is <b>where the waiting happens</b>. Without the buffer, units wait in the order queue and then sit blocked inside Assembly; with the buffer, Assembly pulls them in sooner and they wait on the rack — which grows at 10 − 7.5 = 2.5 orders/hour, so the rack wait soon exceeds the 4-minute blocked wait. Measured <b>from entering Assembly</b>, the buffered design therefore takes longer and keeps growing — yet from arrival the total is unchanged, because the waiting only moved from before Assembly to after it. <mark class="hl">State the boundary before you compare times.</mark> The buffer did not add capacity, so from arrival it changed no unit’s ⟦Tterm⟧. When processing times vary rather than repeat exactly, freeing Assembly is what keeps a line moving: buffers absorb variation. The variability simulator develops this.' },
     { t: 'quiz', dim: true, dimNote: 'New case — the simulation still shows the loan pipeline.', q: '<span class="qtag off">NEW CASE</span><br>An IPO team runs due diligence (4 days per deal) → drafting (6 days) → filing (1 day), three separate teams working in series. A client asks: “Can you take on one new deal every 10 business days?”', opts: [{ o: 'Yes — the slowest team (drafting) releases a deal every 6 days, and one per 6 days is faster than one per 10', ok: 1 }, { o: 'No — a deal takes 4 + 6 + 1 = 11 days start to finish, and 11 > 10', ok: 0 }, { o: 'Yes, easily — filing takes only 1 day', ok: 0 }], pts: 10, ex: 'This question contains two separate questions. <b>RATE (capacity):</b> how often can a deal start? The bottleneck is drafting at 6 days/deal → system capacity = one deal per 6 days. Demand = one per 10 days. 1/6 > 1/10 → yes, comfortably. <b>DURATION (⟦Tterm⟧):</b> ⟦T⟧ = 4 + 6 + 1 = 11 days per deal. The error to avoid is comparing 11 (how long ONE deal is inside) with 10 (the spacing between deals) — a duration and a spacing, two different kinds of quantity. Deals overlap: while deal #1 sits in drafting, deal #2 is already in due diligence — three teams, three deals, all moving at once. Say yes, then tell the client each deal takes ~11 days door to door. Confusing the rate with the duration is how firms overpromise — or turn away work they could easily take.' },
     { t: 'task', pg: 'caseA', h: '<span class="tt">Business case: the urgent-care clinic</span><span class="qtag off">NEW CASE</span> An urgent-care clinic treats walk-in patients: <b>Registration</b> (processing time p = 2 minutes) → <b>Physician</b> (p = 10 minutes) → <b>Discharge</b> (p = 3 minutes). Patients arrive every 6 minutes (demand: 10 patients/hour). The waiting room fills further every hour, and the clinic can fund one improvement.<br>Turn one option on, press <b>▶ Play</b>, and read the result. Turning an option off restores the original clinic.', toggles: [{ label: 'Hire a physician' }, { label: 'Hire receptionists' }, { label: 'Expand the waiting room (Buffer 2)' }], applyToggles(ts) { E.cfg.stations[0].p = 2; E.cfg.stations[1].p = 10; let flash = null; if (ts.on0) { E.cfg.stations[1].p = 5; flash = 'mapCap1'; } if (ts.on1) { E.cfg.stations[0].p = 1; flash = 'mapCap0'; } if (ts.on2) { flash = 'bufName1'; } computeSchedule(); E.t = 0; E.playing = false; if ($('playBtn')) $('playBtn').textContent = '▶ Play'; drawMap({ showArrRate: true, showCap: true, showP: true, hotDemand: true }); updateWidgets(); if (flash) { const f = document.getElementById(flash); if (f) f.setAttribute('class', 'flashIn'); } }, unlock: 'Find the option that stops the waiting room from growing; the exercise unlocks after that run reaches t = 60.', endT: 60, verify(ts) { const anyOn = ts.on0 || ts.on1 || ts.on2; if (!anyOn) return { ok: false, msg: E.playing ? 'Running… the waiting room grows at 10 − 6 = 4 patients/hour. Turn one option on.' : 'Turn one option on.' }; if (E.t < 30) return { ok: false, msg: E.playing ? 'Running… t = ' + Math.floor(E.t) + ' — watch the waiting room.' : 'Press ▶ Play to test this option.' }; if (ts.on0) { if (E.t < 59.9) return { ok: false, msg: 'Running… t = ' + Math.floor(E.t) + ' / 60 — the waiting room has stopped growing.' }; return { ok: true, msg: 'A second physician doubles that capacity: system capacity = min(30, 12, 20) = 12 patients/hour, so throughput = min(10, 12) = 10 patients/hour = demand — the waiting room stops growing. The other options never touched the constraint.' }; } if (ts.on1) return { ok: false, warn: true, msg: 'Registration was not the constraint. System capacity is still min(60, 6, 20) = 6 patients/hour, and the room keeps filling at 4 patients/hour. Turn this off and try another option.' }; return { ok: false, warn: true, msg: 'A larger waiting room holds more waiting patients; the rate of care is unchanged. Throughput = min(10, 6) = 6 patients/hour, and the room keeps filling. Turn this off and try another option.' }; } },
     { t: 'match', pg: 'floodRecap', pts: 10 },
@@ -852,7 +906,7 @@
     floodBn: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); setSpeed(8); E.tEnd = Infinity; setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); if (!E.playing && E.t < 500) { E.playing = true; $('playBtn').textContent = '❚❚ Pause'; } },
     sandbox: () => { computeSchedule(); drawSandbox(); E.t = 0; E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); },
     floodRecap: () => { pipeCfg(4); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); E.t = 60; E.playing = true; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); },
-    whack: () => { pipeCfg(2.5, Math.min(E.cfg.stations[1] ? E.cfg.stations[1].p : 5, 5)); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); }
+    whack: () => { pipeCfg(4, 5); drawMap({ showArrRate: true, showCap: true, hotDemand: true, showBn: true, showU: true }); E.playing = false; E.tEnd = Infinity; setSpeed(5); setUI({ runbar: true, tiles: { R: 1, Q: 1, U: 1, CT: 1 }, ticker: true }); }
   };
   function drawSandbox() {
     const demand = 60 / E.cfg.a, syscap = Math.min.apply(null, E.cfg.stations.map(st => 60 / st.p));
@@ -1155,6 +1209,7 @@
           if (st.applyToggles) st.applyToggles(tdata);
         });
       });
+      if (st.applyToggles && (st.toggles || []).some((tg2, i4) => tdata['on' + i4])) st.applyToggles(tdata);
       if (st.endT) { E.tEnd = st.endT; if ($('endIn')) $('endIn').value = st.endT; }
       if (st.ctlP2) {
         $('p2sl').addEventListener('input', () => {
@@ -1273,6 +1328,7 @@
   renderStep();
   requestAnimationFrame(t => { E.lastReal = t; requestAnimationFrame(frame); });
 
+  applyNotation();
   window.__P102 = { C, E, STEPS, metrics, SCHED: () => SCHED, bnIdx, renderStep, tourReset: () => { nbLearned.length = 0; renderNotebook(); curPage = null; } };
 })();
 
