@@ -283,12 +283,10 @@
   }
 
   /* ---------- the exercise: home text, the two cases, the closing page ---------- */
-  const HOME = '<p style="font-size:15px"><b>Exercise 4 — Levers.</b> In this exercise you work as a <b>business process analyst</b> — <b>the consultant</b> a client calls when a process is falling behind. Two clients call: a <b>mortgage lender</b> in a refinance wave, and a <b>fulfillment center</b> five days into a sale. For each, you read the process — processing times, capacities, the bottleneck, inventory, Little’s Law — then set the levers that change what the process completes, price each one on the profit card, and commit to a plan the client runs.</p><p style="font-size:12.5px;color:var(--secondary)">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. The <b>“Why this works”</b> panel on any page reopens the full explanation. <b class="flashtxt">A calculator</b> is at the bottom right of the page if you need one. Submit the completion code in Canvas when you finish.</p>';
-  const CASE2 = '<p style="font-size:15px"><b>Case 2 — the fulfillment center, five days into the sale.</b> The client calls with 360 orders inside the boundary of the process and a checkout promise of “ships within 2 business days.” Little’s Law says how late they are, what rate would keep the promise, and how many pickers that takes; the profit card prices each lever.</p>';
-  const TAKE = 'Throughput rate = min(demand, the smallest activity capacity), and capacity = <i>m</i> / <i>p</i>. A lever pays only at the bottleneck — re-arrange work, add a processor (<i>m</i> + 1), or cut the processing time (<i>p</i>) — and once the bottleneck moves, the next lever must act where it moved to. Capacity equal to demand holds the inventory where it is; to drain a queue, capacity must exceed demand for a while — drain rate = flow leaving − flow arriving — and the extra capacity is released when the queue is gone. Little’s Law prices the delay: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ for what arrives now, ⟦I⟧ = ⟦R⟧ × ⟦T⟧ for the inventory a promise allows, ⟦R⟧ = ⟦I⟧ / ⟦T⟧ for the rate a promise needs. Profit = units completed × margin − lever cost − penalties: the cheapest plan that reaches demand and clears the queue wins.';
+  const HOME = "<p style=\"font-size:15px\"><b>Exercise 4 — Levers.</b> In this exercise you work as a <b>business process analyst</b> — <b>the consultant</b> a client calls when a process is falling behind. Two clients call: a <b>mortgage lender</b> in a refinance wave, and a <b>fulfillment center</b> five days into a sale. For each, you read the process — processing times, capacities, the bottleneck, inventory, Little’s Law — then set the levers that change what the process completes, price each one on the profit card, and commit to a plan the client runs.</p><p style=\"font-size:12.5px;color:var(--secondary)\">This is a practice lab. Use hints when needed; completion matters more than first-try accuracy. The <b>“Why this works”</b> panel on any page reopens the full explanation. <b class=\"flashtxt\">A calculator</b> is at the bottom right of the page if you need one. Submit the completion code in Canvas when you finish.</p>";
   const ORDER = [
-    { name: 'lender', offset: 0, pages: 7, pill: 'Case 1: Mortgage Lender', home: HOME, go: 'Begin Case 1 →', finish: 'Continue to Case 2 →' },
-    { name: 'rescue', offset: 7, pages: 5, pill: 'Case 2: Fulfillment Center', home: CASE2, go: 'Begin Case 2 →', finish: 'Finish Exercise 4 →' }
+    { name: 'lender', offset: 0, pages: 7, pill: "Case 1: Mortgage Lender", home: HOME, go: "Begin Case 1 →", finish: "Continue to Case 2 →" },
+    { name: 'rescue', offset: 7, pages: 5, pill: "Case 2: Fulfillment Center", home: "<p style=\"font-size:15px\"><b>Case 2 — the fulfillment center, five days into the sale.</b> The client calls with 360 orders inside the boundary of the process and a checkout promise of “ships within 2 business days.” Little’s Law says how late they are, what rate would keep the promise, and how many pickers that takes; the profit card prices each lever.</p>", go: "Begin Case 2 →", finish: "Finish Exercise 4 →" }
   ];
   const TOTAL = ORDER.reduce((a, o) => a + o.pages, 0) + 1;   // + the closing page
 
@@ -1149,7 +1147,7 @@ function (api) {
           if (it.flash) flashTiles(it.flash, true);
           const inps = Array.from(wrap.querySelectorAll('.sqIn')), inp = inps[0], btn = wrap.querySelector('.sqBtn'), fb = wrap.querySelector('.sqFb');
           const answerText = fields.map(f => '<b>' + f.ans + ' ' + (f.unit || '') + '</b>').join(' and ');
-          const finish = () => { btn.disabled = true; inps.forEach(x => x.disabled = true); hb1.disabled = true; hb2.disabled = true; if (it.flash) flashTiles(it.flash, false); doReveal(it); idx++; next(); };
+          const finish = () => { btn.disabled = true; inps.forEach(x => x.disabled = true); hb1.disabled = true; hb2.disabled = true; if (it.flash) flashTiles(it.flash, false); doReveal(it); if (it.onDone) it.onDone(); idx++; next(); };
           const hb1 = wrap.querySelector('.hb1') || { disabled: false }, hb2 = wrap.querySelector('.hb2') || { disabled: false };
           let attempts = 0, done = false, shown = 0;
           const showHint = (n) => { shown = Math.max(shown, n); fb.className = 'lp-fb sqFb info'; fb.innerHTML = (n === 1 ? '<b>Hint 1:</b> ' + subN(it.hint) : '<b>Hint 1:</b> ' + subN(it.hint) + '<br><b>Hint 2:</b> ' + subN(it.hint2 || it.hint)); hb1.disabled = true; hb2.disabled = n >= 2; };
@@ -2135,7 +2133,7 @@ function (api) {
           if (it.flash) flashTiles(it.flash, true);
           const inps = Array.from(wrap.querySelectorAll('.sqIn')), inp = inps[0], btn = wrap.querySelector('.sqBtn'), fb = wrap.querySelector('.sqFb');
           const answerText = fields.map(f => '<b>' + f.ans + ' ' + (f.unit || '') + '</b>').join(' and ');
-          const finish = () => { btn.disabled = true; inps.forEach(x => x.disabled = true); hb1.disabled = true; hb2.disabled = true; if (it.flash) flashTiles(it.flash, false); doReveal(it); idx++; next(); };
+          const finish = () => { btn.disabled = true; inps.forEach(x => x.disabled = true); hb1.disabled = true; hb2.disabled = true; if (it.flash) flashTiles(it.flash, false); doReveal(it); if (it.onDone) it.onDone(); idx++; next(); };
           const hb1 = wrap.querySelector('.hb1') || { disabled: false }, hb2 = wrap.querySelector('.hb2') || { disabled: false };
           let attempts = 0, done = false, shown = 0;
           const showHint = (n) => { shown = Math.max(shown, n); fb.className = 'lp-fb sqFb info'; fb.innerHTML = (n === 1 ? '<b>Hint 1:</b> ' + subN(it.hint) : '<b>Hint 1:</b> ' + subN(it.hint) + '<br><b>Hint 2:</b> ' + subN(it.hint2 || it.hint)); hb1.disabled = true; hb2.disabled = n >= 2; };
@@ -2411,7 +2409,7 @@ function (api) {
   if ($('notaSel')) $('notaSel').addEventListener('change', () => { if (S.live) S.live._nota(); else if (S.finished) renderFinal(); });   // the code is drawn once (S.code); a notation change re-renders the page around it
   renderLessonBar();
   mount(0);
-  window.__E4 = { S, ORDER, TOTAL, INST, tracks: _m2, n0: () => _n0, fin: _fin, u9: _u9, mount, finishModule, live: () => S.live };
+  window.__E4 = window.__EX = { S, ORDER, TOTAL, INST, tracks: _m2, n0: () => _n0, fin: _fin, u9: _u9, mount, finishModule, live: () => S.live };
 })();
 </script>
 </body>
