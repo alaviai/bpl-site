@@ -248,7 +248,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.1</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.2</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -305,7 +305,7 @@
 
   /* ---------- the case modules: stage markup and scripts ---------- */
   const TPL = {
-    lender: { stage: "<div class=\"card stagewrap\" id=\"stageCard\">\n        <svg id=\"stageSvg\" viewBox=\"0 0 900 275\"></svg>\n        <canvas id=\"stageCanvas\"></canvas>\n        <div class=\"planbanner\" id=\"planBanner\"></div>\n        <div class=\"runbar\" id=\"runbar\">\n          <button class=\"mini\" id=\"playBtn\">▶ Play</button>\n          <button class=\"mini\" id=\"resetBtn\">Restart</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:6px\">speed</span>\n          <button class=\"mini spd\" data-s=\"0.5\">½×</button>\n          <button class=\"mini spd act\" data-s=\"1\">1×</button>\n          <button class=\"mini spd\" data-s=\"2\">2×</button>\n          <button class=\"mini spd\" data-s=\"4\">4×</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:8px\">stop at t =</span>\n          <input type=\"number\" id=\"endIn\" min=\"0\" step=\"5\" placeholder=\"∞\" class=\"endin\">\n          <span style=\"font-size:11.5px;color:var(--muted)\">days</span>\n          <span class=\"clock\" id=\"clockEl\">t = 0 days</span>\n        </div>\n        <div class=\"levers\" id=\"levers\">\n          <div class=\"k\">Levers · switch on or off, then press ▶ Play — each change restarts the run at t = 0</div>\n          <div class=\"levrow\">\n            <button class=\"lev\" id=\"lev-reassign\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Re-arrange work</span><span class=\"lc\">$0 · conditions work moves to Intake: Underwriting 160 → 96, Intake 128 → 192 min per file</span></button>\n            <button class=\"lev\" id=\"lev-hire\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Contract underwriter</span><span class=\"lc\">$500 per day · <i>m</i> = 2 at Underwriting</span></button>\n            <button class=\"lev\" id=\"lev-eclose\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">E-closing</span><span class=\"lc\">$10,000 once · Closing 120 → 60 min per file</span></button>\n          </div>\n        </div>\n      </div>\n      <div class=\"tiles\">\n        <div class=\"tile cR\" id=\"tileR\"><div class=\"k\">Throughput (<span class=\"ntR\">R</span>)</div><div class=\"v\" id=\"vR\">—</div><div class=\"s\" id=\"sR\">loans completed per day, last 5 days</div></div>\n        <div class=\"tile cI\" id=\"tileI\"><div class=\"k\">Inventory (<span class=\"ntI\">I</span>)</div><div class=\"v\" id=\"vI\">—</div><div class=\"s\" id=\"sI\">files inside the boundary of the process right now</div></div>\n        <div class=\"tile cT\" id=\"tileT\"><div class=\"k\"><span class=\"ntTtermC\">Throughput time</span> (<span class=\"ntT\">T</span>)</div><div class=\"v\" id=\"vT\">—</div><div class=\"s\" id=\"sT\">for a file arriving now: <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span>, by the law</div></div>\n        <div class=\"tile cP\" id=\"tileP\"><div class=\"k\">Profit this run</div><div class=\"v\" id=\"vP\">—</div><div class=\"s\" id=\"sP\">$4,000 per closing − levers − extension fees</div></div>\n      </div>", nb: "<div class=\"card nb\" id=\"nbCard\">\n      <h2>Process Notebook</h2>\n      <div id=\"nbBody\"></div>\n    </div>" }
+    lender: { stage: "<div class=\"card stagewrap\" id=\"stageCard\">\n        <svg id=\"stageSvg\" viewBox=\"0 0 900 275\"></svg>\n        <canvas id=\"stageCanvas\"></canvas>\n        <div class=\"planbanner\" id=\"planBanner\"></div>\n        <div class=\"runbar\" id=\"runbar\">\n          <button class=\"mini\" id=\"playBtn\">▶ Play</button>\n          <button class=\"mini\" id=\"resetBtn\">Restart</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:6px\">speed</span>\n          <button class=\"mini spd\" data-s=\"0.5\">½×</button>\n          <button class=\"mini spd act\" data-s=\"1\">1×</button>\n          <button class=\"mini spd\" data-s=\"2\">2×</button>\n          <button class=\"mini spd\" data-s=\"4\">4×</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:8px\">stop at t =</span>\n          <input type=\"number\" id=\"endIn\" min=\"0\" step=\"5\" placeholder=\"∞\" class=\"endin\">\n          <span style=\"font-size:11.5px;color:var(--muted)\">days</span>\n          <span class=\"clock\" id=\"clockEl\">t = 0 days</span>\n        </div>\n        <div class=\"levers\" id=\"levers\">\n          <div class=\"k\">Levers · switch on or off, then press ▶ Play — each change restarts the run at t = 0</div>\n          <div class=\"levrow\">\n            <button class=\"lev\" id=\"lev-reassign\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Re-arrange work</span><span class=\"lc\">$0 · conditions work moves to Intake: Underwriting 160 → 96, Intake 128 → 192 min per file</span></button>\n            <button class=\"lev\" id=\"lev-hire\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Contract underwriter</span><span class=\"lc\">$500 per day · <i>m</i> = 2 at Underwriting</span></button>\n            <button class=\"lev\" id=\"lev-eclose\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">E-closing</span><span class=\"lc\">$10,000 once · Closing 120 → 60 min per file</span></button>\n          </div>\n        </div>\n      </div>\n      <div class=\"tiles\">\n        <div class=\"tile cR\" id=\"tileR\"><div class=\"k\">Throughput (<span class=\"ntR\">R</span>)</div><div class=\"v\" id=\"vR\">—</div><div class=\"s\" id=\"sR\">loans completed per day, last 5 days</div></div>\n        <div class=\"tile cI\" id=\"tileI\"><div class=\"k\">Inventory (<span class=\"ntI\">I</span>)</div><div class=\"v\" id=\"vI\">—</div><div class=\"s\" id=\"sI\">files inside the boundary of the process right now</div></div>\n        <div class=\"tile cT\" id=\"tileT\"><div class=\"k\"><span class=\"ntTtermC\">Throughput time</span> (<span class=\"ntT\">T</span>)</div><div class=\"v\" id=\"vT\">—</div><div class=\"s\" id=\"sT\">for a file arriving now: <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span> by the law — first in, first out, while that rate holds</div></div>\n        <div class=\"tile cP\" id=\"tileP\"><div class=\"k\">Profit this run</div><div class=\"v\" id=\"vP\">—</div><div class=\"s\" id=\"sP\">$4,000 per closing − levers − extension fees</div></div>\n      </div>", nb: "<div class=\"card nb\" id=\"nbCard\">\n      <h2>Process Notebook</h2>\n      <div id=\"nbBody\"></div>\n    </div>" }
   };
   const MODULES = {};
   MODULES.lender = 
@@ -757,7 +757,7 @@ function (api) {
     { c: 'e-R', nm: 'Throughput rate', fx: '⟦R⟧ = min(demand, capacity)', df: 'capacity of the process = the smallest activity capacity (the bottleneck); while a queue waits, the process runs at the smallest capacity from that queue onward' },
     { c: 'e-u', nm: 'Utilization', fx: 'u = (⟦R⟧ × p) / m', df: 'time busy / time available' },
     { c: 'e-b', nm: 'Inventory build-up and drain', fx: 'build-up rate = flow arriving − flow leaving', df: 'drain rate = flow leaving − flow arriving; days to clear a queue = queue / drain rate' },
-    { c: 'e-I', nm: 'Little’s Law', fx: '⟦law⟧', df: 'set the rate: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ — how long the files arriving now will take; set the time: ⟦I⟧ = ⟦R⟧ × ⟦T⟧ — the inventory at which that time is reached' }
+    { c: 'e-I', nm: 'Little’s Law', fx: '⟦law⟧', df: 'as averages over a period, for a process that ends the period as it began: ⟦I⟧ = ⟦R⟧ × ⟦T⟧. Read at one moment, for one file: its time = the files ahead of it / the rate the process completes them at — exact under first in, first out while that rate holds. Set the time instead, and ⟦I⟧ = ⟦R⟧ × ⟦T⟧ is the inventory at which that time is reached.' }
   ];
   const NB_LEVERS = [];
   function renderNotebook() {
@@ -783,7 +783,7 @@ function (api) {
   }
   function showTile(k) { if (UI.tiles[k]) return; setUI({ runbar: UI.runbar, levers: UI.levers, tiles: Object.assign({}, UI.tiles, { [k]: 1 }) }); }
   const PAGES = {
-    wave: () => pageStart({ hideCaps: true, tEnd: 10, tiles: NO_T }),
+    wave: () => pageStart({ hideCaps: true, tEnd: 10, tiles: { I: 1, P: 1 } }),
     lock: () => pageStart({ tEnd: 10, tiles: NO_T }),
     reassign: () => pageStart({ tEnd: 10, enable: ['reassign'], pulse: ['reassign'], hideR: true, tiles: { I: 1, T: 1, P: 1 } }),
     hire: () => pageStart({ tEnd: 10, lev: { reassign: true }, enable: ['reassign', 'hire'], pulse: ['hire'] }),
@@ -855,7 +855,7 @@ function (api) {
           hint: 'Capacity = <i>m</i> / <i>p</i>: one closer, 120 minutes per file.',
           hint2: '480 / 120.',
           ex: '480 / 120 = <b>4 files per day</b>.' },
-        { k: 'num', reveal: 'R', q: tag + '<b>5 applications arrive a day</b>. What is <b>the number of loan applications that get processed per day</b>, given the three capacities on the simulation?', unit: 'files/day', ans: 3, tol: 0.1,
+        { k: 'num', reveal: 'R', revealTile: 'R', q: tag + '<b>5 applications arrive a day</b>. What is <b>the number of loan applications that get processed per day</b>, given the three capacities on the simulation?', unit: 'files/day', ans: 3, tol: 0.1,
           hint: 'Throughput rate = min(demand, capacity), and the capacity of the process is the smallest activity capacity.',
           hint2: 'min(5, 7.5, 3, 4).',
           ex: 'min(5, 7.5, 3, 4) = <b>3 files per day</b>: Underwriting is the bottleneck. The other 2 applications per day accumulate in front of Underwriting.' },
@@ -868,7 +868,7 @@ function (api) {
     },
     { // 2 — the lock, by the law
       t: 'seq', pg: 'lock',
-      intro: core('Little’s Law: set the ⟦Tterm⟧ or set the rate.', '⟦law⟧ has three quantities; given two, the third follows. Set the rate, and ⟦T⟧ = ⟦I⟧ / ⟦R⟧ is how long the files arriving now will take. Set the ⟦Tterm⟧ — a lock — and ⟦I⟧ = ⟦R⟧ × ⟦T⟧ is the inventory at which that time is reached.<br><b>For this client:</b> 40 files inside, a 30-day lock.'),
+      intro: core('Little’s Law: set the ⟦Tterm⟧ or set the rate.', '⟦law⟧ has three quantities; given two, the third follows. Set the rate, and ⟦T⟧ = ⟦I⟧ / ⟦R⟧ is how long a file arriving now will take — the files ahead of it, completed at the process’s rate. Set the ⟦Tterm⟧ — a lock — and ⟦I⟧ = ⟦R⟧ × ⟦T⟧ is the inventory at which that time is reached.<br><b>For this client:</b> 40 files inside, a 30-day lock.'),
       seq: [
         { k: 'num', q: tag + 'Applications arrive at <b>5 a day</b> and <b>3 are completed a day</b>. What is the rate at which files are added to the queue waiting for underwriting — <b>the inventory build-up rate</b> — in files per day?', unit: 'files/day', ans: 2, tol: 0.05,
           hint: 'Inventory build-up rate = flow arriving − flow leaving.',
@@ -881,10 +881,10 @@ function (api) {
             if (E.t < 9.99) return { ok: false, msg: runMsg(m, 10) };
             return { ok: true, msg: 'Day 10. Answer below.' };
           } },
-        { k: 'num', hints: true, flash: ['I', 'R'], revealTile: 'T', q: tag + 'Look at the process and the <b>inventory card</b> for the number of files inside the boundary of the process, and at the <b>throughput card</b> for the throughput rate. By ⟦law⟧, what is <b>the ⟦Tterm⟧ of a file arriving on day 10</b> — the days until it is completed?', unit: 'days', ans: 20, tol: 0.5,
-          hint: '⟦T⟧ = ⟦I⟧ / ⟦R⟧.',
+        { k: 'num', hints: true, flash: ['I', 'R'], revealTile: 'T', q: tag + 'Look at the process and the <b>inventory card</b> — the files inside the boundary, every one of them ahead of a file arriving now — and at the <b>throughput card</b> — the rate at which the process completes them. Reading ⟦law⟧ for that one file: what is <b>the ⟦Tterm⟧ of a file arriving on day 10</b> — the days until it is completed?', unit: 'days', ans: 20, tol: 0.5,
+          hint: '⟦T⟧ = ⟦I⟧ / ⟦R⟧ — the files ahead of it, completed at the process’s rate.',
           hint2: '⟦T⟧ = 60 files / 3 files per day.',
-          ex: '60 / 3 = <b>20 days</b>. The file arriving on day 10 joins 60 files ahead of it; at 3 completed files a day it is completed on day 30 — inside its 30-day lock.' },
+          ex: '60 / 3 = <b>20 days</b>. First in, first out: the file arriving on day 10 is completed after the 60 ahead of it, and the process completes them at the underwriter’s rate, 3 a day, for as long as underwriting has a queue — which it does for the whole wave. It is completed on day 30, inside its 30-day lock; exact to within one file’s time at underwriting, a third of a day.' },
         { k: 'num', hints: true, q: 'What is <b>the inventory at which an arriving file’s ⟦Tterm⟧ reaches the 30-day lock</b> — ⟦law⟧ with ⟦R⟧ = <b>3 files per day</b> and ⟦T⟧ = <b>30 days</b>?', unit: 'files', ans: 90, tol: 0.5,
           hint: '⟦I⟧ = ⟦R⟧ × ⟦T⟧, with the lock period as ⟦T⟧.',
           hint2: '⟦I⟧ = 3 files per day × 30 days.',
@@ -908,7 +908,7 @@ function (api) {
           hint2: '(90 files − 40 files) / 2 files per day.',
           ex: '(90 − 40) / 2 = <b>day 25</b>. The application arriving on day 25 is completed on day 55 and pays the $750 extension. <b>From then on every completed loan is subject to a $750 penalty.</b>' }
       ],
-      teach: 'Inventory build-up rate = flow arriving − flow leaving = 5 − 3 = 2 files per day. Little’s Law holds for the boundary of the process. Set the rate: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 60 / 3 = 20 days on day 10. Set the time: ⟦I⟧ = ⟦R⟧ × ⟦T⟧ = 3 × 30 = 90 files, the inventory at which the lock is reached. The build-up rate turns the inventory gap into a date: (90 − 40) / 2 = day 25. The inventory card counts every file inside the boundary; the label under “Waiting for underwriting” counts only that buffer — on day 10, 58 in the buffer and one file each at Underwriting and Closing. The throughput-time card is ⟦I⟧ / ⟦R⟧ from the other two cards.'
+      teach: 'Inventory build-up rate = flow arriving − flow leaving = 5 − 3 = 2 files per day. Little’s Law holds for the boundary of the process. Set the rate: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 60 / 3 = 20 days on day 10 — first in, first out, at a rate that holds for the whole wave. Set the time: ⟦I⟧ = ⟦R⟧ × ⟦T⟧ = 3 × 30 = 90 files, the inventory at which the lock is reached. The build-up rate turns the inventory gap into a date: (90 − 40) / 2 = day 25. The inventory card counts every file inside the boundary; the label under “Waiting for underwriting” counts only that buffer — on day 10, 58 in the buffer and one file each at Underwriting and Closing. The throughput-time card is ⟦I⟧ / ⟦R⟧ from the other two cards.'
     },
     { // 3 — lever 1: re-arrange work
       t: 'seq', pg: 'reassign',

@@ -248,7 +248,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.1</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.2</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -305,7 +305,7 @@
 
   /* ---------- the case modules: stage markup and scripts ---------- */
   const TPL = {
-    rescue: { stage: "<div class=\"card stagewrap\" id=\"stageCard\">\n        <svg id=\"stageSvg\" viewBox=\"0 0 900 275\"></svg>\n        <canvas id=\"stageCanvas\"></canvas>\n        <div class=\"planbanner\" id=\"planBanner\"></div>\n        <div class=\"runbar\" id=\"runbar\">\n          <button class=\"mini\" id=\"playBtn\">▶ Play</button>\n          <button class=\"mini\" id=\"resetBtn\">Restart</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:6px\">speed</span>\n          <button class=\"mini spd\" data-s=\"0.5\">½×</button>\n          <button class=\"mini spd act\" data-s=\"1\">1×</button>\n          <button class=\"mini spd\" data-s=\"2\">2×</button>\n          <button class=\"mini spd\" data-s=\"4\">4×</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:8px\">stop at t =</span>\n          <input type=\"number\" id=\"endIn\" min=\"0\" step=\"5\" placeholder=\"∞\" class=\"endin\">\n          <span style=\"font-size:11.5px;color:var(--muted)\">days</span>\n          <span class=\"clock\" id=\"clockEl\">t = 0 days</span>\n        </div>\n        <div class=\"levers\" id=\"levers\">\n          <div class=\"k\">Levers · set them, then press ▶ Play — each change restarts the run at t = 0</div>\n          <div class=\"levrow\">\n            <div class=\"lev stepper dis\" id=\"lev-temps\"><span class=\"stp\"><button class=\"stb\" id=\"tempMinus\" disabled>−</button><span class=\"stn\" id=\"tempCnt\">0</span><button class=\"stb\" id=\"tempPlus\" disabled>+</button></span><span class=\"ln\">Temporary pickers</span><span class=\"lc\">$150 per temporary picker per day, by the whole day · <i>m</i> = 1 + temporary pickers at Picking</span></div>\n            <button class=\"lev\" id=\"lev-eclose\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Auto-bagger</span><span class=\"lc\">$4,000 once · Packing 3.2 → 1.6 min per order</span></button>\n          </div>\n        </div>\n      </div>\n      <div class=\"tiles\">\n        <div class=\"tile cR\" id=\"tileR\"><div class=\"k\">Throughput (<span class=\"ntR\">R</span>)</div><div class=\"v\" id=\"vR\">—</div><div class=\"s\" id=\"sR\">orders shipped per day, last 2 days</div></div>\n        <div class=\"tile cI\" id=\"tileI\"><div class=\"k\">Inventory (<span class=\"ntI\">I</span>)</div><div class=\"v\" id=\"vI\">—</div><div class=\"s\" id=\"sI\">orders inside the boundary of the process right now</div></div>\n        <div class=\"tile cT\" id=\"tileT\"><div class=\"k\"><span class=\"ntTtermC\">Throughput time</span> (<span class=\"ntT\">T</span>)</div><div class=\"v\" id=\"vT\">—</div><div class=\"s\" id=\"sT\">for an order placed now: <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span>, by the law · promise 2 days</div></div>\n        <div class=\"tile cP\" id=\"tileP\"><div class=\"k\">Profit this run</div><div class=\"v\" id=\"vP\">—</div><div class=\"s\" id=\"sP\">$15 per shipped order − levers − $10 per late order</div></div>\n      </div>\n      <div class=\"card tile chartcard\" id=\"tileC\"><div class=\"k\">Orders in and out, day by day, from day 0 (the day the client called)</div>\n        <details class=\"teach chartwhy\"><summary>Why this works</summary>\n          <p style=\"color:#2a78d6\"><b>Blue line</b> — the running total of orders that have entered the process: it starts at 360, the orders already inside on day 0, and rises by one for every order that arrives after that.</p>\n          <p style=\"color:#2e7d32\"><b>Green line</b> — the running total of orders shipped from day 0 on.</p>\n          <p style=\"color:#1baf7a\"><b>Vertical bracket</b> — the gap between the two lines at the current day: orders in minus orders out = the inventory <span class=\"ntI\">I</span>, the orders inside the boundary of the process.</p>\n          <p style=\"color:#2e7d32\"><b>Dotted green line</b> — how the green line would continue if the room keeps shipping at the current throughput rate <span class=\"ntR\">R</span>.</p>\n          <p style=\"color:#7c5cd6\"><b>Horizontal bracket</b> — from the blue line’s current point to where the dotted line reaches that height: the days until the orders inside now have all shipped, which is the <span class=\"ntTterm\">throughput time</span> <span class=\"ntT\">T</span> = <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span> of an order placed now.</p>\n          <p style=\"color:#52514e\">Lines parallel: the inventory holds. Green steeper than blue: the backlog drains. Blue steeper than green: it grows.</p>\n        </details>\n        <canvas id=\"cfd\"></canvas></div>", nb: "<div class=\"card nb\" id=\"nbCard\">\n      <h2>Process Notebook</h2>\n      <div id=\"nbBody\"></div>\n    </div>" }
+    rescue: { stage: "<div class=\"card stagewrap\" id=\"stageCard\">\n        <svg id=\"stageSvg\" viewBox=\"0 0 900 275\"></svg>\n        <canvas id=\"stageCanvas\"></canvas>\n        <div class=\"planbanner\" id=\"planBanner\"></div>\n        <div class=\"runbar\" id=\"runbar\">\n          <button class=\"mini\" id=\"playBtn\">▶ Play</button>\n          <button class=\"mini\" id=\"resetBtn\">Restart</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:6px\">speed</span>\n          <button class=\"mini spd\" data-s=\"0.5\">½×</button>\n          <button class=\"mini spd act\" data-s=\"1\">1×</button>\n          <button class=\"mini spd\" data-s=\"2\">2×</button>\n          <button class=\"mini spd\" data-s=\"4\">4×</button>\n          <span style=\"font-size:11.5px;color:var(--muted);margin-left:8px\">stop at t =</span>\n          <input type=\"number\" id=\"endIn\" min=\"0\" step=\"5\" placeholder=\"∞\" class=\"endin\">\n          <span style=\"font-size:11.5px;color:var(--muted)\">days</span>\n          <span class=\"clock\" id=\"clockEl\">t = 0 days</span>\n        </div>\n        <div class=\"levers\" id=\"levers\">\n          <div class=\"k\">Levers · set them, then press ▶ Play — each change restarts the run at t = 0</div>\n          <div class=\"levrow\">\n            <div class=\"lev stepper dis\" id=\"lev-temps\"><span class=\"stp\"><button class=\"stb\" id=\"tempMinus\" disabled>−</button><span class=\"stn\" id=\"tempCnt\">0</span><button class=\"stb\" id=\"tempPlus\" disabled>+</button></span><span class=\"ln\">Temporary pickers</span><span class=\"lc\">$150 per temporary picker per day, by the whole day · <i>m</i> = 1 + temporary pickers at Picking</span></div>\n            <button class=\"lev\" id=\"lev-eclose\" role=\"switch\" aria-checked=\"false\" disabled><span class=\"sw\"><span class=\"knob\"></span></span><span class=\"ln\">Auto-bagger</span><span class=\"lc\">$4,000 once · Packing 3.2 → 1.6 min per order</span></button>\n          </div>\n        </div>\n      </div>\n      <div class=\"tiles\">\n        <div class=\"tile cR\" id=\"tileR\"><div class=\"k\">Throughput (<span class=\"ntR\">R</span>)</div><div class=\"v\" id=\"vR\">—</div><div class=\"s\" id=\"sR\">orders shipped per day, last 2 days</div></div>\n        <div class=\"tile cI\" id=\"tileI\"><div class=\"k\">Inventory (<span class=\"ntI\">I</span>)</div><div class=\"v\" id=\"vI\">—</div><div class=\"s\" id=\"sI\">orders inside the boundary of the process right now</div></div>\n        <div class=\"tile cT\" id=\"tileT\"><div class=\"k\"><span class=\"ntTtermC\">Throughput time</span> (<span class=\"ntT\">T</span>)</div><div class=\"v\" id=\"vT\">—</div><div class=\"s\" id=\"sT\">for an order placed now: <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span> by the law — first in, first out, while that rate holds · promise 2 days</div></div>\n        <div class=\"tile cP\" id=\"tileP\"><div class=\"k\">Profit this run</div><div class=\"v\" id=\"vP\">—</div><div class=\"s\" id=\"sP\">$15 per shipped order − levers − $10 per late order</div></div>\n      </div>\n      <div class=\"card tile chartcard\" id=\"tileC\"><div class=\"k\">Orders in and out, day by day, from day 0 (the day the client called)</div>\n        <details class=\"teach chartwhy\"><summary>Why this works</summary>\n          <p style=\"color:#2a78d6\"><b>Blue line</b> — the running total of orders that have entered the process: it starts at 360, the orders already inside on day 0, and rises by one for every order that arrives after that.</p>\n          <p style=\"color:#2e7d32\"><b>Green line</b> — the running total of orders shipped from day 0 on.</p>\n          <p style=\"color:#1baf7a\"><b>Vertical bracket</b> — the gap between the two lines at the current day: orders in minus orders out = the inventory <span class=\"ntI\">I</span>, the orders inside the boundary of the process.</p>\n          <p style=\"color:#2e7d32\"><b>Dotted green line</b> — how the green line would continue if the room keeps shipping at the current throughput rate <span class=\"ntR\">R</span>.</p>\n          <p style=\"color:#7c5cd6\"><b>Horizontal bracket</b> — from the blue line’s current point to where the dotted line reaches that height: the days until the orders inside now have all shipped, which is the <span class=\"ntTterm\">throughput time</span> <span class=\"ntT\">T</span> = <span class=\"ntI\">I</span> / <span class=\"ntR\">R</span> of an order placed now.</p>\n          <p style=\"color:#52514e\">Lines parallel: the inventory holds. Green steeper than blue: the backlog drains. Blue steeper than green: it grows.</p>\n        </details>\n        <canvas id=\"cfd\"></canvas></div>", nb: "<div class=\"card nb\" id=\"nbCard\">\n      <h2>Process Notebook</h2>\n      <div id=\"nbBody\"></div>\n    </div>" }
   };
   const MODULES = {};
   MODULES.rescue = 
@@ -482,8 +482,23 @@ function (api) {
     el('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#8d99a5' }, mk);
     el('line', { x1: 10, y1: CY, x2: NODES[0].x - TRI_W / 2 - 10, y2: CY, stroke: '#8d99a5', 'stroke-width': 2.2, 'marker-end': 'url(#arr)' }, SVG);
     const dem = DEMAND_ORDERS(E.t), hot = dem > Math.min.apply(null, E.st.map(capOf)) * TOTE;
-    el('text', { id: 'demLbl', x: 8, y: CY - 100, 'font-size': 12, 'font-weight': 800, fill: hot ? '#a5202f' : '#2a78d6' }, SVG).textContent = 'demand: ' + dem + ' orders';
-    el('text', { id: 'demLbl2', x: 8, y: CY - 86, 'font-size': 12, 'font-weight': 800, fill: hot ? '#a5202f' : '#2a78d6' }, SVG).textContent = 'per day' + (E.t < SALE_DAYS ? ' · the sale' : '');
+    // the demand legend: one arrow per phase; the phase in force is bold, the other dimmed
+    (function demandLegend(rows, active) {
+      const x0 = 8, y0 = 3, rowH = 15;
+      const box = el('rect', { id: 'demBox', x: x0, y: y0, width: 200, height: rowH * rows.length + 8, rx: 6, fill: 'rgba(255,255,255,.8)', stroke: '#d9d7cf', 'stroke-width': 1 }, SVG);
+      let wmax = 0;
+      rows.forEach((r, i) => {
+        const y = y0 + 12 + i * rowH, on = i === active;
+        el('line', { x1: x0 + 7, y1: y - 3.5, x2: x0 + 27, y2: y - 3.5, stroke: r.color, 'stroke-width': on ? 2.6 : 1.4, opacity: on ? 1 : .3 }, SVG);
+        el('polygon', { points: (x0 + 33) + ',' + (y - 3.5) + ' ' + (x0 + 25) + ',' + (y - 7.5) + ' ' + (x0 + 25) + ',' + (y + .5), fill: r.color, opacity: on ? 1 : .3 }, SVG);
+        const tx = el('text', { id: 'demRow' + i, x: x0 + 38, y, 'font-size': 10, 'font-weight': on ? 800 : 600, fill: r.color, opacity: on ? 1 : .35 }, SVG); tx.textContent = r.txt;
+        wmax = Math.max(wmax, tx.getBBox().width);
+      });
+      box.setAttribute('width', 38 + wmax + 8);   // the box fits its widest row
+    })([{ txt: 'sale: ' + (SALE * TOTE) + ' orders/day · days 0–' + SALE_DAYS, color: '#a5202f' }, { txt: 'after: ' + (BASE * TOTE) + ' orders/day · from day ' + SALE_DAYS, color: '#2a78d6' }], E.t < SALE_DAYS + 1 / 24 ? 0 : 1);
+    { const sale = E.t < SALE_DAYS + 1 / 24, demNow = sale ? SALE * TOTE : BASE * TOTE, hotNow = demNow > Math.min.apply(null, E.st.map(capOf)) * TOTE;
+      el('text', { id: 'demLbl', x: 8, y: CY - 98, 'font-size': 12, 'font-weight': 800, fill: hotNow ? '#a5202f' : '#2a78d6' }, SVG).textContent = 'demand: ' + demNow + ' orders';
+      el('text', { id: 'demLbl2', x: 8, y: CY - 84, 'font-size': 12, 'font-weight': 800, fill: hotNow ? '#a5202f' : '#2a78d6' }, SVG).textContent = 'per day' + (sale ? ' · the sale' : ' · after the sale'); }
     // links (fork/merge drawn with parallel boxes)
     for (let i = 0; i < NODES.length - 1; i++) {
       const a = NODES[i], b = NODES[i + 1];
@@ -557,7 +572,7 @@ function (api) {
     const lo = a0.x - (a0.m > 1 ? AW2 : ACT_W) / 2, hi = aL.x + (aL.m > 1 ? AW2 : ACT_W) / 2;
     let x0 = lo, x1 = hi, y0 = CY - ACT_H / 2, y1 = CY + ACT_H / 2;
     Array.from(SVG.querySelectorAll('text, rect, polygon')).forEach(e => {
-      if (e.id === 'stageNote') return;
+      if (e.id === 'stageNote' || e.id === 'demLbl' || e.id === 'demLbl2' || e.id === 'demBox' || e.id === 'demRow0' || e.id === 'demRow1') return;   // the legend and the demand label at the top left lie outside
       const b = e.getBBox(); if (!b.width || !b.height) return;
       const cx = b.x + b.width / 2; if (cx < lo - 1 || cx > hi + 1) return;
       x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width); y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height);
@@ -724,7 +739,7 @@ function (api) {
       const rel = E.t >= LEV.hireUntil && !busyTemp;
       if (rel !== E.relDrawn) { E.relDrawn = rel; E.st[1].m = rel ? 1 : 1 + LEV.temps; drawMap(Object.assign({}, mapOpts, { flash: rel ? 1 : undefined })); }
     }
-    const phase = E.t < SALE_DAYS ? 'sale' : 'after'; if (phase !== lastPhase) { lastPhase = phase; drawMap(Object.assign({}, mapOpts, { flash: undefined })); }
+    const phase = E.t < SALE_DAYS + 1 / 24 ? 'sale' : 'after';   // the legend's row switches an hour after the sale ends if (phase !== lastPhase) { lastPhase = phase; drawMap(Object.assign({}, mapOpts, { flash: undefined })); }
     const m = statsAt(E.sched, LEV, E.t);
     $('clockEl').textContent = 't = ' + E.t.toFixed(1) + ' days since the call · ' + (E.t < SALE_DAYS ? (SALE_DAYS - E.t).toFixed(1) + ' sale days left' : 'the sale has ended');
     if (REVEAL.R) { const rl = $('rLbl'); if (rl) rl.textContent = NT().R + ' = ' + Math.round(m.R * TOTE); }
@@ -849,7 +864,7 @@ function (api) {
     { c: 'e-R', nm: 'Throughput rate', fx: '⟦R⟧ = min(demand, capacity)', df: 'capacity of the process = the smallest activity capacity (the bottleneck); while a backlog waits, the process ships at its capacity' },
     { c: 'e-u', nm: 'Utilization', fx: 'u = (⟦R⟧ × p) / m', df: 'time busy / time available' },
     { c: 'e-b', nm: 'Inventory build-up and drain', fx: 'build-up rate = flow arriving − flow leaving', df: 'drain rate = flow leaving − flow arriving; days to clear a backlog = backlog / drain rate' },
-    { c: 'e-I', nm: 'Little’s Law', fx: '⟦law⟧', df: 'read for a time: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ — how late the orders arriving now will be; read for a rate: ⟦R⟧ = ⟦I⟧ / ⟦T⟧ — what a promise needs' }
+    { c: 'e-I', nm: 'Little’s Law', fx: '⟦law⟧', df: 'as averages over a period, for a process that ends the period as it began: ⟦I⟧ = ⟦R⟧ × ⟦T⟧. Read at one moment, for one order: its time = the orders ahead of it / the rate the center ships them at — exact under first in, first out while that rate holds. Read for a rate instead, and ⟦R⟧ = ⟦I⟧ / ⟦T⟧ is what a promise needs.' }
   ];
   const NB_LEVERS = [];
   function renderNotebook() {
@@ -875,7 +890,7 @@ function (api) {
   }
   function showTile(k) { if (UI.tiles[k]) return; setUI({ runbar: UI.runbar, levers: UI.levers, tiles: Object.assign({}, UI.tiles, { [k]: 1 }) }); }
   const PAGES = {
-    call: () => pageStart({ hideCaps: true, tEnd: 5, tiles: NO_T }),
+    call: () => pageStart({ hideCaps: true, tEnd: 5, tiles: { I: 1, P: 1 } }),
     diagnose: () => pageStart({ tEnd: 5, tiles: NO_T }),
     temps: () => pageStart({ tEnd: 5, enable: ['temps'], pulse: ['temps'] }),
     bagger: () => pageStart({ tEnd: 5, lev: { temps: 1 }, enable: ['temps', 'eclose'], pulse: ['eclose'], hideR: true, tiles: { I: 1, T: 1, P: 1, C: 1 } }),
@@ -944,7 +959,7 @@ function (api) {
           hint: 'Capacity = <i>m</i> / <i>p</i>: one packer, 3.2 minutes per order.',
           hint2: '480 / 3.2.',
           ex: '480 / 3.2 = <b>150 orders per day</b>.' },
-        { k: 'num', reveal: 'R', q: tag + '<b>180 orders arrive per day</b>. What is <b>the number of orders the room ships per day</b>?', unit: 'orders/day', ans: 120, tol: 1,
+        { k: 'num', reveal: 'R', revealTile: 'R', q: tag + '<b>180 orders arrive per day</b>. What is <b>the number of orders the room ships per day</b>?', unit: 'orders/day', ans: 120, tol: 1,
           hint: 'Throughput rate = min(demand, capacity); the capacity of the process is its smallest activity capacity.',
           hint2: 'min(180, 300, 120, 150).',
           ex: 'min(180, 300, 120, 150) = <b>120 orders per day</b>: Picking is the bottleneck. 60 more orders enter the room each day than leave it; five days of that is the 300 waiting to be picked.' },
@@ -957,12 +972,12 @@ function (api) {
     },
     { // 2 — how far behind, by the law
       t: 'seq', pg: 'diagnose',
-      intro: core('Little’s Law: set the ⟦Tterm⟧ or set the rate.', '⟦law⟧ has three quantities; given two, the third follows. Set the rate, and ⟦T⟧ = ⟦I⟧ / ⟦R⟧ is how long the orders arriving now will take. Set the ⟦Tterm⟧ — a promise — and ⟦R⟧ = ⟦I⟧ / ⟦T⟧ is how fast the process must ship to keep it.<br><b>For this client:</b> 360 orders inside, a promise of 2 days.'),
+      intro: core('Little’s Law: set the ⟦Tterm⟧ or set the rate.', '⟦law⟧ has three quantities; given two, the third follows. Set the rate, and ⟦T⟧ = ⟦I⟧ / ⟦R⟧ is how long an order placed now will take — the orders ahead of it, shipped at the process’s rate. Set the ⟦Tterm⟧ — a promise — and ⟦R⟧ = ⟦I⟧ / ⟦T⟧ is how fast the process must ship to keep it.<br><b>For this client:</b> 360 orders inside, a promise of 2 days.'),
       seq: [
-        { k: 'num', hints: true, flash: ['I', 'R'], revealTile: 'T', q: tag + 'Read the <b>inventory card</b> and the <b>throughput card</b>. By ⟦law⟧, what is <b>the ⟦Tterm⟧ of an order placed now</b> — the days until it ships?', unit: 'days', ans: 3, tol: 0.1,
-          hint: '⟦T⟧ = ⟦I⟧ / ⟦R⟧.',
+        { k: 'num', hints: true, flash: ['I', 'R'], revealTile: 'T', q: tag + 'Read the <b>inventory card</b> — the orders inside the boundary, every one of them ahead of an order placed now — and the <b>throughput card</b> — the rate at which the center ships them. Reading ⟦law⟧ for that one order: what is <b>the ⟦Tterm⟧ of an order placed now</b> — the days until it ships?', unit: 'days', ans: 3, tol: 0.1,
+          hint: '⟦T⟧ = ⟦I⟧ / ⟦R⟧ — the orders ahead of it, shipped at the center’s rate.',
           hint2: '360 / 120.',
-          ex: '360 / 120 = <b>3 days</b>, against a promise of 2: <b>every order placed now ships a day late.</b>' },
+          ex: '360 / 120 = <b>3 days</b>, against a promise of 2: <b>every order placed now ships a day late.</b> First in, first out: the order ships after the 360 ahead of it, and the center ships them at picking’s rate, 120 a day, for as long as picking has a backlog — which it does for the rest of the sale and beyond. Exact to within one tote’s time at picking.' },
         { k: 'num', hints: true, revealTile: 'C', q: tag + 'What is <b>the throughput rate the room must ship at for an order placed now to ship out within 2 days</b> <i>(now that there are <b>360 orders</b> ahead of it in the fulfillment center)</i>?', unit: 'orders/day', ans: 180, tol: 1,
           hint: '⟦R⟧ = ⟦I⟧ / ⟦T⟧, with the promised time as ⟦T⟧.',
           hint2: '360 / 2.',
@@ -989,7 +1004,7 @@ function (api) {
             return { ok: true, msg: 'Day 5: ' + (m.inv * TOTE) + ' orders inside, ' + m.T.toFixed(1) + ' days for an order placed now.' };
           } }
       ],
-      teach: 'Little’s Law holds for the boundary of the process. Set the rate: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 360 / 120 = 3 days. Set the time: ⟦R⟧ = ⟦I⟧ / ⟦T⟧ = 360 / 2 = 180 orders per day. With nothing done the inventory builds up at 180 − 120 = 60 orders per day: 360 + 60 × 5 = 660 on day 5, and 660 / 120 = 5.5 days. On the chart the vertical gap between the lines is ⟦I⟧ and the horizontal gap is ⟦T⟧.'
+      teach: 'Little’s Law holds for the boundary of the process. Set the rate: ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 360 / 120 = 3 days — first in, first out, at a rate that holds while the backlog lasts. Set the time: ⟦R⟧ = ⟦I⟧ / ⟦T⟧ = 360 / 2 = 180 orders per day. With nothing done the inventory builds up at 180 − 120 = 60 orders per day: 360 + 60 × 5 = 660 on day 5, and 660 / 120 = 5.5 days. On the chart the vertical gap between the lines is ⟦I⟧ and the horizontal gap is ⟦T⟧.'
     },
     { // 3 — temp pickers (a quantity lever)
       t: 'seq', pg: 'temps',
@@ -1029,10 +1044,10 @@ function (api) {
           ],
           hint: 'Judge a lever by what it changes in the capacity of the process, what it costs, and where the bottleneck goes next.',
           ex: 'The lever pays for itself — $450 a day for $150 — but the promise needs 180, and no number of pickers passes Packing’s 150. The next lever must act there.' },
-        { k: 'num', hints: true, flash: ['I', 'R'], q: chip('1 temporary picker') + 'Read the <b>inventory card</b> and the <b>throughput card</b> at <b>day 5</b>: <b>520 orders</b> inside the fulfillment center, shipping at <b>150 orders per day</b>. By ⟦law⟧, what is <b>the new ⟦Tterm⟧ (rounded to the nearest tenth) for an order placed now</b>?', lbl: 'New ⟦TtermC⟧:', unit: 'days', ans: 3.47, tol: 0.1,
+        { k: 'num', hints: true, flash: ['I', 'R'], q: chip('1 temporary picker') + 'Read the <b>inventory card</b> and the <b>throughput card</b> at <b>day 5</b>: <b>520 orders</b> inside the fulfillment center, every one of them ahead of an order placed now, shipping at <b>150 orders per day</b> — packing’s rate, now that packing is the bottleneck. Reading ⟦law⟧ for that one order: what is <b>the new ⟦Tterm⟧ (rounded to the nearest tenth) for an order placed now</b>?', lbl: 'New ⟦TtermC⟧:', unit: 'days', ans: 3.47, tol: 0.1,
           hint: '⟦T⟧ = ⟦I⟧ / ⟦R⟧.',
           hint2: '520 / 150.',
-          ex: '520 / 150 = <b>3.5 days</b> — still a day and a half over the promise. The temporary picker alone slows the build-up; it does not restore the promise.' }
+          ex: '520 / 150 = <b>3.5 days</b> — still a day and a half over the promise; packing has a queue until the order ships, so its rate holds. The temporary picker alone slows the build-up; it does not restore the promise.' }
       ],
       onEnter: () => noteLever('Lever — add processors (m)', 'raises the capacity of one activity; pays only at the bottleneck, and only until the bottleneck moves; $150 per temporary picker per day here'),
       teach: 'One temporary picker: Picking 2 × 120 = 240 orders per day. Fixing the bottleneck moves it: the smallest capacity is now Packing at 150, so the process ships 150 and the inventory still builds up at 180 − 150 = 30 orders per day — 360 + 30 × 5 = 510 on day 5 by the arithmetic, 520 on the run. ⟦T⟧ = 520 / 150 = 3.5 days. Utilization of the two pickers: 150 / 240 = 63%.'
