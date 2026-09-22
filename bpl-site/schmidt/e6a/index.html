@@ -498,7 +498,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.1</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.2</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
@@ -1205,8 +1205,10 @@
   const _z4 = 'VVZEST5PUEU6UVBWXz9bOVE8Qi5LXzxCRzRXLS1JWD1dSVBIRFxCUCJMVk84WFtURSMhUkhJVlRXSCAnKEM7SSFaUyEkXTddW15HMyYnXFBFNkFONydJTEVROS1aTCRaI0kwVENURCVLQS5PTlMuNio8WChIXkEvWytLUUlFWFtFVihdRVhXPUhRTSk5QiBDUExYKy5ORFUsSEpDTy8wRFsoMF1dXyxEN1pVPF8lKi1CS1tbOkAjLTIwNSxYQEVYXTM3XUlcQkxaVTBQP1xORTI3WDFWW0dCU1BbLDZWW0EuLFNBXTdCPEwuRFw9RjQ3X19YWkA/JjVZVF1RWkNRQDpJUF5dUFNFWzsqRkVF';
   function _u9(n) { const r = atob(_z4); let o = ''; for (let i = n * 9; i < n * 9 + 9; i++) o += String.fromCharCode(r.charCodeAt(i) ^ ((i * 7 + 23) & 31)); return o; }
   let _n0 = 0;   // the number of tracked checks, counted from the pages once they are defined
+  let PRED_KEYS = new Set();   // the keys of the predictions: builds before EX v 1.2 tracked them, and a saved state may still carry them
+  const _tracked = () => Object.keys(_m2).filter(k => !PRED_KEYS.has(k)).map(k => _m2[k]);
   function _fin() {
-    const a = Object.values(_m2);
+    const a = _tracked();
     if (!a.length || a.length < _n0 || a.some(q => !q.s && !q.r)) return null;
     const p = a.reduce((sm, q) => sm + (q.r || !q.s ? 0 : q.f ? 2 : 1), 0) / (2 * a.length);
     const g = p >= 0.9 ? 0 : p >= 0.5 ? 1 : 2;
@@ -1574,7 +1576,7 @@
   function saveState() { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ step: C.step, maxStep: C.maxStep || 1, prog: C.prog, preds: C.preds || {}, ansTxt: C.ansTxt || {}, tracks: _m2, code: C.code || null, finished: !!C.finished, t: Date.now() })); } catch (e) {} }
   function loadState() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return s && s.step > 0 ? s : null; } catch (e) { return null; } }
   function clearState() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
-  function resumeState(sv) { C.prog = sv.prog || {}; C.preds = sv.preds || {}; C.ansTxt = sv.ansTxt || {}; C.maxStep = sv.maxStep || 1; Object.keys(sv.tracks || {}).forEach(k => { _m2[k] = sv.tracks[k]; }); C.code = sv.code || null; C.finished = !!sv.finished; C.step = Math.min(sv.step, STEPS.length - 1); curPage = null; renderStep(); }
+  function resumeState(sv) { C.prog = sv.prog || {}; C.preds = sv.preds || {}; C.ansTxt = sv.ansTxt || {}; C.maxStep = sv.maxStep || 1; Object.keys(sv.tracks || {}).forEach(k => { if (!PRED_KEYS.has(k)) _m2[k] = sv.tracks[k]; }); C.code = sv.code || null; C.finished = !!sv.finished; C.step = Math.min(sv.step, STEPS.length - 1); curPage = null; renderStep(); }
   function renderStep() {
     stopPoll(); clearSpot(); flashTiles(null, false); LEVER_KEYS.forEach(k => $('lev-' + k).classList.remove('pulse-red'));
     { const bp = $('brief'); if (bp) bp.remove(); } document.body.classList.remove('panel');
@@ -1738,8 +1740,7 @@
           const fb = wrap.querySelector('.sqFb'); let done = false;
           wrap.querySelectorAll('.sqQz').forEach(b => b.addEventListener('click', () => {
             if (done) return; done = true; b.classList.add('sel'); wrap.querySelectorAll('.sqQz').forEach(x => x.disabled = true);
-            C.preds = C.preds || {}; C.preds[C.step + ':' + myIdx] = { o: it.opts[+b.dataset.oi].o, ok: b.dataset.ok === '1' };
-            _t1('s' + C.step + 'i' + myIdx, b.dataset.ok === '1');
+            C.preds = C.preds || {}; C.preds[C.step + ':' + myIdx] = { o: it.opts[+b.dataset.oi].o, ok: b.dataset.ok === '1' };   // a prediction is never tracked: it is ungraded, and a wrong one must not block the code
             fb.className = 'lp-fb sqFb info'; fb.innerHTML = 'Prediction recorded.'; if (it.onDone) it.onDone(); idx++; next();
           }));
         } else if (it.k === 'note') {
@@ -1870,6 +1871,7 @@
     for (let i = 0; i < 32; i++) { const d = document.createElement('div'); d.className = 'cpage'; d.textContent = em[i % em.length]; d.style.left = (Math.random() * 100) + 'vw'; d.style.animationDuration = (2.4 + Math.random() * 2.2) + 's'; d.style.animationDelay = (Math.random() * 0.9) + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 6200); }
   }
   _n0 = STEPS.reduce((a, sx) => a + (sx.seq ? sx.seq.filter(it => it.k === 'num' || it.k === 'num2' || it.k === 'mc' || it.k === 'mmc' || it.k === 'order' || it.k === 'match').length : 0), 0);
+  STEPS.forEach((sx, si) => { (sx.seq || []).forEach((it, ii) => { if (it.k === 'predict') PRED_KEYS.add('s' + si + 'i' + ii); }); });
   function renderLessonBar() { const lb = $('lbar'); if (!lb) return; lb.innerHTML = '<span class="lchip active' + (C.finished ? ' done' : '') + '">' + (C.finished ? '✓ ' : '') + EX_TITLE + '</span>'; }
   renderLessonBar();
   (function nbInit() { const t = document.querySelector('.nbTog'); if (!t) return; const set = on => { document.body.classList.toggle('nbmin', on); t.textContent = on ? '+' : '−'; t.title = on ? 'Expand the notebook' : 'Collapse the notebook'; t.setAttribute('aria-label', t.title); try { localStorage.setItem('bpl-nb', on ? '1' : '0'); } catch (e) {} window.dispatchEvent(new Event('resize')); }; let saved = null; try { saved = localStorage.getItem('bpl-nb'); } catch (e) {} if (saved === '1') set(true); t.addEventListener('click', () => set(!document.body.classList.contains('nbmin'))); })();
@@ -1965,7 +1967,7 @@
   // every page render: the button and the opening text flash on the opening page until the calculator has been opened; a page change closes it
   { const _renderStep0 = renderStep; renderStep = function () { _renderStep0(); calcFlash(C.step === 0); if (CALC.pageKey !== C.step) { CALC.pageKey = C.step; calcToggle(false); } }; calcFlash(C.step === 0); }
   /*__/CALC__*/
-  window.__P4 = { C, E, LEV, STEPS, CHOV, WI, statsAt, simulate, theory, longRunOf, cfgNow, renderStep, setLevers, restartRun, revealAll, drawMap, ensurePage: p => { curPage = null; ensurePage(p); }, tracks: _m2, NOTA, sizeOf, get CHM() { return CHM; }, WROWS: typeof WROWS !== 'undefined' ? WROWS : null, EXKEY, clearState, loadState, subN };
+  window.__P4 = { C, E, LEV, STEPS, CHOV, WI, statsAt, simulate, theory, longRunOf, cfgNow, renderStep, setLevers, restartRun, revealAll, drawMap, ensurePage: p => { curPage = null; ensurePage(p); }, tracks: _m2, tracked: () => _tracked(), n0: () => _n0, NOTA, sizeOf, get CHM() { return CHM; }, WROWS: typeof WROWS !== 'undefined' ? WROWS : null, EXKEY, clearState, loadState, subN };
 })();
 
 </script>
