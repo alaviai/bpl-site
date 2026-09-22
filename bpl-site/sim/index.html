@@ -249,7 +249,7 @@
 <body>
   <div class="header">
     <div>
-      <h1>Variability, Queues &amp; Flow — Live Process Simulator <span class="ver">v 0.26</span></h1>
+      <h1>Variability, Queues &amp; Flow — Live Process Simulator <span class="ver">v 0.27</span></h1>
       <div class="tabs">
         <button class="tab active" id="tabSim">Simulator</button>
         <button class="tab" id="tabLearn">☕ Learn — The Daily Grind</button>
@@ -439,7 +439,7 @@
       <div class="midrow">
         <div class="card chartcard">
           <div class="cardhead">
-            <h2>Little’s Law &nbsp;·&nbsp; <span id="lawSpan">I = R × T</span></h2>
+            <h2>Little’s Law &nbsp;·&nbsp; <span id="lawSpan" style="text-transform:none">I = R × T</span></h2>
             <div class="ctools">
               <button class="tbtn" id="lzIn" title="Zoom in (y-axis)">+</button>
               <button class="tbtn" id="lzOut" title="Zoom out (y-axis)">−</button>
@@ -582,12 +582,12 @@
             <h2>The science: Little’s Law, queueing &amp; variability</h2>
             <div class="ctools"><button class="tbtn coll" title="Minimize card">–</button></div>
           </div>
-          <p><b>Little’s Law — WIP = R × T.</b> The long-run average number of jobs in a system equals throughput times average <span class="ntTterm">throughput time</span>. Remarkably, it holds for <i>any</i> stable system — regardless of arrival pattern, service distributions, or queue discipline — which is why it is often called the most general law in operations. Proven formally by Little (1961); see Little (2011) for a 50-year retrospective. In Cachon &amp; Terwiesch notation it reads I = R × T. Note it relates <i>long-run averages</i>: the instantaneous WIP fluctuates constantly (the gray line in the Little’s Law panel) even while the law holds exactly for the averages.</p>
+          <p><b>Little’s Law — WIP = R × T.</b> The long-run average number of jobs in a system equals throughput times average <span class="ntTterm">throughput time</span>. Remarkably, it holds for <i>any</i> process, as averages over one period — regardless of arrival pattern, service distributions, or queue discipline, and without a steady state — which is why it is often called the most general law in operations. Proven formally by Little (1961); see Little (2011) for a 50-year retrospective. In Cachon &amp; Terwiesch notation it reads I = R × T. Note it relates <i>averages over a period</i>: the instantaneous WIP fluctuates constantly (the gray line in the Little’s Law panel) even while the law holds exactly for the averages. Stability is what the <i>settled</i> values need — the theory column’s R = min(demand, capacity) and its T describe the process only once it has settled; measured consistently over any period (every job’s time inside that period), the three numbers satisfy the law at every moment, and the panel shows both.</p>
           <p><b>Why queues form — the VUT equation.</b> Kingman’s heavy-traffic approximation decomposes waiting into Variability × Utilization × Time: Tq ≈ [(CVa² + CVp²)/2] · [ρ/(1−ρ)] · p (Kingman 1961). With no variability there is no queue at any utilization up to and including 100% — a deterministic line can balance exactly at capacity (a knife-edge). With any variability, waiting explodes nonlinearly as ρ → 1 (the “hockey stick” panel) and ρ = 100% becomes unsustainable: the queue behaves like an un-drifted random walk and grows without bound. The formula is exact for the M/M/1 queue (CV = 1) and, with the (1+CVp²)/2 factor, for M/G/1 via Pollaczek–Khinchine.</p>
           <p><b>Variability propagates.</b> An activity’s departures inherit variability from both its arrivals and its own processing: CVd² = ρ²CVp² + (1−ρ²)CVa². This “linking equation,” used in Whitt’s Queueing Network Analyzer (1983) and popularized by <i>Factory Physics</i>, explains why one variable step creates queues at downstream activities that are themselves perfectly steady (Scenario 6).</p>
           <p><b>Bottlenecks &amp; capacity.</b> Each activity’s capacity is 1/p; a serial line’s capacity is the <i>minimum</i> — the process can never produce faster than its slowest step. System utilization = R / capacity. Balancing flow to the bottleneck is the heart of the Theory of Constraints (Goldratt &amp; Cox, <i>The Goal</i>).</p>
           <p><b>WIP caps &amp; CONWIP.</b> Capping WIP stabilizes <span class="ntTterm">throughput time</span> (by Little’s Law, T = WIP/R when WIP is fixed) at some cost in throughput — the pull logic behind kanban and CONWIP (Spearman, Woodruff &amp; Hopp 1990).</p>
-          <p><b>Simulation practice.</b> One animated run is a single random sample; short runs are biased by the empty-system warm-up. Standard remedies — deleting the warm-up (Reset stats) and averaging independent replications with confidence intervals — follow Law’s <i>Simulation Modeling and Analysis</i>.</p>
+          <p><b>Simulation practice.</b> One animated run is a single random sample; short runs are biased by the empty-system warm-up when the measured averages are compared with the theory column. Standard remedies — deleting the warm-up (Reset stats) and averaging independent replications with confidence intervals — follow Law’s <i>Simulation Modeling and Analysis</i>. The identity itself needs no warm-up: counted consistently, it holds over any window.</p>
           <div class="refs">
             Little, J.D.C. (1961), “A Proof for the Queuing Formula: L = λW,” <i>Operations Research</i> 9(3), 383–387 ·
             Little, J.D.C. (2011), “Little’s Law as Viewed on Its 50th Anniversary,” <i>Operations Research</i> 59(3), 536–549 ·
@@ -807,7 +807,7 @@
     backlog: [], buffers: [[], [], []], servers: [null, null, null], finished: [],
     arrived: 0, completed: 0,
     // statistics window (cleared by Reset stats)
-    statsT0: 0, statCompleted: 0, sumFlow: 0, sumLineFlow: 0, sumBndFlow: 0, bndArea: 0,
+    statsT0: 0, statCompleted: 0, sumFlow: 0, sumLineFlow: 0, sumBndFlow: 0, bndArea: 0, statBndAt0: 0, statBndEntered: 0,
     busyI: [0, 0, 0], blkI: [0, 0, 0], empI: [0, 0, 0],
     sumWait: [0, 0, 0], nWait: [0, 0, 0],
     lqArea: [0, 0, 0], wipArea: 0, sysArea: 0, lastIntT: 0,
@@ -857,7 +857,7 @@
   function startService(i, t) {
     const id = S.buffers[i].shift();
     const job = S.jobs.get(id);
-    if (i === 0) job.bndEnter = t;   // the moment the job crosses into the process boundary
+    if (i === 0) { job.bndEnter = t; S.statBndEntered++; }   // the moment the job crosses into the process boundary
     S.sumWait[i] += t - job.enter; S.nWait[i]++;
     const d = durationR(S.rand, P.m[i], P.s[i]);
     S.servers[i] = { jobId: id, start: t, dur: d, slow: d > 1.5 * P.m[i], blocked: false };
@@ -958,6 +958,7 @@
 
   function clearStats(t0) {
     S.statsT0 = t0; S.statCompleted = 0; S.sumFlow = 0; S.sumLineFlow = 0; S.sumBndFlow = 0; S.bndArea = 0;
+    S.statBndAt0 = bndWip(); S.statBndEntered = 0;   // the consistent count (Little 2011, LL.2): the jobs inside at t0 count with the entries since
     S.busyI = [0, 0, 0]; S.blkI = [0, 0, 0]; S.empI = [0, 0, 0];
     S.sumWait = [0, 0, 0]; S.nWait = [0, 0, 0];
     S.lqArea = [0, 0, 0]; S.wipArea = 0; S.sysArea = 0; S.lastIntT = t0;
@@ -1283,6 +1284,8 @@
       Tline: S.statCompleted ? S.sumLineFlow / S.statCompleted : NaN,
       Tbnd: S.statCompleted ? S.sumBndFlow / S.statCompleted : NaN,
       wip: S.wipArea / elapsed, sys: S.sysArea / elapsed, wipBnd: S.bndArea / elapsed,
+      nBndWin: S.statBndAt0 + S.statBndEntered, lamWin: (S.statBndAt0 + S.statBndEntered) / elapsed,
+      Wwin: (S.statBndAt0 + S.statBndEntered) ? S.bndArea / (S.statBndAt0 + S.statBndEntered) : NaN,
       util: S.busyI.map(b => b / elapsed),
       blk: S.blkI.map(b => b / elapsed),
       emp: S.empI.map(b => b / elapsed),
@@ -1392,10 +1395,11 @@
         'avg ' + NT().I + ' = <b>' + fmt(avgW, 2) + '</b> &nbsp;vs.&nbsp; ' + NT().R + ' × ' + NT().T + ' = ' + o.R.toFixed(3) + ' jobs/min × ' + fmt(o.Tbnd, 1) + ' min' +
         ' = <b>' + fmt(rt, 2) + '</b> &nbsp;' +
         (gap < 0.05 ? '<span class="lok">✓ match (' + (gap * 100).toFixed(1) + '% gap)</span>'
-                    : '<span class="lgap">gap ' + (gap * 100).toFixed(0) + '% — closes as the run lengthens</span>') +
-        '<br><span style="color:var(--muted)">' + NT().I + ' right now: ' + bndWip() + ' — the law holds for long-run averages, not each instant. Scope: inside the process boundary (it holds at any boundary you draw).</span>';
+                    : '<span class="lgap">gap ' + (gap * 100).toFixed(0) + '% — the jobs still inside are in ' + NT().I + ' but not yet in ' + NT().R + ' or ' + NT().T + '; the gap closes as the run lengthens</span>') +
+        '<br><span style="color:var(--muted)">Counted consistently — every job’s time inside so far, the ' + S.statBndAt0 + ' inside when the count began included: ' + NT().R + ' = ' + o.nBndWin + ' jobs / ' + fmt(o.elapsed, 0) + ' min = ' + o.lamWin.toFixed(3) + ' jobs/min, ' + NT().T + ' = ' + fmt(o.Wwin, 1) + ' min, ' + NT().R + ' × ' + NT().T + ' = <b>' + fmt(o.lamWin * o.Wwin, 2) + '</b> = avg ' + NT().I + ' at every moment.</span>' +
+        '<br><span style="color:var(--muted)">' + NT().I + ' right now: ' + bndWip() + ' — the average form relates averages over the window; a single instant’s count need not equal ' + NT().R + ' × ' + NT().T + '. Scope: inside the process boundary (the law holds at any boundary you draw).</span>';
     } else {
-      $('littleLive').innerHTML = 'Waiting for the first completed job… &nbsp;<span style="color:var(--muted)">The law compares long-run averages inside the process boundary: time-averaged inventory against throughput × average time inside.</span>';
+      $('littleLive').innerHTML = 'Waiting for the first completed job… &nbsp;<span style="color:var(--muted)">The law relates three averages over the same period inside the process boundary: time-averaged inventory against throughput × average time inside.</span>';
     }
 
     // map annotations — demand at the entry, throughput rate R = min(demand, capacity) at the exit.
@@ -3076,17 +3080,17 @@
       { t: 'take', h: 'A chain’s capacity = its slowest link: <b>the bottleneck</b> (the step with the highest utilization). System cycle time = the bottleneck’s p. Fix the bottleneck and it <i>moves</i> — after each fix, recompute all capacities. And a step can be the bottleneck with no queue in sight: it’s about capacity, not lines.' }
     ]},
     { ico: '⚖️', title: 'Little’s Law', pts: 30, steps: [
-      { t: 'read', h: '<p>One equation, three measures: <b>⟦law⟧</b> — inventory = throughput × ⟦Tterm⟧. It holds for any stable process, regardless of industry or flow unit.</p><p>Draw a boundary around ANY stable system — a café, a factory, an ER, an accounts-receivable ledger, your inbox. Count what’s inside (⟦I⟧), measure the flow (⟦R⟧), time the journey (⟦T⟧): the three are locked together. No assumptions about randomness, luck, or discipline. Given any two of the three, the law provides the third.</p>' },
-      { t: 'task', h: '<span class="tt">Watch the two lines converge</span> The café runs with realistic variability. Press <b>▶ Play</b> to t = 1500 and watch the Little’s Law panel: the gray line (inside right now) bounces wildly — the law says nothing about instants. But the averages must converge.', setup() { lsParams([10, 5, 8, 4, 8, 4, 8, 4]); lsEnd('time', 1500); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { return runIsDone() ? { ok: true, msg: 'See the blue (avg ⟦I⟧) and red (⟦R⟧ × ⟦T⟧) lines tracking each other: the law relates the two averages.' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 1500' }; } },
+      { t: 'read', h: '<p>One equation, three measures: <b>⟦law⟧</b> — inventory = throughput × ⟦Tterm⟧. It holds for any process, as averages over one period, regardless of industry or flow unit.</p><p>Draw a boundary around ANY system — a café, a factory, an ER, an accounts-receivable ledger, your inbox. Count what’s inside (⟦I⟧), measure the flow (⟦R⟧), time the journey (⟦T⟧): the three are locked together. No assumptions about randomness, luck, or discipline. Given any two of the three, the law provides the third.</p>' },
+      { t: 'task', h: '<span class="tt">Watch the two lines converge</span> The café runs with realistic variability. Press <b>▶ Play</b> to t = 1500 and watch the Little’s Law panel: the gray line (inside right now) bounces wildly — the average form binds averages, not an instant’s count. The two average lines converge as the jobs still inside become a small share of the run.', setup() { lsParams([10, 5, 8, 4, 8, 4, 8, 4]); lsEnd('time', 1500); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { return runIsDone() ? { ok: true, msg: 'See the blue (avg ⟦I⟧) and red (⟦R⟧ × ⟦T⟧) lines tracking each other: the law relates the two averages.' } : { ok: false, msg: 'Running… t = ' + Math.floor(S.t) + ' / 1500' }; } },
       { t: 'quiznum', q: 'Read ⟦R⟧ and ⟦T⟧ from the tiles and multiply them — mind the units: the tile reports ⟦R⟧ in jobs/hour and ⟦T⟧ in minutes, so convert ⟦R⟧ to jobs per minute (divide by 60) first. What must the average inventory be?', unit: 'jobs', dyn: () => { const o = obsSnapshot(); return o.R * o.Tbnd; }, rtol: 0.2, pts: 5, ex: 'Whatever your run produced: ⟦I⟧ = ⟦R⟧ × ⟦T⟧, with consistent units — and the measured Avg inventory tile agrees. No cameras, no counting. Two numbers handed you the third.' },
-      { t: 'quiz', q: 'At one instant you count 9 customers inside, but ⟦R⟧ × ⟦T⟧ = 6. Is the law broken?', opts: [{ o: 'No — it binds long-run AVERAGES; any single instant can wander', ok: 1 }, { o: 'Yes — it must hold at every moment', ok: 0 }], pts: 5, ex: 'The gray line “breaks the law” all day long; the averages never do. Little’s Law is about flows, not snapshots.' },
+      { t: 'quiz', q: 'At one instant you count 9 customers inside, but ⟦R⟧ × ⟦T⟧ = 6. Is the law broken?', opts: [{ o: 'No — it binds long-run AVERAGES; any single instant can wander', ok: 1 }, { o: 'Yes — it must hold at every moment', ok: 0 }], pts: 5, ex: 'The gray line “breaks the law” all day long; the averages never do. The average form is about flows over a period; a count at one instant is not an average.' },
       { t: 'read', h: '<p><b>The rearrangement.</b> In real life you can usually measure two of the three cheaply — the law hands you the third for free.</p><p>Classic: Burger Hut serves 2,000 customers over a 15-hour day, and on average 50 are inside. How long does a customer spend inside? ⟦T⟧ = ⟦I⟧ / ⟦R⟧ = 50 / (2000/15 per hr) = 50 / 133.3/hr = 0.375 hr ≈ <b>22.5 minutes</b>. No stopwatch, no tracking app — two numbers any manager already has.</p>' },
       { t: 'quiznum', q: 'Your turn: a dining hall serves 1,200 students over a 10-hour day; on average 80 are inside. Average time inside, in minutes?', unit: 'min', ans: 40, tol: 3, pts: 5, ex: '⟦R⟧ = 120/hr, ⟦I⟧ = 80 → ⟦T⟧ = 80/120 hr = 40 min. You obtained the value without direct measurement with one division.' },
       { t: 'read', h: '<p><b>The finance payoff.</b> You will use this law in finance whether you notice it or not. Define the system as the <b>accounts-receivable ledger</b>: invoices flow in when you sell (⟦R⟧ = yearly sales, from the income statement), sit inside as receivables (⟦I⟧ = the AR balance, from the balance sheet), and flow out when customers pay. Then ⟦T⟧ = ⟦I⟧/⟦R⟧ is <b>days sales outstanding</b> — how long the firm’s cash stays stuck in IOUs.</p><p>Do the same for inventory (COGS as the flow) and for payables, and you get the <b>cash conversion cycle</b> = days in inventory + days receivable − days payable: three Little’s Law calculations that analysts run on every 10-K.</p>' },
       { t: 'quiznum', q: 'A firm sells $20M per year; its AR balance averages $2.5M. How many DAYS does it wait to collect? (365-day year)', unit: 'days', ans: 45.6, tol: 3, pts: 10, ex: '⟦T⟧ = 2.5/20 year = 0.125 yr ≈ 46 days of sales sitting as IOUs (the DSO). Same law as the café — the “jobs” are dollars. This is why operations people read balance sheets like process maps.' },
       { t: 'task', h: '<span class="tt">Predict the future with one multiplication</span> Game-day overload with a WIP cap: ⟦I⟧ inside the café will be pinned at <b>6</b>, and the bottleneck fixes ⟦R⟧ at 7.5/hr (one cup per 8 min). Before running, the law already says the inside journey MUST be 6 × 8 = 48 min. Set the cap to <b>6</b> and Play to t = 1200 to verify the prediction.', ctl: [{ id: 'lim-conwip', lab: 'Line WIP cap', min: 3, max: 10, step: 1 }], setup() { lsParams([4, 0, 8, 0, 8, 0, 8, 0]); lsEnd('time', 1200); lsSpeed(40); $('resetBtn').click(); focusCards(['little']); }, verify() { if (L.conwip !== 6) return { ok: false, msg: 'Set the cap to exactly 6 (currently ' + (isFinite(L.conwip) ? L.conwip : '∞') + ').' }; if (!runIsDone()) return { ok: false, msg: 'Cap = 6 ✓ — Play to t = 1200. Inside right now: ' + lineWip() }; return { ok: true, msg: 'Check the “incl. the arrival queue” line on the ⟦T⟧ tile: ≈ 48 min, as the law requires before you ever pressed Play.' }; } },
       { t: 'quiznum', q: 'And indeed — the “incl. the arrival queue” ⟦Tterm⟧ settled at about ___ minutes:', unit: 'min', ans: 48, tol: 5, pts: 5, ex: '⟦T⟧ = ⟦I⟧/⟦R⟧ = 6 / (1/8 per min) = 48. You predicted a random simulation with one multiplication — the same trick managers use to promise lead times they can keep.' },
-      { t: 'take', h: '<b>⟦law⟧</b> — true for any stable system, any industry, any luck. Know two of the three and the law provides the third. It sizes waiting rooms, predicts lead times, and turns a balance sheet into a process map (days sales outstanding = ⟦I⟧/⟦R⟧ × 365). It holds for any stable process, regardless of industry or flow unit.' }
+      { t: 'take', h: '<b>⟦law⟧</b> — true for any process, as averages over one period: any industry, any luck. Know two of the three and the law provides the third. It sizes waiting rooms, predicts lead times, and turns a balance sheet into a process map (days sales outstanding = ⟦I⟧/⟦R⟧ × 365). The settled values need a settled process; the law itself needs one boundary and one period.' }
     ]},
     { ico: '🎲', title: 'Variability', pts: 25, steps: [
       { t: 'read', h: '<p>So far, timings were exact. Real cafés aren’t: someone orders a 6-syllable latte, someone pays in coins. Today: <b>the same averages as a perfect deterministic morning</b> — arrivals every 10 min, each step 8 min — but now everything is random (CV = 1).</p>' },
