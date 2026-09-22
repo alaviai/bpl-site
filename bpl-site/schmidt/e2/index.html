@@ -219,16 +219,18 @@
   .optdetail { display: none; color: var(--muted); font-weight: 400; }
   .showdet .optdetail { display: inline; }
   .dettoggle { font-size: 11.5px; font-weight: 700; color: var(--navy); cursor: pointer; text-decoration: underline; margin: 2px 0 6px; display: inline-block; }
+  #notaLbl { display: none; }
+  body.home #notaLbl { display: inline; }   /* the notation is named on the opening page only */
 </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 4.3</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 4.4</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
-      <span class="small" style="font-size:11.5px;color:var(--muted)">Notation: Schmidt (R · T · I)</span>
+      <span class="small" id="notaLbl" style="font-size:11.5px;color:var(--muted)">Notation: Schmidt (R · T · I)</span>
     </div>
   </div>
 
@@ -987,7 +989,7 @@
   }
   function renderStep() {
     stopPoll();
-    const st = STEPS[C.step];
+    const st = STEPS[C.step]; document.body.classList.toggle('home', st.t === 'home');
     const c = $('lessonCard');
     setScore();
     let effPg = st.pg;

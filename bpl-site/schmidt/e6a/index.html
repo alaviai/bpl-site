@@ -491,16 +491,18 @@
   .lp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; font-weight: 800; letter-spacing: .1em; color: var(--navy); background: #eff3f8; border: 1.5px dashed var(--navy); border-radius: 10px; padding: 10px 12px; text-align: center; margin: 10px 0; user-select: all; }
   .cpage { position: fixed; top: -12px; pointer-events: none; z-index: 90; font-size: 18px; animation: fallpage linear forwards; }
   @keyframes fallpage { to { transform: translateY(105vh) rotate(340deg); opacity: .9; } }
+  #notaLbl { display: none; }
+  body.home #notaLbl { display: inline; }   /* the notation is named on the opening page only */
 </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.0</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.1</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
-      <span class="small" style="border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:600;background:#fff;color:var(--ink)">Notation: Schmidt (R · T · I · Tq · Iq)</span>
+      <span class="small" id="notaLbl" style="font-size:11.5px;color:var(--muted)">Notation: Schmidt (R · T · I · Tq · Iq)</span>
     </div>
   </div>
 

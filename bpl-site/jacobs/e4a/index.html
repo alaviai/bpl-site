@@ -243,16 +243,18 @@
   .flashtxt { animation: txtflash 1.15s ease-in-out infinite; color: var(--green); }
   .flashtxt.still { animation: none; }
   @keyframes txtflash { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+  #notaLbl { display: none; }
+  body.home #notaLbl { display: inline; }   /* the notation is named on the opening page only */
 </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.2</span></h1>
+      <h1>Business Process Lab · Exercise <span class="ver">EX v 1.3</span></h1>
       <div class="lbar" id="lbar"></div>
     </div>
     <div class="hdr-right">
-      <span class="small" style="border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:600;background:#fff;color:var(--ink)">Notation: Jacobs (λ · FT · INV)</span>
+      <span class="small" id="notaLbl" style="font-size:11.5px;color:var(--muted)">Notation: Jacobs (λ · FT · INV)</span>
     </div>
   </div>
 
@@ -1278,7 +1280,7 @@ function (api) {
       onKill: fn => kills.push(fn),
       onResume: fn => resumes.push(fn),
       onGoto: fn => { gotoFn = fn; },
-      progress: (step, mx) => { const inst = INST[i]; if (inst) { inst.step = step; inst.maxStep = Math.max(inst.maxStep || 1, mx || 1, step); } setProgress(o.offset + step); calcFlash(i === 0 && step === 0); const key = i + ':' + step; if (S.pageKey !== key) { S.pageKey = key; calcToggle(false); } },
+      progress: (step, mx) => { const inst = INST[i]; if (inst) { inst.step = step; inst.maxStep = Math.max(inst.maxStep || 1, mx || 1, step); } setProgress(o.offset + step); calcFlash(i === 0 && step === 0); document.body.classList.toggle('home', i === 0 && step === 0); const key = i + ':' + step; if (S.pageKey !== key) { S.pageKey = key; calcToggle(false); } },
       pillbar: (step, mx) => pillbarHTML(i, step, mx),
       homeHTML: () => o.home, goLabel: o.go, finishLabel: o.finish,
       done: (tracks, n, deliv) => finishModule(o, tracks, n, deliv),
@@ -1348,7 +1350,7 @@ function (api) {
     }
   }
   function renderFinal() {
-    setProgress(TOTAL); calcToggle(false);
+    setProgress(TOTAL); document.body.classList.remove('home'); calcToggle(false);
     if (!S.finished) { S.finished = true; renderLessonBar(); }
     if (!S.celebrated) { S.celebrated = true; setTimeout(confetti, 300); }
     let h = pillbarHTML(ORDER.length, 0, 0) + '<div class="lp-step">';
